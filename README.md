@@ -49,6 +49,8 @@ Buka http://127.0.0.1:8800.
    `node scripts/bungkus-game.mjs <berkas-sumber.html> <id>`
 2. Simpan gambar kartu persegi 480x480 di `public/games/<id>/thumb.png`.
 3. Tambahkan entri di `public/assets/games.js` (judul, tanggal rilis, kategori, deskripsi ID dan EN).
+4. Naikkan `?v=` pada tiga tautan aset di `public/index.html`. Berkas `/assets/*` disimpan peramban selama satu jam
+   (lihat `public/_headers`), jadi tanpa langkah ini pengunjung lama belum melihat game baru.
 
 ## Deploy ke Cloudflare
 
