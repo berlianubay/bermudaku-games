@@ -1,0 +1,2754 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+<title>Tambal Ban</title>
+<meta name="description" content="Jaga bengkel tambal ban pinggir jalan: cari bocor di baskom, amplas, lem, tempel, lalu uji sebelum pelanggan kehabisan sabar.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap">
+<style>
+/* Tata letak kisi: pita info (atas di HP, kolom kiri di layar lebar), panggung kanvas, panel alat.
+   Kanvas hanya mengisi sel panggung, jadi gambar tidak pernah tertutup panel. */
+:root {
+  --kertas: #F2EBDD;
+  --lembar: #FFFBF2;
+  --tinta: #201C19;
+  --tinta-2: #5A5048;
+  --oranye: #B4430D;
+  --aksen-teks: #FFFFFF;
+  --biru: #1F4F8F;
+  --garis: #8A7B6D;
+  --garis-halus: #E0D5C2;
+  --jalur: #E9DFCD;
+  --arsir: #DCCFB8;
+  --bayang: rgba(32, 28, 25, .22);
+  --tirai: rgba(32, 28, 25, .5);
+  --karet-ui: #1F1D1C;
+  /* Warna dunia: isi bengkel, bukan warna antarmuka. Tema gelap tidak mengganti ini; malam dibuat
+     dengan lapisan gelap di kanvas supaya satu bohlam yang menerangi meja kerja terasa sebagai sumber cahaya. */
+  --dinding: #E4D8BF;
+  --dinding-bawah: #C9B996;
+  --lantai: #B5A68B;
+  --lantai-gelap: #9E8F74;
+  --terpal: #2A64A8;
+  --terpal-gelap: #1C4A80;
+  --kayu: #9C6B3E;
+  --kayu-gelap: #6E4A2A;
+  --karet: #22201F;
+  --karet-kilap: #57524E;
+  --karet-gelap: #0E0D0C;
+  --seng: #A9B0B2;
+  --seng-gelap: #737B7E;
+  --seng-dalam: #4F5659;
+  --air: #2C6E83;
+  --air-muka: #B9DDE6;
+  --kapur: #F7F4EA;
+  --kuningan: #C69A43;
+  --besi: #8E9497;
+  --lem: #C9952F;
+  --lem-kering: #8C7646;
+  --tepi-tambalan: #E0701E;
+  --amplas: #6F6660;
+  --kulit-tangan: #A86E45;
+  --lengan: #4E5B4A;
+  --garis-dunia: #1B1715;
+  --font-judul: "Permanent Marker", "Segoe Print", system-ui, sans-serif;
+  --font-teks: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --kertas: #151413;
+    --lembar: #221F1C;
+    --tinta: #F2EBDF;
+    --tinta-2: #C3B8AA;
+    --oranye: #F28C4E;
+    --aksen-teks: #2A1206;
+    --biru: #86AEE6;
+    --garis: #8F857A;
+    --garis-halus: #34302B;
+    --jalur: #2D2A26;
+    --arsir: #3A3631;
+    --bayang: rgba(0, 0, 0, .5);
+    --tirai: rgba(0, 0, 0, .62);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --kertas: #151413;
+  --lembar: #221F1C;
+  --tinta: #F2EBDF;
+  --tinta-2: #C3B8AA;
+  --oranye: #F28C4E;
+  --aksen-teks: #2A1206;
+  --biru: #86AEE6;
+  --garis: #8F857A;
+  --garis-halus: #34302B;
+  --jalur: #2D2A26;
+  --arsir: #3A3631;
+  --bayang: rgba(0, 0, 0, .5);
+  --tirai: rgba(0, 0, 0, .62);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--kertas);
+  color: var(--tinta);
+  font-family: var(--font-teks);
+  font-size: 15px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+h1, h2, h3, p, ol, ul { margin: 0; }
+button { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.app {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: "kepala" "panggung" "kendali";
+}
+
+/* Tambalan bundar bertepi oranye: tanda identitas di judul, langkah aktif, lembar hasil, dan dialog. */
+.tanda-tambal {
+  display: inline-block;
+  flex: none;
+  width: .86em;
+  height: .86em;
+  border-radius: 50%;
+  background: var(--karet-ui);
+  border: .17em solid var(--oranye);
+}
+
+/* Pita info (HP potret) */
+.kepala {
+  grid-area: kepala;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "judul cara" "info info";
+  align-items: center;
+  gap: 4px 12px;
+  padding: max(6px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) 7px max(14px, env(safe-area-inset-left, 0px));
+  background: var(--kertas);
+  border-bottom: 2px solid var(--garis-halus);
+  min-width: 0;
+}
+.kepala h1 {
+  grid-area: judul;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  font-family: var(--font-judul);
+  font-weight: 400;
+  font-size: clamp(1.45rem, 1.1rem + 1.3vw, 2.2rem);
+  line-height: 1.05;
+}
+.tombol-kecil {
+  grid-area: cara;
+  justify-self: end;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 2px solid var(--garis);
+  background: var(--lembar);
+  font-weight: 700;
+  font-size: .9rem;
+  cursor: pointer;
+}
+.info {
+  grid-area: info;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) auto;
+  gap: 12px;
+  align-items: end;
+  min-width: 0;
+}
+.sel { display: grid; gap: 2px; min-width: 0; }
+.label, .sub {
+  font-size: .74rem;
+  font-weight: 700;
+  color: var(--tinta-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sub { font-weight: 600; }
+.nama-pel { font-weight: 800; font-size: 1rem; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.angka { font-weight: 800; font-size: 1.3rem; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sel.nilai { text-align: right; }
+.bilah {
+  position: relative;
+  height: 12px;
+  border-radius: 6px;
+  border: 2px solid var(--garis);
+  background: var(--jalur);
+  overflow: hidden;
+}
+.bilah .isi { position: absolute; top: 0; bottom: 0; left: 0; width: 0; background: var(--biru); }
+.ucapan, .langkah, .papan { display: none; }
+kbd {
+  font-family: var(--font-teks);
+  font-weight: 700;
+  font-size: .85em;
+  padding: 0 5px;
+  border-radius: 6px;
+  border: 1.5px solid var(--garis);
+  background: var(--lembar);
+  color: var(--tinta);
+  white-space: nowrap;
+}
+
+/* Panggung */
+.panggung {
+  grid-area: panggung;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+}
+#kanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.layar-galat {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  padding: 20px;
+  text-align: center;
+  background: var(--kertas);
+}
+.layar-galat h2 { font-family: var(--font-judul); font-weight: 400; font-size: 1.4rem; }
+.layar-galat p { max-width: 40ch; color: var(--tinta-2); line-height: 1.5; }
+
+/* Panel alat: petunjuk langkah, satu meteran, tiga tombol, dan tombol lanjut */
+.kendali {
+  grid-area: kendali;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr) minmax(0, 1fr);
+  grid-template-areas: "petunjuk petunjuk petunjuk" "meter meter meter" "kiri utama kanan" "lanjut lanjut lanjut";
+  gap: 7px 8px;
+  padding: 8px max(12px, env(safe-area-inset-right, 0px)) max(10px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+  background: var(--kertas);
+  border-top: 2px solid var(--garis-halus);
+}
+.petunjuk {
+  grid-area: petunjuk;
+  min-height: 2.7em;
+  font-size: .86rem;
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+.petunjuk b {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-right: 6px;
+  font-weight: 800;
+}
+.meter { grid-area: meter; display: grid; gap: 3px; min-width: 0; }
+.baris-meter {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--tinta-2);
+}
+.baris-meter > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.baris-meter .nilai { flex: none; color: var(--tinta); }
+.bilah.ukur { height: 24px; border-radius: 8px; overflow: visible; }
+.bilah.ukur .isi { border-radius: 6px 0 0 6px; }
+.zona {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  font-size: .7rem;
+  font-weight: 700;
+  color: var(--tinta-2);
+  white-space: nowrap;
+}
+/* Arsiran menandai bagian bilah yang bukan tempat berhenti */
+.zona.arsir { background: repeating-linear-gradient(135deg, transparent 0 6px, var(--arsir) 6px 9px); }
+.zona.pas { border-left: 2px solid var(--tinta); border-right: 2px solid var(--tinta); color: var(--tinta); font-weight: 800; }
+.zona.pas.aktif { background: var(--oranye); color: var(--aksen-teks); }
+.jarum {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: 0;
+  width: 4px;
+  margin-left: -2px;
+  border-radius: 2px;
+  background: var(--tinta);
+  box-shadow: 0 0 0 2px var(--lembar);
+}
+
+.alat {
+  min-height: 54px;
+  min-width: 0;
+  padding: 4px 8px;
+  border-radius: 14px;
+  border: 2px solid var(--garis);
+  background: var(--lembar);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  font-weight: 800;
+  font-size: .95rem;
+  line-height: 1.15;
+  text-align: center;
+}
+#tombol-kiri { grid-area: kiri; }
+#tombol-utama { grid-area: utama; }
+#tombol-kanan { grid-area: kanan; }
+#tombol-lanjut { grid-area: lanjut; min-height: 46px; }
+.alat .kunci { font-size: .72rem; font-weight: 600; color: var(--tinta-2); white-space: nowrap; }
+.alat.utama {
+  border-color: var(--oranye);
+  background: var(--oranye);
+  color: var(--aksen-teks);
+  font-family: var(--font-judul);
+  font-weight: 400;
+  font-size: 1.12rem;
+  letter-spacing: .01em;
+}
+.alat.utama .kunci { font-family: var(--font-teks); color: var(--aksen-teks); }
+.alat.utama kbd { background: transparent; border-color: currentColor; color: inherit; }
+.alat.ditekan { transform: translateY(2px); }
+.alat[aria-disabled="true"] { border-style: dashed; color: var(--tinta-2); cursor: default; }
+.alat.kosong { visibility: hidden; }
+@media (pointer: coarse) {
+  .alat .kunci, .petunjuk .kunci-tk { display: none; }
+}
+.tombol:focus-visible, .tombol-kecil:focus-visible, .alat:focus-visible {
+  outline: 3px solid var(--tinta);
+  outline-offset: 3px;
+}
+
+/* Lembar hasil: bertepi oranye seperti tepi tambalan; bayangan menandai ia mengapung di atas bengkel. */
+.hasil {
+  grid-column: 1;
+  grid-row: 2 / 4;
+  align-self: end;
+  z-index: 4;
+  margin: 0 max(10px, env(safe-area-inset-right, 0px)) max(10px, env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));
+  max-height: calc(100% - 16px);
+  overflow: auto;
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 3px solid var(--oranye);
+  background: var(--lembar);
+  box-shadow: 0 12px 30px var(--bayang);
+}
+.hasil h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-judul);
+  font-weight: 400;
+  font-size: 1.4rem;
+  line-height: 1.15;
+}
+.hasil h2:focus { outline: none; }
+.sebab, .saran { line-height: 1.42; font-size: .9rem; }
+.saran { color: var(--tinta-2); }
+.saran b { color: var(--tinta); }
+.baris-angka { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+.angka-hasil { display: grid; gap: 1px; }
+.angka-hasil span { font-size: .74rem; font-weight: 700; color: var(--tinta-2); }
+.angka-hasil strong { font-weight: 800; font-size: 1.3rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.daftar { list-style: none; padding: 0; display: grid; gap: 4px; font-size: .86rem; line-height: 1.35; }
+.daftar li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 5px 0; border-bottom: 1.5px solid var(--garis-halus); }
+.daftar li span:first-child { min-width: 0; }
+.daftar li b { font-weight: 800; }
+.daftar li .ket { color: var(--tinta-2); }
+.daftar li strong { font-variant-numeric: tabular-nums; }
+.rekor { font-size: .86rem; color: var(--tinta-2); }
+.rekor.baru { color: var(--oranye); font-weight: 700; }
+.tombol {
+  min-height: 50px;
+  padding: 0 18px;
+  border-radius: 14px;
+  border: 2px solid var(--garis);
+  background: transparent;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tombol.utama {
+  border-color: var(--oranye);
+  background: var(--oranye);
+  color: var(--aksen-teks);
+  font-family: var(--font-judul);
+  font-weight: 400;
+  font-size: 1.22rem;
+  letter-spacing: .01em;
+}
+.tombol:active, .tombol-kecil:active { transform: translateY(1px); }
+
+/* Dialog cara main */
+dialog {
+  width: min(680px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  border: 3px solid var(--oranye);
+  border-radius: 20px;
+  padding: 16px 18px 14px;
+  background: var(--lembar);
+  color: var(--tinta);
+  box-shadow: 0 16px 40px var(--bayang);
+}
+dialog::backdrop { background: var(--tirai); }
+.isi-dialog { display: grid; gap: 9px; line-height: 1.45; font-size: .92rem; }
+.isi-dialog h2 { display: flex; align-items: center; gap: 10px; font-family: var(--font-judul); font-weight: 400; font-size: 1.6rem; line-height: 1.1; }
+.isi-dialog h2:focus { outline: none; }
+.isi-dialog h3 { font-size: 1rem; font-weight: 800; }
+.isi-dialog ol { padding-left: 1.3em; display: grid; gap: 4px; }
+.isi-dialog .kecil { font-size: .85rem; color: var(--tinta-2); }
+.isi-dialog form { display: flex; justify-content: flex-end; }
+
+/* Mode kartu: hanya panggung, untuk gambar kartu 480x480 */
+.app.mode-kartu { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); grid-template-areas: "panggung"; }
+.mode-kartu .kepala, .mode-kartu .kendali, .mode-kartu .hasil { display: none !important; }
+
+/* Layar lebar: pita info menjadi kolom kiri; panel alat di bawah panggung. */
+@media (orientation: landscape) and (min-width: 540px) {
+  .app {
+    --lebar-sisi: clamp(200px, 23vw, 310px);
+    grid-template-columns: var(--lebar-sisi) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas: "kepala panggung" "kepala kendali";
+  }
+  .kepala {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "judul" "cara" "info" "ucapan" "langkah" "papan";
+    grid-template-rows: auto auto auto auto auto 1fr;
+    align-items: start;
+    align-content: start;
+    gap: 14px;
+    padding: max(18px, env(safe-area-inset-top, 0px)) 18px max(16px, env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px));
+    border-bottom: 0;
+    border-right: 2px solid var(--garis-halus);
+    overflow: auto;
+  }
+  .kepala h1 { font-size: clamp(1.9rem, 1.3rem + 1.3vw, 2.4rem); }
+  .tombol-kecil { justify-self: start; }
+  .info { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "pel nilai" "sabar sabar"; gap: 10px 14px; }
+  .sel.pelanggan { grid-area: pel; }
+  .sel.sabar { grid-area: sabar; }
+  .sel.nilai { grid-area: nilai; }
+  .nama-pel { font-size: 1.15rem; }
+  .angka { font-size: 1.6rem; }
+  .ucapan {
+    grid-area: ucapan;
+    display: block;
+    padding: 9px 12px;
+    border-radius: 12px;
+    border: 2px solid var(--garis);
+    background: var(--lembar);
+    font-size: .88rem;
+    line-height: 1.45;
+  }
+  .langkah {
+    grid-area: langkah;
+    display: grid;
+    gap: 5px;
+    list-style: none;
+    padding: 0;
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--tinta-2);
+  }
+  .langkah li { display: flex; align-items: center; gap: 9px; min-height: 22px; }
+  .langkah li::before {
+    content: "";
+    flex: none;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: 2px solid var(--garis);
+  }
+  .langkah li.lewat::before { background: var(--biru); border-color: var(--biru); }
+  .langkah li[aria-current="step"] { color: var(--tinta); font-weight: 800; }
+  .langkah li[aria-current="step"]::before { width: 15px; height: 15px; background: var(--karet-ui); border: 3px solid var(--oranye); }
+  .papan { grid-area: papan; display: block; align-self: end; font-size: .84rem; line-height: 1.65; color: var(--tinta-2); }
+  .petunjuk b { display: none; }
+  .kendali {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.3fr);
+    grid-template-areas: "petunjuk petunjuk petunjuk petunjuk" "meter meter meter meter" "kiri utama kanan lanjut";
+    gap: 8px 12px;
+    padding: 10px 16px max(12px, env(safe-area-inset-bottom, 0px));
+  }
+  .petunjuk { min-height: 0; font-size: .92rem; }
+  #tombol-lanjut { min-height: 54px; }
+  .hasil {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: center;
+    justify-self: center;
+    width: min(560px, calc(100% - 32px));
+    margin: 0;
+    max-height: calc(100% - 24px);
+    gap: 10px;
+    padding: 18px 20px;
+  }
+  .hasil h2 { font-size: 1.7rem; }
+  .sebab, .saran { font-size: .95rem; line-height: 1.5; }
+  .angka-hasil strong { font-size: 1.55rem; }
+}
+@media (orientation: landscape) and (min-width: 1100px) {
+  .kendali {
+    grid-template-columns: minmax(0, 1fr) 104px minmax(180px, 230px) 104px minmax(170px, 210px);
+    grid-template-areas: "petunjuk petunjuk petunjuk petunjuk petunjuk" "meter kiri utama kanan lanjut";
+    align-items: end;
+  }
+  .alat { min-height: 60px; }
+  #tombol-lanjut { min-height: 60px; }
+}
+/* HP mendatar: tinggi layar sempit, jadi panel dirapatkan. */
+@media (orientation: landscape) and (min-width: 540px) and (max-height: 520px) {
+  .kepala { gap: 8px; padding-top: 10px; padding-bottom: 10px; }
+  .kepala h1 { font-size: 1.5rem; }
+  .ucapan, .papan { display: none; }
+  .langkah { gap: 1px; font-size: .82rem; }
+  .kendali { gap: 5px 10px; padding-top: 6px; }
+  .alat, #tombol-lanjut { min-height: 46px; }
+  .petunjuk { font-size: .84rem; }
+}
+/* Kolom kiri yang sempit: info pelanggan, kesabaran, dan nilai bertumpuk supaya nama tidak terpotong. */
+@media (orientation: landscape) and (min-width: 540px) and (max-width: 999px) {
+  .info { grid-template-columns: minmax(0, 1fr); grid-template-areas: "pel" "sabar" "nilai"; gap: 8px; }
+  .sel.nilai { grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; column-gap: 8px; text-align: left; }
+  .sel.nilai .sub { grid-column: 1 / -1; }
+  .angka { font-size: 1.3rem; }
+}
+/* HP mendatar yang pendek: daftar langkah diganti label langkah di panel alat. */
+@media (orientation: landscape) and (min-width: 540px) and (max-height: 420px) {
+  .app { --lebar-sisi: clamp(180px, 23vw, 310px); }
+  .kepala { gap: 6px; padding-top: 8px; padding-bottom: 8px; }
+  .kepala h1 { font-size: 1.3rem; }
+  .langkah { display: none; }
+  .info { gap: 6px 10px; }
+  .petunjuk b { display: inline-flex; }
+  .alat, #tombol-lanjut { min-height: 44px; }
+}
+/* HP potret yang pendek */
+@media (max-height: 620px) and (orientation: portrait) {
+  .alat { min-height: 46px; }
+  #tombol-lanjut { min-height: 44px; }
+  .kendali { gap: 5px 8px; }
+  .angka { font-size: 1.1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tombol:active, .tombol-kecil:active, .alat.ditekan { transform: none; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="kepala" id="kepala">
+    <h1><span class="tanda-tambal" aria-hidden="true"></span>Tambal Ban</h1>
+    <button class="tombol-kecil" id="tombol-cara" type="button" aria-haspopup="dialog">Cara main</button>
+    <div class="info">
+      <div class="sel pelanggan">
+        <span class="label" id="label-pelanggan">Pelanggan 1 dari 5</span>
+        <strong class="nama-pel" id="nama-pelanggan">Mas Yoga</strong>
+        <span class="sub" id="peran-pelanggan">pengojek</span>
+      </div>
+      <div class="sel sabar">
+        <span class="label">Kesabaran <span id="sabar-detik"></span></span>
+        <div class="bilah" aria-hidden="true"><span class="isi" id="isi-sabar"></span></div>
+        <span class="sub" id="sabar-kata">tenang</span>
+      </div>
+      <div class="sel nilai">
+        <span class="label">Nilai hari ini</span>
+        <span class="angka" id="angka-nilai">0</span>
+        <span class="sub" id="hud-rekor">Belum ada rekor</span>
+      </div>
+    </div>
+    <p class="ucapan" id="ucapan"></p>
+    <ol class="langkah" id="langkah" aria-label="Urutan menambal">
+      <li data-langkah="cari">Cari bocor</li>
+      <li data-langkah="amplas">Amplas</li>
+      <li data-langkah="lem">Lem</li>
+      <li data-langkah="tekan">Tempel dan tekan</li>
+      <li data-langkah="uji">Uji</li>
+    </ol>
+    <p class="papan">Papan ketik: <kbd>←</kbd> <kbd>→</kbd> memutar ban dan menggosok, <kbd>Spasi</kbd> atau <kbd>Enter</kbd> tombol oranye (tahan untuk lem, tekan, cabut paku), <kbd>L</kbd> tombol paling kanan.</p>
+  </header>
+
+  <main class="panggung" id="panggung" aria-label="Bengkel tambal ban. Ban dalam dicelup ke baskom air; lubang bocor mengeluarkan gelembung." aria-describedby="pengumum">
+    <canvas id="kanvas" aria-hidden="true"></canvas>
+  </main>
+
+  <section class="kendali" id="kendali" aria-label="Alat kerja">
+    <p class="petunjuk" id="petunjuk"><b id="langkah-label"><span class="tanda-tambal" aria-hidden="true"></span><span id="langkah-teks">1/5 Cari bocor</span></b><span id="teks-petunjuk">Putar ban. Saat gelembung naik di pita kapur, tekan Tandai kapur.</span></p>
+    <div class="meter" id="meter">
+      <div class="baris-meter"><span id="meter-label">Sudah dicelup</span><span class="nilai" id="meter-nilai">0% keliling</span></div>
+      <div class="bilah ukur" id="bilah-ukur" aria-hidden="true">
+        <span class="zona" id="zona-0"></span><span class="zona" id="zona-1"></span><span class="zona" id="zona-2"></span><span class="zona" id="zona-3"></span>
+        <span class="isi" id="isi-ukur"></span>
+        <span class="jarum" id="jarum-ukur"></span>
+      </div>
+    </div>
+    <button class="alat" id="tombol-kiri" type="button" aria-keyshortcuts="ArrowLeft A"><span class="nama">Putar kiri</span><span class="kunci"><kbd>←</kbd> tahan</span></button>
+    <button class="alat utama" id="tombol-utama" type="button" aria-keyshortcuts="Space Enter"><span class="nama">Tandai kapur</span><span class="kunci"><kbd>Spasi</kbd></span></button>
+    <button class="alat" id="tombol-kanan" type="button" aria-keyshortcuts="ArrowRight D"><span class="nama">Putar kanan</span><span class="kunci"><kbd>→</kbd> tahan</span></button>
+    <button class="alat" id="tombol-lanjut" type="button" aria-keyshortcuts="L"><span class="nama">Tambal tanda</span><span class="kunci"><kbd>L</kbd></span></button>
+  </section>
+
+  <section class="hasil" id="hasil" aria-labelledby="judul-hasil" hidden>
+    <h2 id="judul-hasil" tabindex="-1"><span class="tanda-tambal" aria-hidden="true"></span><span id="teks-judul-hasil">Bengkel buka</span></h2>
+    <p class="sebab" id="sebab"></p>
+    <ul class="daftar" id="daftar-hasil" hidden></ul>
+    <p class="saran" id="baris-saran"><b>Saran:</b> <span id="saran"></span></p>
+    <div class="baris-angka" id="angka-hasil"></div>
+    <p class="rekor" id="rekor-hasil"></p>
+    <button class="tombol utama" id="tombol-hasil" type="button">Terima ban pertama</button>
+  </section>
+
+  <p class="sr" id="pengumum" aria-live="polite"></p>
+</div>
+
+<dialog id="dialog-cara" aria-labelledby="judul-cara">
+  <div class="isi-dialog">
+    <h2 id="judul-cara" tabindex="-1"><span class="tanda-tambal" aria-hidden="true"></span>Cara main</h2>
+    <ol>
+      <li><b>Cari bocor.</b> Ban dalam yang sudah dipompa dicelup ke baskom. Putar ban supaya bagian lain masuk air. Lubang mengeluarkan gelembung: lubang besar ramai, lubang kecil jarang dan halus. Saat gelembung naik tepat di pita kapur di tengah baskom, tekan <b>Tandai kapur</b>. Tanda yang meleset tidak menambal apa-apa; hapus dengan memutarnya kembali ke pita lalu tekan <b>Hapus tanda</b>.</li>
+      <li><b>Amplas.</b> Gosok bolak-balik sampai karet kusam dan jarum masuk pita Cukup. Menggosok ke arah yang sama dua kali tidak menambah apa-apa.</li>
+      <li><b>Lem.</b> Tahan untuk mengoles sampai jarum masuk pita Pas. Lem tipis tidak lengket, lem tebal lama keringnya.</li>
+      <li><b>Tempel dan tekan.</b> Tunggu lem setengah kering (jarum masuk pita Siap dan lem tidak mengilap lagi), tempel tambalan, lalu tahan tekan sampai bilah penuh.</li>
+      <li><b>Uji.</b> Celup lagi dan putar sampai satu keliling penuh. Masih ada gelembung berarti ada bocor lain atau tambalan gagal: tandai dan tambal lagi. Kalau bersih, serahkan ban.</li>
+    </ol>
+    <h3>Paku</h3>
+    <p>Kalau ada paku menancap, putar paku ke pita kapur lalu tahan <b>Cabut paku</b>. Selama paku masih di sana, lubangnya tersumbat dan tidak bergelembung, tapi ban akan kempes lagi begitu dipakai.</p>
+    <h3>Pelanggan dan nilai</h3>
+    <p>Lima pelanggan sehari, makin lama makin sulit. Kesabaran tiap pelanggan berkurang setiap detik; kalau habis, ia pergi. Nilai tiap pelanggan paling tinggi 100: tujuh puluh persen dari mutu tambalan, tiga puluh persen dari sisa kesabaran. Ban yang diserahkan masih bocor tidak mendapat nilai.</p>
+    <p class="kecil">Papan ketik: <kbd>←</kbd> <kbd>→</kbd> (atau <kbd>A</kbd> <kbd>D</kbd>) memutar ban dan menggosok amplas. <kbd>Spasi</kbd> atau <kbd>Enter</kbd> untuk tombol oranye; tahan untuk mengoles lem, menekan tambalan, dan mencabut paku. <kbd>L</kbd> untuk tombol paling kanan (Tambal, Serahkan, Tambah lem, Lewati). <kbd>Tab</kbd> berpindah antar tombol, <kbd>Escape</kbd> menutup dialog ini.</p>
+    <p class="kecil">Tetikus dan sentuh: seret ban untuk memutar, seret bolak-balik di atas karet untuk mengamplas, tahan di atas karet untuk mengoles lem dan menekan tambalan.</p>
+    <p class="kecil">Rekor nilai harian hanya disimpan di peramban ini. Permainan berhenti selama dialog ini terbuka.</p>
+    <form method="dialog"><button class="tombol" type="submit" id="tombol-tutup">Kembali ke bengkel</button></form>
+  </div>
+</dialog>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const el = {
+  app: $('#app'), kepala: $('#kepala'), panggung: $('#panggung'), kanvas: $('#kanvas'),
+  labelPel: $('#label-pelanggan'), namaPel: $('#nama-pelanggan'), peranPel: $('#peran-pelanggan'),
+  sabarDetik: $('#sabar-detik'), isiSabar: $('#isi-sabar'), sabarKata: $('#sabar-kata'),
+  nilai: $('#angka-nilai'), hudRekor: $('#hud-rekor'), ucapan: $('#ucapan'), langkah: $('#langkah'),
+  langkahTeks: $('#langkah-teks'), petunjuk: $('#teks-petunjuk'),
+  meterLabel: $('#meter-label'), meterNilai: $('#meter-nilai'), isiUkur: $('#isi-ukur'), jarumUkur: $('#jarum-ukur'),
+  zona: [0, 1, 2, 3].map(i => $('#zona-' + i)),
+  kendali: $('#kendali'), kiri: $('#tombol-kiri'), utama: $('#tombol-utama'), kanan: $('#tombol-kanan'), lanjut: $('#tombol-lanjut'),
+  hasil: $('#hasil'), judulHasil: $('#judul-hasil'), teksJudulHasil: $('#teks-judul-hasil'), sebab: $('#sebab'),
+  daftarHasil: $('#daftar-hasil'), barisSaran: $('#baris-saran'), saran: $('#saran'), angkaHasil: $('#angka-hasil'),
+  rekorHasil: $('#rekor-hasil'), tombolHasil: $('#tombol-hasil'),
+  tombolCara: $('#tombol-cara'), dialog: $('#dialog-cara'), judulCara: $('#judul-cara'), pengumum: $('#pengumum')
+};
+
+const ctx = el.kanvas.getContext && el.kanvas.getContext('2d');
+if (!ctx) {
+  const g = document.createElement('div');
+  g.className = 'layar-galat';
+  g.setAttribute('role', 'alert');
+  g.innerHTML = '<h2>Peramban ini belum bisa menggambar bengkel</h2><p>Game ini butuh Canvas 2D. Coba buka di Chrome, Firefox, Safari, atau Edge versi terbaru.</p>';
+  el.panggung.appendChild(g);
+  return;
+}
+
+const RAD = Math.PI / 180, TAU = Math.PI * 2;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const modDeg = a => ((a % 360) + 360) % 360;
+// Jarak sudut 0..180 dan jarak bertanda -180..180
+const selisih = (a, b) => { const d = modDeg(a - b); return d > 180 ? 360 - d : d; };
+const selisihBertanda = (a, b) => { const d = modDeg(a - b); return d > 180 ? d - 360 : d; };
+
+// Satuan: derajat untuk keliling ban, detik untuk waktu. Sudut layar 0 = kanan, 90 = bawah (sumbu y ke bawah).
+const KONFIG = {
+  sudutPenanda: 90,       // pita kapur di dasar cincin
+  tolTanda: 6,            // tanda kena lubang bila selisihnya paling banyak segini
+  tolPaku: 9,
+  airSin: 0.5,            // permukaan air di 0,5 R di bawah pusat cincin: busur 30..150 derajat tercelup
+  putarLambat: 32, putarCepat: 115, rampPutar: 0.55, langkahKetuk: 1.5,
+  amplasPerGosok: 12, amplasPerRc: 12, gosokMaksRc: 1.25,
+  amplasLicin: 60, amplasCukup: 100, amplasTipis: 150, amplasMaks: 180,
+  lemLaju: 42,            // persen tebal per detik selama ditahan
+  lemGagal: 30, lemPasMin: 45, lemPasMaks: 75,
+  jendelaSiap: 6,         // detik lem setengah kering sebelum terlalu kering
+  tekanPerlu: 2, tekanLuruh: 1.4,
+  cabutPerlu: 0.7,
+  kelilingCm: 170,        // keliling ban dalam motor ring 17 kira-kira
+  jedaTempel: 0.35,       // tombol tempel diabaikan sebentar setelah lem dilepas, supaya tekan ganda tidak menempel
+  bobotMutu: 0.7, bobotSabar: 0.3,
+  potongSia: 8
+};
+// Lama lem sampai setengah kering. Di atas pita Pas waktunya melonjak: lem tebal butuh jauh lebih lama.
+function lamaSetengah(tebal) { return 1.5 + tebal / 100 * 2.4 + Math.max(0, tebal - KONFIG.lemPasMaks) / 25 * 4.5; }
+
+const UKURAN = {
+  besar: { nama: 'besar', laju: 7, r: [0.034, 0.054], celah: 9 },
+  sedang: { nama: 'sedang', laju: 3.2, r: [0.022, 0.034], celah: 6 },
+  kecil: { nama: 'kecil', laju: 1.15, r: [0.013, 0.02], celah: 3.5 }
+};
+
+// Pelanggan rekaan; warna rupa adalah warna dunia, digelapkan lapisan malam pada tema gelap.
+const PELANGGAN = [
+  { id: 'yoga', nama: 'Mas Yoga', peran: 'pengojek', sabar: 60, lubang: ['besar'], paku: 0,
+    ucap: 'Ban belakang kempes, Mas. Penumpang saya nunggu di pasar.',
+    rupa: { baju: '#8A3C2F', celana: '#2E343D', kulit: '#9A6440', kepala: 'helm', aksen: '#E6E0D2', motor: '#4F6475', bawaan: null } },
+  { id: 'ratih', nama: 'Bu Ratih', peran: 'penjual sayur keliling', sabar: 65, lubang: ['kecil'], paku: 0,
+    ucap: 'Pagi masih keras, siang kok kempes pelan-pelan.',
+    rupa: { baju: '#6E7A3B', celana: '#5A4535', kulit: '#B07A50', kepala: 'kerudung', aksen: '#B25B45', motor: '#7A3030', bawaan: 'keranjang' } },
+  { id: 'harun', nama: 'Pak Harun', peran: 'kurir paket', sabar: 90, lubang: ['sedang', 'kecil'], paku: 0,
+    ucap: 'Tadi lewat jalan proyek, banyak beling.',
+    rupa: { baju: '#7A5A3A', celana: '#3A3A36', kulit: '#8C5A38', kepala: 'topi', aksen: '#2F4F5F', motor: '#3E4A3A', bawaan: 'kardus' } },
+  { id: 'sari', nama: 'Mbak Sari', peran: 'mahasiswi', sabar: 90, lubang: ['kecil'], paku: 1,
+    ucap: 'Ada paku nancap, Mas. Saya nggak berani cabut sendiri.',
+    rupa: { baju: '#3F6A78', celana: '#2B2F3A', kulit: '#B98458', kepala: 'kuncir', aksen: '#C9A24A', motor: '#C9C2B4', bawaan: 'tas' } },
+  { id: 'udin', nama: 'Bang Udin', peran: 'penjual roti keliling', sabar: 115, lubang: ['sedang', 'kecil', 'kecil'], paku: 0,
+    ucap: 'Minggu ini sudah dua kali kempes. Rotinya keburu dingin.',
+    rupa: { baju: '#B0742E', celana: '#3B3530', kulit: '#8E5B3A', kepala: 'handuk', aksen: '#ECE6D8', motor: '#5B5149', bawaan: 'kotak' } }
+];
+const LANGKAH = { cari: [1, 'Cari bocor'], amplas: [2, 'Amplas'], lem: [3, 'Lem'], tekan: [4, 'Tempel dan tekan'], uji: [5, 'Uji'] };
+
+function buatAcak(benih) {
+  let a = benih >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const fmt1 = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const satu = v => fmt1.format(Math.round(v * 10) / 10);
+const bulat = v => String(Math.round(v));
+const cmDari = derajat => Math.max(1, Math.round(derajat / 360 * KONFIG.kelilingCm));
+
+// ---------- Rekor ----------
+const KUNCI_REKOR = 'tambal-ban:rekor';
+let simpanGagal = false;
+function bacaRekor() {
+  try {
+    const v = JSON.parse(localStorage.getItem(KUNCI_REKOR));
+    if (v && Number.isFinite(v.nilai) && v.nilai >= 0) return { nilai: v.nilai, lulus: Number.isFinite(v.lulus) ? v.lulus : 0 };
+  } catch (e) { simpanGagal = true; /* penyimpanan diblokir: main tetap jalan tanpa rekor */ }
+  return null;
+}
+function simpanRekor(v) {
+  try { localStorage.setItem(KUNCI_REKOR, JSON.stringify(v)); return true; } catch (e) { simpanGagal = true; return false; }
+}
+let rekor = bacaRekor();
+
+const reduksi = matchMedia('(prefers-reduced-motion: reduce)');
+let gerakHias = !reduksi.matches;
+reduksi.addEventListener('change', () => { gerakHias = !reduksi.matches; letupan = []; });
+
+// ---------- Keadaan ----------
+let status = 'siap';   // siap | main | hasil | selesai
+let fase = 'celup';    // celup | amplas | lem | tekan
+let sesi = null, pel = null;
+let jeda = false, beku = false, modeKartu = false;
+let jam = 0;           // jam permainan (berhenti saat jeda)
+let jamHias = 0;       // jam hiasan
+let idSeq = 0;
+let gelembung = [], letupan = [];
+let transisi = 0;
+let jenisLembar = 'mulai';
+let waktuLembar = 0;
+let ucapan = { teks: '', sampai: 0 };
+const tahan = { kiri: null, kanan: null, utama: null, lanjut: null, panggung: null };
+const lamaTahan = { kiri: 0, kanan: 0 };
+const terakhirTurun = { kiri: -1e9, kanan: -1e9, utama: -1e9, lanjut: -1e9 };
+const terakhirNaik = { kiri: -1e9, kanan: -1e9, utama: -1e9, lanjut: -1e9 };
+
+function sesiBaru(benih) {
+  const b = (benih ?? (Date.now() & 0x7fffffff)) >>> 0;
+  sesi = { benih: b, acak: buatAcak(b), ke: 0, total: 0, catatan: [] };
+  siapkanPelanggan(0);
+}
+
+function siapkanPelanggan(i) {
+  const data = PELANGGAN[i];
+  const acak = sesi.acak;
+  const jumlah = data.lubang.length + data.paku;
+  const sudut = [];
+  let coba = 0;
+  // Lubang berjauhan supaya tiap gelembung bisa dibedakan, dan tidak tepat di pentil.
+  while (sudut.length < jumlah && coba++ < 800) {
+    const s = Math.round(acak() * 3600) / 10;
+    if (selisih(s, 0) >= 14 && sudut.every(d => selisih(d, s) >= 55)) sudut.push(s);
+  }
+  const lubang = [];
+  data.lubang.forEach((u, k) => lubang.push({ id: ++idSeq, sudut: sudut[k], ukuran: u, paku: false, dicabut: false, tutup: null, jeda: acak() * 0.4 }));
+  for (let k = 0; k < data.paku; k++) {
+    lubang.push({ id: ++idSeq, sudut: sudut[data.lubang.length + k], ukuran: 'sedang', paku: true, dicabut: false, cabut: 0, animCabut: 0, tutup: null, jeda: 0.2 });
+  }
+  // Putaran awal: tidak ada lubang atau paku yang sudah di dekat pita penanda.
+  let putar = 0;
+  for (let n = 0; n < 200; n++) {
+    putar = Math.round(acak() * 360);
+    const diPenanda = modDeg(KONFIG.sudutPenanda - putar);
+    if (lubang.every(l => selisih(l.sudut, diPenanda) > 35)) break;
+  }
+  pel = {
+    data, indeks: i, sabarAwal: data.sabar, sabar: data.sabar, lubang, tanda: [], tambalan: [], antrian: [],
+    putar, cakupan: new Array(36).fill(false), sudahTambal: false, kerja: null,
+    waktu: { cari: 0, uji: 0, amplas: 0, lem: 0, tunggu: 0, tekan: 0, sia: 0, ulang: 0 },
+    suasana: 'tenang', keadaanAkhir: null, waktuMain: 0
+  };
+  fase = 'celup';
+  gelembung = []; letupan = [];
+  catatCakupan();
+}
+
+function mulaiMain() {
+  status = 'main';
+  pel.waktuMain = 0;
+  ucap(pel.data.ucap, 5);
+  el.ucapan.textContent = `${pel.data.nama}: "${pel.data.ucap}"`;
+  sembunyikanLembar();
+  umumkan(`${pel.data.nama}, ${pel.data.peran}, menyerahkan ban dalam. ${pel.data.ucap}`);
+  perbaruiHud(true);
+  fokusUtama();
+}
+
+function ucap(teks, detik) { ucapan = { teks, sampai: jamHias + detik }; }
+
+// ---------- Geometri ban di baskom ----------
+function sudutDiPenanda() { return modDeg(KONFIG.sudutPenanda - pel.putar); }
+function sudutLayar(a) { return modDeg(a + pel.putar); }
+function tercelup(a) { return Math.sin(sudutLayar(a) * RAD) > KONFIG.airSin + 0.03; }
+function tambalanById(id) { return pel.tambalan.find(t => t.id === id) || null; }
+function lubangById(id) { return pel.lubang.find(l => l.id === id) || null; }
+function tertutup(l) { const t = l.tutup != null ? tambalanById(l.tutup) : null; return !!(t && !t.gagal); }
+function pakuAktif(l) { return l.paku && !l.dicabut; }
+function pakuDiPenanda() {
+  const a = sudutDiPenanda();
+  return pel.lubang.find(l => pakuAktif(l) && selisih(l.sudut, a) <= KONFIG.tolPaku) || null;
+}
+function tandaDiPenanda() {
+  const a = sudutDiPenanda();
+  return pel.tanda.find(t => selisih(t.sudut, a) <= KONFIG.tolTanda) || null;
+}
+function catatCakupan() {
+  for (let b = 0; b < 36; b++) {
+    const s = Math.sin(modDeg(b * 10 + 5 + pel.putar) * RAD);
+    if (s > KONFIG.airSin + 0.03) pel.cakupan[b] = true;
+  }
+}
+function persenCakupan() { return Math.round(pel.cakupan.filter(Boolean).length / 36 * 100); }
+
+// Sumber gelembung: lubang yang belum tertutup tambalan yang baik dan tidak tersumbat paku.
+function sumberBocor() {
+  const out = [];
+  for (const l of pel.lubang) {
+    if (pakuAktif(l) || tertutup(l)) continue;
+    const t = l.tutup != null ? tambalanById(l.tutup) : null;
+    if (t) out.push({ obj: l, sudut: t.sudut + (selisihBertanda(l.sudut, t.sudut) >= 0 ? 4 : -4), laju: 2.4, r: UKURAN.sedang.r, tambalan: t });
+    else out.push({ obj: l, sudut: l.sudut, laju: UKURAN[l.ukuran].laju, r: UKURAN[l.ukuran].r, tambalan: null });
+  }
+  return out;
+}
+
+// ---------- Aksi ----------
+function aktivitas() {
+  if (fase === 'celup') return pel.sudahTambal ? 'uji' : 'cari';
+  const k = pel.kerja;
+  if (k && k.tanda.lubangId == null) return 'sia';
+  if (k && k.tanda.ulang) return 'ulang';
+  if (fase === 'lem') return k.mengoles || !k.adaLem ? 'lem' : 'tunggu';
+  return fase;
+}
+
+function tandai() {
+  if (fase !== 'celup' || status !== 'main') return;
+  if (pakuDiPenanda()) return;
+  const lama = tandaDiPenanda();
+  if (lama) { hapusTanda(lama); return; }
+  const a = sudutDiPenanda();
+  let lub = null, d = 999;
+  for (const l of pel.lubang) {
+    const s = selisih(l.sudut, a);
+    if (s < d) { d = s; lub = l; }
+  }
+  const kena = lub && d <= KONFIG.tolTanda && !pakuAktif(lub) ? lub : null;
+  const tb = pel.tambalan.find(t => selisih(t.sudut, a) <= KONFIG.tolTanda) || null;
+  const t = {
+    id: ++idSeq, sudut: a, lubangId: kena ? kena.id : (tb ? tb.lubangId : null),
+    selisih: kena ? selisihBertanda(a, kena.sudut) : null, terdekat: lub ? { id: lub.id, d } : null,
+    ulang: tb ? tb.id : null, benih: (idSeq * 7919) >>> 0
+  };
+  pel.tanda.push(t);
+  const n = pel.tanda.length;
+  pesan(tb ? 'Tanda di atas tambalan: tambalan itu akan dicopot dan diulang.' : `Tanda kapur ke-${n} dibuat.`);
+  umumkan(tb ? 'Tanda kapur di atas tambalan lama.' : `Tanda kapur ke-${n} dibuat.`);
+}
+function hapusTanda(t) {
+  pel.tanda = pel.tanda.filter(x => x !== t);
+  pesan('Tanda kapur dihapus.');
+  umumkan('Tanda kapur dihapus.');
+}
+
+function mulaiTambal() {
+  if (!pel.tanda.length) { pesan('Belum ada tanda kapur. Tandai dulu bagian yang bergelembung.'); umumkan('Belum ada tanda kapur.'); return; }
+  pel.antrian = pel.tanda.slice();
+  pel.tanda = [];
+  pel.putaranTambal = { total: pel.antrian.length, nomor: 0 };
+  kerjaBerikut();
+}
+function kerjaBerikut() {
+  const t = pel.antrian.shift();
+  if (t) pel.putaranTambal.nomor++;
+  if (!t) {
+    // Semua tanda sudah ditambal: celup lagi untuk uji, cakupan dihitung ulang dari nol.
+    pel.kerja = null;
+    pel.sudahTambal = pel.tambalan.length > 0;
+    pel.cakupan.fill(false);
+    gantiFase('celup');
+    catatCakupan();
+    umumkan('Semua tanda sudah ditambal. Ban dicelup lagi untuk diuji.');
+    return;
+  }
+  pel.kerja = {
+    tanda: t, amplas: 0, arahTerakhir: 0, pxArah: 0, alat: 0, alatSasaran: 0,
+    tebal: 0, umur: 0, adaLem: false, mengoles: false, guardSampai: 0,
+    tempel: null, tekan: 0, animTempel: 0
+  };
+  gantiFase('amplas');
+  const pt = pel.putaranTambal;
+  umumkan(pt.total > 1 ? `Mengamplas tanda ${pt.nomor} dari ${pt.total}.` : 'Mengamplas bagian yang ditandai.');
+}
+
+function gantiFase(f) {
+  fase = f;
+  pesanSementara.sampai = 0;
+  // Peralihan baskom ke meja kerja diberi pudar singkat supaya pergantian sudut pandang tidak mengagetkan.
+  if (gerakHias && (f === 'celup' || f === 'amplas')) transisi = 0.28;
+}
+
+function gosokKetuk(arah) {
+  const k = pel.kerja;
+  if (!k || fase !== 'amplas') return;
+  k.alatSasaran = arah * 0.62;
+  if (arah === k.arahTerakhir) { pesan('Ganti arah: gosok bolak-balik, bukan ke arah yang sama.'); return; }
+  k.arahTerakhir = arah;
+  k.pxArah = 0;
+  k.amplas = Math.min(KONFIG.amplasMaks, k.amplas + KONFIG.amplasPerGosok);
+}
+function gosokGeser(dxRc) {
+  const k = pel.kerja;
+  if (!k || fase !== 'amplas' || !dxRc) return;
+  const arah = Math.sign(dxRc);
+  if (arah !== k.arahTerakhir) { k.arahTerakhir = arah; k.pxArah = 0; }
+  const pakai = Math.max(0, Math.min(Math.abs(dxRc), KONFIG.gosokMaksRc - k.pxArah));
+  k.pxArah += Math.abs(dxRc);
+  k.amplas = Math.min(KONFIG.amplasMaks, k.amplas + pakai * KONFIG.amplasPerRc);
+  k.alatSasaran = clamp(k.alatSasaran + dxRc, -0.7, 0.7);
+  k.alat = k.alatSasaran;
+}
+function cukupAmplas() {
+  if (fase !== 'amplas') return;
+  gantiFase('lem');
+  umumkan(`Amplas ${bulat(pel.kerja.amplas)} persen. Sekarang oles lem.`);
+}
+function lewatiTanda() {
+  if (fase !== 'amplas') return;
+  umumkan('Tanda ini dilewati tanpa ditambal.');
+  kerjaBerikut();
+}
+function mulaiOles() {
+  const k = pel.kerja;
+  if (!k || fase !== 'lem') return;
+  k.mengoles = true;
+  k.adaLem = true;
+  k.umur = 0;
+}
+function lepasOles() {
+  const k = pel.kerja;
+  if (!k || !k.mengoles) return;
+  k.mengoles = false;
+  k.guardSampai = jam + KONFIG.jedaTempel;
+  umumkan(`Lem ${bulat(k.tebal)} persen. Tunggu setengah kering.`);
+}
+function keadaanLem(k) {
+  if (!k.adaLem) return 'kosong';
+  if (k.mengoles) return 'oles';
+  const s = lamaSetengah(k.tebal);
+  if (k.umur < s) return 'basah';
+  if (k.umur < s + KONFIG.jendelaSiap) return 'siap';
+  return 'kering';
+}
+function tempel() {
+  const k = pel.kerja;
+  if (!k || fase !== 'lem' || !k.adaLem || k.mengoles || jam < k.guardSampai) return;
+  k.tempel = { tebal: k.tebal, umur: k.umur, setengah: lamaSetengah(k.tebal), keadaan: keadaanLem(k) };
+  k.animTempel = 0;
+  gantiFase('tekan');
+  umumkan('Tambalan ditempel. Tahan tekan sampai bilah penuh.');
+}
+function selesaiTekan() {
+  const k = pel.kerja, t = k.tanda, tp = k.tempel;
+  // Satu sebab gagal per tambalan, urut dari yang paling menentukan.
+  let gagal = null;
+  if (tp.umur < tp.setengah) gagal = 'basah';
+  else if (tp.tebal < KONFIG.lemGagal) gagal = 'tipis';
+  else if (k.amplas < KONFIG.amplasLicin) gagal = 'licin';
+  const mA = k.amplas >= KONFIG.amplasCukup
+    ? (k.amplas > KONFIG.amplasTipis ? clamp(100 - (k.amplas - KONFIG.amplasTipis) * 1, 70, 100) : 100)
+    : clamp(lerp(50, 100, (k.amplas - KONFIG.amplasLicin) / (KONFIG.amplasCukup - KONFIG.amplasLicin)), 0, 100);
+  const mL = tp.tebal < KONFIG.lemPasMin ? 70 : tp.tebal <= KONFIG.lemPasMaks ? 100 : 88;
+  const lewat = tp.umur - tp.setengah - KONFIG.jendelaSiap;
+  const mT = lewat <= 0 ? 100 : clamp(100 - lewat * 5, 60, 100);
+  const mutu = gagal ? 0 : Math.round(0.4 * mA + 0.3 * mL + 0.3 * mT);
+  if (t.ulang) {
+    const lama = tambalanById(t.ulang);
+    if (lama) {
+      pel.tambalan = pel.tambalan.filter(x => x !== lama);
+      for (const l of pel.lubang) if (l.tutup === lama.id) l.tutup = null;
+    }
+  }
+  const baru = {
+    id: ++idSeq, sudut: t.sudut, lubangId: t.lubangId, gagal, mutu, amplas: k.amplas, tebal: tp.tebal,
+    umurLem: tp.umur, setengah: tp.setengah, keadaanLem: tp.keadaan, mA, mL, mT, terlihat: false, celupGagal: 0,
+    selisihTanda: t.selisih, terdekat: t.terdekat, ulang: !!t.ulang, benih: t.benih
+  };
+  pel.tambalan.push(baru);
+  if (t.lubangId != null) { const l = lubangById(t.lubangId); if (l) l.tutup = baru.id; }
+  umumkan('Tambalan menempel.');
+  kerjaBerikut();
+}
+
+function serahkan() {
+  if (status !== 'main' || fase !== 'celup') return;
+  if (!pel.tambalan.length) { pesan('Tambal dulu sebelum menyerahkan ban.'); return; }
+  if (pel.tanda.length) { pesan('Masih ada tanda kapur yang belum ditambal.'); return; }
+  const bocor = pel.lubang.filter(l => !tertutup(l));
+  akhiriPelanggan(bocor.length ? 'kempes' : 'lulus', bocor);
+}
+
+function selesaiCabut(l) {
+  l.dicabut = true;
+  l.animCabut = 0.001;
+  l.cabut = 0;
+  pesan('Paku tercabut. Sekarang lubangnya bergelembung.');
+  umumkan('Paku tercabut.');
+}
+
+// ---------- Tombol: satu pintu untuk tetikus, sentuh, dan papan ketik ----------
+const ELEMEN_SLOT = { kiri: el.kiri, utama: el.utama, kanan: el.kanan, lanjut: el.lanjut };
+function modeSlot(slot) {
+  if (status !== 'main' || !pel) return null;
+  if (fase === 'celup') {
+    if (slot === 'kiri') return { id: 'putarKiri', nama: 'Putar kiri', kunci: '<kbd>←</kbd> tahan', tahan: true };
+    if (slot === 'kanan') return { id: 'putarKanan', nama: 'Putar kanan', kunci: '<kbd>→</kbd> tahan', tahan: true };
+    if (slot === 'utama') {
+      if (tahan.utama === 'cabut' || pakuDiPenanda()) return { id: 'cabut', nama: 'Tahan: cabut paku', kunci: 'tahan <kbd>Spasi</kbd>', tahan: true };
+      if (tandaDiPenanda()) return { id: 'hapus', nama: 'Hapus tanda', kunci: '<kbd>Spasi</kbd>' };
+      return { id: 'tandai', nama: 'Tandai kapur', kunci: '<kbd>Spasi</kbd>' };
+    }
+    if (slot === 'lanjut') {
+      const n = pel.tanda.length;
+      if (n) return { id: 'tambal', nama: `Tambal ${n} tanda`, kunci: '<kbd>L</kbd>' };
+      if (pel.tambalan.length) return { id: 'serahkan', nama: 'Serahkan ban', kunci: '<kbd>L</kbd>' };
+      return { id: 'tambal', nama: 'Tambal tanda', kunci: '<kbd>L</kbd>', mati: 'Belum ada tanda kapur. Tandai dulu bagian yang bergelembung.' };
+    }
+  }
+  if (fase === 'amplas') {
+    if (slot === 'kiri') return { id: 'gosokKiri', nama: 'Gosok kiri', kunci: '<kbd>←</kbd>' };
+    if (slot === 'kanan') return { id: 'gosokKanan', nama: 'Gosok kanan', kunci: '<kbd>→</kbd>' };
+    if (slot === 'utama') return { id: 'cukup', nama: 'Cukup, oles lem', kunci: '<kbd>Spasi</kbd>' };
+    if (slot === 'lanjut') return { id: 'lewati', nama: 'Lewati tanda ini', kunci: '<kbd>L</kbd>' };
+  }
+  if (fase === 'lem') {
+    const k = pel.kerja;
+    if (slot === 'utama') {
+      if (!k.adaLem || k.mengoles) return { id: 'oles', nama: 'Tahan: oles lem', kunci: 'tahan <kbd>Spasi</kbd>', tahan: true };
+      return { id: 'tempel', nama: 'Tempel tambalan', kunci: '<kbd>Spasi</kbd>' };
+    }
+    if (slot === 'lanjut' && k.adaLem && !k.mengoles) return { id: 'tambahLem', nama: 'Tambah lem', kunci: 'tahan <kbd>L</kbd>', tahan: true };
+    if (slot === 'lanjut' && tahan.lanjut === 'tambahLem') return { id: 'tambahLem', nama: 'Tambah lem', kunci: 'tahan <kbd>L</kbd>', tahan: true };
+  }
+  if (fase === 'tekan' && slot === 'utama') return { id: 'tekan', nama: 'Tahan: tekan tambalan', kunci: 'tahan <kbd>Spasi</kbd>', tahan: true };
+  return null;
+}
+function tekanSlot(slot, turun) {
+  if (status !== 'main' || jeda) { if (!turun) tahan[slot] = null; return; }
+  if (!turun) {
+    const id = tahan[slot];
+    tahan[slot] = null;
+    terakhirNaik[slot] = performance.now();
+    if (id) lepasTahan(id, slot);
+    return;
+  }
+  terakhirTurun[slot] = performance.now();
+  const m = modeSlot(slot);
+  if (!m) return;
+  if (m.mati) { pesan(m.mati); umumkan(m.mati); return; }
+  if (m.tahan) {
+    if (tahan[slot]) return;
+    tahan[slot] = m.id;
+    mulaiTahan(m.id, slot);
+  } else jalankan(m.id);
+}
+function mulaiTahan(id, slot) {
+  if (id === 'putarKiri' || id === 'putarKanan') {
+    lamaTahan[slot] = 0;
+    pel.putar = modDeg(pel.putar + (id === 'putarKiri' ? 1 : -1) * KONFIG.langkahKetuk);
+  } else if (id === 'oles' || id === 'tambahLem') mulaiOles();
+}
+function lepasTahan(id) {
+  if (id === 'oles' || id === 'tambahLem') { if (!tahan.utama && !tahan.lanjut && !tahan.panggung) lepasOles(); }
+  else if (id === 'cabut') { const l = pel.lubang.find(x => pakuAktif(x)); if (l) l.cabut = 0; }
+}
+function jalankan(id) {
+  if (id === 'tandai' || id === 'hapus') tandai();
+  else if (id === 'tambal') mulaiTambal();
+  else if (id === 'serahkan') serahkan();
+  else if (id === 'gosokKiri') gosokKetuk(-1);
+  else if (id === 'gosokKanan') gosokKetuk(1);
+  else if (id === 'cukup') cukupAmplas();
+  else if (id === 'lewati') lewatiTanda();
+  else if (id === 'tempel') tempel();
+}
+function lepasSemua() {
+  for (const s of ['kiri', 'kanan', 'utama', 'lanjut']) if (tahan[s]) tekanSlot(s, false);
+  if (tahan.panggung) { const id = tahan.panggung; tahan.panggung = null; lepasTahan(id); }
+  seret = null;
+}
+
+for (const [slot, b] of Object.entries(ELEMEN_SLOT)) {
+  b.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    try { b.setPointerCapture(e.pointerId); } catch (er) { /* tidak apa */ }
+    tekanSlot(slot, true);
+  });
+  const naik = () => { if (tahan[slot]) tekanSlot(slot, false); else terakhirNaik[slot] = performance.now(); };
+  b.addEventListener('pointerup', naik);
+  b.addEventListener('pointercancel', naik);
+  b.addEventListener('lostpointercapture', naik);
+  b.addEventListener('contextmenu', e => e.preventDefault());
+  // Klik tanpa pointerdown/keydown (misalnya dari pembaca layar) tetap menjalankan tombol sekali.
+  b.addEventListener('click', () => {
+    const t = performance.now();
+    if (t - terakhirTurun[slot] < 700 || t - terakhirNaik[slot] < 700) return;
+    tekanSlot(slot, true);
+    tekanSlot(slot, false);
+  });
+}
+
+// ---------- Panggung: seret untuk memutar, menggosok, mengoles, menekan ----------
+let seret = null;
+function titik(e) { const r = el.panggung.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+el.panggung.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  if (status !== 'main' || jeda || el.dialog.open) return;
+  e.preventDefault();
+  try { el.panggung.setPointerCapture(e.pointerId); } catch (er) { /* tidak apa */ }
+  const p = titik(e), g = geo();
+  seret = { id: e.pointerId, x: p.x, y: p.y, sudut: Math.atan2(p.y - g.cy, p.x - g.cx) };
+  if (fase === 'lem') { tahan.panggung = 'oles'; mulaiOles(); }
+  else if (fase === 'tekan') tahan.panggung = 'tekan';
+});
+el.panggung.addEventListener('pointermove', e => {
+  if (!seret || e.pointerId !== seret.id || status !== 'main' || jeda) return;
+  const p = titik(e), g = geo();
+  if (fase === 'celup') {
+    const jauh = Math.hypot(p.x - g.cx, p.y - g.cy);
+    if (jauh > g.R * 0.3) {
+      const s = Math.atan2(p.y - g.cy, p.x - g.cx);
+      let d = s - seret.sudut;
+      if (d > Math.PI) d -= TAU;
+      if (d < -Math.PI) d += TAU;
+      pel.putar = modDeg(pel.putar + d / RAD);
+      seret.sudut = s;
+    } else {
+      pel.putar = modDeg(pel.putar - (p.x - seret.x) / g.R / RAD);
+      seret.sudut = Math.atan2(p.y - g.cy, p.x - g.cx);
+    }
+  } else if (fase === 'amplas') {
+    gosokGeser((p.x - seret.x) / g.rc);
+  }
+  seret.x = p.x; seret.y = p.y;
+});
+function akhirSeret(e) {
+  if (!seret || (e && e.pointerId !== seret.id)) return;
+  seret = null;
+  if (tahan.panggung) { const id = tahan.panggung; tahan.panggung = null; lepasTahan(id); }
+}
+el.panggung.addEventListener('pointerup', akhirSeret);
+el.panggung.addEventListener('pointercancel', akhirSeret);
+el.panggung.addEventListener('lostpointercapture', akhirSeret);
+el.panggung.addEventListener('contextmenu', e => e.preventDefault());
+el.kendali.addEventListener('contextmenu', e => e.preventDefault());
+
+// ---------- Papan ketik ----------
+const slotDariElemen = a => (a === el.kiri ? 'kiri' : a === el.utama ? 'utama' : a === el.kanan ? 'kanan' : a === el.lanjut ? 'lanjut' : null);
+const kunciTahan = {};
+document.addEventListener('keydown', e => {
+  if (el.dialog.open || e.altKey || e.ctrlKey || e.metaKey) return;
+  const k = e.key;
+  let slot = null;
+  if (k === 'ArrowLeft' || e.code === 'KeyA') slot = 'kiri';
+  else if (k === 'ArrowRight' || e.code === 'KeyD') slot = 'kanan';
+  else if (k === 'l' || k === 'L') slot = 'lanjut';
+  else if (k === ' ' || k === 'Enter') {
+    const a = document.activeElement;
+    const s = slotDariElemen(a);
+    // Tombol lain (Cara main, lembar hasil) memakai perilaku bawaan peramban.
+    if (a && a !== document.body && a !== el.panggung && !s) return;
+    slot = s || 'utama';
+  }
+  if (!slot || status !== 'main') return;
+  e.preventDefault();
+  if (e.repeat) return;
+  kunciTahan[k] = slot;
+  tandaiTekan(slot, true);
+  tekanSlot(slot, true);
+});
+document.addEventListener('keyup', e => {
+  const slot = kunciTahan[e.key];
+  if (!slot) return;
+  delete kunciTahan[e.key];
+  e.preventDefault();
+  tandaiTekan(slot, false);
+  tekanSlot(slot, false);
+});
+function tandaiTekan(slot, on) { ELEMEN_SLOT[slot].classList.toggle('ditekan', on); }
+window.addEventListener('blur', () => { for (const k of Object.keys(kunciTahan)) delete kunciTahan[k]; lepasSemua(); });
+
+el.tombolHasil.addEventListener('click', () => {
+  // Tekanan yang masih tertahan dari langkah sebelumnya tidak boleh langsung melanjutkan.
+  if (performance.now() - waktuLembar < 450) return;
+  if (jenisLembar === 'mulai') mulaiMain();
+  else if (jenisLembar === 'pelanggan') {
+    if (sesi.ke >= PELANGGAN.length - 1) tampilkanSesi();
+    else { sesi.ke++; siapkanPelanggan(sesi.ke); mulaiMain(); }
+  } else if (jenisLembar === 'sesi') { sesiBaru(); mulaiMain(); }
+});
+el.tombolCara.addEventListener('click', () => {
+  el.dialog.showModal();
+  // Fokus ke judul supaya dialog terbuka dari atas; Tab berikutnya sampai ke tombol penutup.
+  el.dialog.scrollTop = 0;
+  el.judulCara.focus({ preventScroll: true });
+  aturJeda(true);
+});
+el.dialog.addEventListener('close', () => aturJeda(false));
+// Escape ditangani sendiri juga: Chrome kadang menahan Escape pertama setelah dialog dibuka.
+el.dialog.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); el.dialog.close(); } });
+el.dialog.addEventListener('click', e => {
+  if (e.target !== el.dialog) return;
+  const r = el.dialog.getBoundingClientRect();
+  if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) el.dialog.close();
+});
+function aturJeda(on) {
+  jeda = on;
+  if (on) lepasSemua();
+}
+
+// ---------- Akhir pelanggan dan sesi ----------
+const FRASA_WAKTU = {
+  cari: 'untuk mencari bocor', uji: 'untuk menguji', amplas: 'untuk mengamplas', lem: 'untuk mengoles lem',
+  tunggu: 'untuk menunggu lem kering', tekan: 'untuk menekan tambalan', sia: 'untuk menambal tanda yang meleset',
+  ulang: 'untuk mengulang tambalan yang gagal'
+};
+const SARAN_WAKTU = {
+  cari: 'Putar cepat di bagian yang tidak bergelembung, pelankan hanya saat gelembung muncul.',
+  uji: 'Putar cepat saat menguji; cukup satu keliling penuh lalu serahkan.',
+  amplas: 'Gosok bolak-balik dan berhenti begitu jarum masuk pita Cukup.',
+  lem: 'Lepas tombol lem begitu jarum masuk pita Pas.',
+  tunggu: 'Tempel begitu jarum masuk pita Siap; menunggu lebih lama tidak membuat tambalan lebih kuat.',
+  tekan: 'Tahan tekan tanpa melepas; bilah tekan turun lagi kalau dilepas.',
+  sia: 'Tandai hanya saat gelembung naik di dalam pita kapur, dan hapus tanda yang meleset sebelum menambal.',
+  ulang: 'Tambalan yang benar sekali jadi lebih cepat daripada mengulang: amplas sampai pita Cukup dan tunggu lem setengah kering.'
+};
+function letakDariPentil(sudut) {
+  const d = selisih(sudut, 0);
+  if (d > 160) return 'di seberang pentil';
+  if (d < 25) return 'dekat pentil';
+  return `sekitar ${Math.round(cmDari(d) / 5) * 5} cm dari pentil`;
+}
+function analisisBocor(bocor) {
+  const daftar = bocor.map(l => {
+    if (pakuAktif(l)) return { jenis: 'paku', l, urut: 0 };
+    const t = l.tutup != null ? tambalanById(l.tutup) : null;
+    if (t && t.gagal) return { jenis: t.gagal, l, t, urut: { basah: 1, tipis: 2, licin: 3 }[t.gagal] };
+    let dekat = null;
+    for (const tb of pel.tambalan) {
+      if (tb.lubangId != null) continue;
+      const d = selisih(tb.sudut, l.sudut);
+      if (d <= 25 && (!dekat || d < dekat.d)) dekat = { tb, d };
+    }
+    if (dekat) return { jenis: 'meleset', l, d: dekat.d, urut: 4 };
+    return { jenis: 'terlewat', l, urut: 5 };
+  });
+  daftar.sort((a, b) => a.urut - b.urut);
+  return daftar;
+}
+function teksSebab(s) {
+  switch (s.jenis) {
+    case 'paku': return { sebab: 'Paku masih menancap di ban dalam, jadi ban kempes lagi begitu dipakai.', saran: 'Putar paku ke pita kapur, lalu tahan Cabut paku sebelum menandai.' };
+    case 'basah': return { sebab: `Tambalan mengelupas karena lem masih basah saat ditempel: baru ${satu(s.t.umurLem)} detik, padahal lem setebal itu butuh ${satu(s.t.setengah)} detik untuk setengah kering.`, saran: 'Tunggu jarum masuk pita Siap dan lem tidak mengilap lagi, baru tempel.' };
+    case 'tipis': return { sebab: `Tambalan tidak lengket karena lemnya terlalu tipis (${bulat(s.t.tebal)}%, pita Pas mulai ${KONFIG.lemPasMin}%).`, saran: 'Tahan oles lem sampai jarum masuk pita Pas.' };
+    case 'licin': return { sebab: `Tambalan lepas karena permukaan karet masih licin: amplas baru ${bulat(s.t.amplas)}%.`, saran: 'Gosok bolak-balik sampai karet kusam dan jarum masuk pita Cukup.' };
+    case 'meleset': return { sebab: `Tanda kapur meleset ${cmDari(s.d)} cm dari lubang, jadi tambalan menutup karet yang utuh dan lubang ${UKURAN[s.l.ukuran].nama} ${letakDariPentil(s.l.sudut)} tetap bocor.`, saran: 'Tandai saat gelembung naik tepat di dalam pita kapur, bukan di sebelahnya.' };
+    default: return { sebab: `Bocor ${UKURAN[s.l.ukuran].nama} ${letakDariPentil(s.l.sudut)} belum ketemu.${s.l.ukuran === 'kecil' ? ' Gelembungnya kecil dan jarang.' : ''}`, saran: s.l.ukuran === 'kecil' ? 'Saat uji, putar pelan sampai dicelup 100% keliling dan tunggu gelembung kecil muncul.' : 'Saat uji, putar sampai dicelup 100% keliling sebelum menyerahkan ban.' };
+  }
+}
+
+function akhiriPelanggan(jenis, bocor) {
+  lepasSemua();
+  status = 'hasil';
+  const d = pel.data;
+  const dipakai = pel.sabarAwal - Math.max(0, pel.sabar);
+  const sisa = clamp(pel.sabar / pel.sabarAwal, 0, 1);
+  const efektif = pel.tambalan.filter(t => t.lubangId != null && !t.gagal);
+  const sia = pel.tambalan.filter(t => t.lubangId == null).length;
+  const mutuRata = efektif.length ? efektif.reduce((s, t) => s + t.mutu, 0) / efektif.length : 0;
+  const mutu = clamp(Math.round(mutuRata - KONFIG.potongSia * sia), 0, 100);
+  let h;
+  if (jenis === 'lulus') {
+    const nilai = Math.round(mutu * KONFIG.bobotMutu + sisa * 100 * KONFIG.bobotSabar);
+    h = { jenis, nilai, mutu, sisa, waktu: dipakai, judul: `${d.nama} berangkat lagi`,
+      sebab: `Ban keras, tidak ada gelembung. Mutu tambalan ${kataMutu(mutu)} (${mutu}), sisa kesabaran ${Math.round(sisa * 100)}%.${sia ? ` ${sia === 1 ? 'Satu' : sia} tambalan menutup karet yang utuh.` : ''}`,
+      saran: saranLulus(sia, sisa), ringkas: `mutu ${mutu}` };
+    ucap('Makasih, Mas! Berangkat dulu.', 6);
+  } else if (jenis === 'kempes') {
+    const daftar = analisisBocor(bocor);
+    const utama = teksSebab(daftar[0]);
+    const tambahan = daftar.length > 1 ? ` Masih ada ${daftar.length - 1} bocor lain juga.` : '';
+    h = { jenis, nilai: 0, mutu, sisa, waktu: dipakai, judul: `Ban ${d.nama} kempes lagi`, sebab: utama.sebab + tambahan, saran: utama.saran,
+      ringkas: ringkasSebab(daftar[0].jenis), sebabJenis: daftar[0].jenis };
+    ucap('Lho, kok kempes lagi?', 6);
+  } else {
+    const [akt, lama] = Object.entries(pel.waktu).sort((a, b) => b[1] - a[1])[0];
+    h = { jenis, nilai: 0, mutu, sisa: 0, waktu: dipakai, judul: `${d.nama} pergi`,
+      sebab: `${d.nama} pergi setelah menunggu ${bulat(pel.sabarAwal)} detik. Waktu paling banyak habis ${FRASA_WAKTU[akt]} (${bulat(lama)} detik).`,
+      saran: akt === 'tunggu' && rataTebal() > KONFIG.lemPasMaks
+        ? `Oles lem secukupnya di pita Pas. Lem setebal ${bulat(rataTebal())}% butuh ${satu(lamaSetengah(rataTebal()))} detik untuk setengah kering.`
+        : SARAN_WAKTU[akt], ringkas: 'kesabaran habis', sebabJenis: 'pergi' };
+  }
+  h.nama = d.nama;
+  pel.keadaanAkhir = h;
+  sesi.catatan[pel.indeks] = h;
+  sesi.total += h.nilai;
+  tampilkanHasilPelanggan(h);
+}
+function rataTebal() {
+  const t = pel.tambalan.map(x => x.tebal);
+  if (pel.kerja && pel.kerja.adaLem) t.push(pel.kerja.tebal);
+  return t.length ? t.reduce((a, b) => a + b, 0) / t.length : 0;
+}
+function kataMutu(m) { return m >= 90 ? 'rapi sekali' : m >= 75 ? 'rapi' : m >= 60 ? 'cukup' : 'seadanya'; }
+function ringkasSebab(j) {
+  return { paku: 'paku tertinggal', basah: 'lem masih basah', tipis: 'lem terlalu tipis', licin: 'amplas kurang', meleset: 'tanda meleset', terlewat: 'bocor terlewat', pergi: 'kesabaran habis' }[j] || j;
+}
+function saranLulus(sia, sisa) {
+  const tp = pel.tambalan.filter(t => t.lubangId != null && !t.gagal);
+  if (sia) return 'Hapus tanda yang meleset sebelum menekan Tambal; tiap tambalan sia-sia memotong nilai mutu.';
+  const tebal = tp.find(t => t.tebal > KONFIG.lemPasMaks);
+  if (tebal) return `Lem tadi ${bulat(tebal.tebal)}%, jadi baru setengah kering setelah ${satu(tebal.setengah)} detik. Oles sampai pita Pas saja.`;
+  const kurang = tp.find(t => t.amplas < KONFIG.amplasCukup);
+  if (kurang) return `Amplas baru ${bulat(kurang.amplas)}%. Gosok sampai pita Cukup supaya tambalan lebih kuat.`;
+  const tipis = tp.find(t => t.amplas > KONFIG.amplasTipis);
+  if (tipis) return `Amplas sampai ${bulat(tipis.amplas)}% membuat karet menipis. Berhenti begitu jarum masuk pita Cukup.`;
+  const kering = tp.find(t => t.mT < 100);
+  if (kering) return 'Lem sudah terlalu kering saat ditempel. Tempel selagi jarum di pita Siap.';
+  const lemKurang = tp.find(t => t.tebal < KONFIG.lemPasMin);
+  if (lemKurang) return `Lem ${bulat(lemKurang.tebal)}% masih di bawah pita Pas, jadi tambalan kurang kuat. Tahan oles sedikit lebih lama.`;
+  if (sisa < 0.4) return 'Tambalan rapi. Untuk nilai lebih tinggi, putar ban lebih cepat saat mencari dan menguji.';
+  return 'Tambalan rapi dan cepat. Pertahankan urutan ini.';
+}
+
+function tampilkanLembar(jenis) {
+  jenisLembar = jenis;
+  waktuLembar = performance.now();
+  el.hasil.hidden = false;
+  el.app.classList.add('ada-hasil');
+  requestAnimationFrame(() => el.tombolHasil.focus({ preventScroll: true }));
+}
+function sembunyikanLembar() {
+  el.hasil.hidden = true;
+  el.app.classList.remove('ada-hasil');
+}
+function isiAngka(pasangan) {
+  el.angkaHasil.replaceChildren(...pasangan.map(([k, v]) => {
+    const d = document.createElement('div');
+    d.className = 'angka-hasil';
+    const s = document.createElement('span'); s.textContent = k;
+    const b = document.createElement('strong'); b.textContent = v;
+    d.append(s, b);
+    return d;
+  }));
+}
+function tampilkanMulai() {
+  el.teksJudulHasil.textContent = 'Bengkel buka';
+  el.sebab.textContent = `Lima pelanggan antre hari ini, mulai dari ${PELANGGAN[0].nama}. Tambal ban dalam mereka sampai lulus uji sebelum kesabarannya habis.`;
+  el.daftarHasil.hidden = true;
+  el.barisSaran.hidden = false;
+  el.saran.textContent = 'Baca Cara main dulu kalau baru pertama kali; permainan berhenti selama dialognya terbuka.';
+  isiAngka([]);
+  el.angkaHasil.hidden = true;
+  el.rekorHasil.textContent = rekor ? `Rekor kamu ${rekor.nilai} (${rekor.lulus} dari 5 pelanggan).` : (simpanGagal ? 'Peramban ini tidak mengizinkan penyimpanan, jadi rekor tidak dicatat.' : 'Belum ada rekor di peramban ini.');
+  el.rekorHasil.classList.remove('baru');
+  el.tombolHasil.textContent = 'Terima ban pertama';
+  tampilkanLembar('mulai');
+}
+function tampilkanHasilPelanggan(h) {
+  el.teksJudulHasil.textContent = h.judul;
+  el.sebab.textContent = h.sebab;
+  el.daftarHasil.hidden = true;
+  el.barisSaran.hidden = false;
+  el.saran.textContent = h.saran;
+  el.angkaHasil.hidden = false;
+  isiAngka(h.jenis === 'lulus'
+    ? [['Nilai', `${h.nilai}`], ['Mutu', `${h.mutu}`], ['Sisa sabar', `${Math.round(h.sisa * 100)}%`], ['Waktu', `${bulat(h.waktu)} dtk`]]
+    : [['Nilai', '0'], ['Waktu', `${bulat(h.waktu)} dtk`], ['Total hari ini', `${sesi.total}`]]);
+  el.rekorHasil.textContent = `Pelanggan ${pel.indeks + 1} dari 5. Nilai hari ini ${sesi.total}.`;
+  el.rekorHasil.classList.remove('baru');
+  const terakhir = sesi.ke >= PELANGGAN.length - 1;
+  el.tombolHasil.textContent = terakhir ? 'Tutup bengkel, lihat hasil' : `Panggil ${PELANGGAN[sesi.ke + 1].nama}`;
+  umumkan(`${h.judul}. ${h.sebab} Saran: ${h.saran}`);
+  perbaruiHud(true);
+  tampilkanLembar('pelanggan');
+}
+function tampilkanSesi() {
+  status = 'selesai';
+  const c = sesi.catatan;
+  const lulus = c.filter(x => x && x.jenis === 'lulus').length;
+  el.teksJudulHasil.textContent = 'Bengkel tutup';
+  el.sebab.textContent = lulus === 5 ? 'Kelima pelanggan pulang dengan ban keras.' : `${lulus} dari 5 pelanggan pulang dengan ban keras.`;
+  el.daftarHasil.replaceChildren(...c.map(h => {
+    const li = document.createElement('li');
+    const a = document.createElement('span');
+    const b = document.createElement('b'); b.textContent = h.nama;
+    const ket = document.createElement('span'); ket.className = 'ket';
+    ket.textContent = h.jenis === 'lulus' ? `, berangkat lagi (${h.ringkas})` : h.jenis === 'kempes' ? `, kempes lagi: ${h.ringkas}` : ', pergi: kesabaran habis';
+    a.append(b, ket);
+    const n = document.createElement('strong'); n.textContent = String(h.nilai);
+    li.append(a, n);
+    return li;
+  }));
+  el.daftarHasil.hidden = false;
+  // Satu saran: sebab gagal yang paling sering, atau saran pelanggan bernilai terendah.
+  const gagal = c.filter(h => h.jenis !== 'lulus');
+  let saran;
+  if (gagal.length) {
+    const hit = {};
+    for (const h of gagal) hit[h.sebabJenis] = (hit[h.sebabJenis] || 0) + 1;
+    const top = Object.entries(hit).sort((a, b) => b[1] - a[1])[0][0];
+    saran = gagal.find(h => h.sebabJenis === top).saran;
+  } else saran = c.slice().sort((a, b) => a.nilai - b.nilai)[0].saran;
+  el.saran.textContent = saran;
+  el.barisSaran.hidden = false;
+  el.angkaHasil.hidden = false;
+  isiAngka([['Nilai hari ini', `${sesi.total}`], ['Berhasil', `${lulus} dari 5`]]);
+  const baru = !rekor || sesi.total > rekor.nilai;
+  if (baru && sesi.total > 0) {
+    const ok = simpanRekor({ nilai: sesi.total, lulus });
+    rekor = { nilai: sesi.total, lulus };
+    el.rekorHasil.textContent = ok ? 'Rekor baru di peramban ini.' : 'Nilai tertinggi hari ini, tapi peramban tidak mengizinkan penyimpanan rekor.';
+    el.rekorHasil.classList.toggle('baru', ok);
+  } else {
+    el.rekorHasil.textContent = rekor ? `Rekor kamu ${rekor.nilai} (${rekor.lulus} dari 5 pelanggan).` : 'Belum ada rekor: nilai nol tidak dicatat.';
+    el.rekorHasil.classList.remove('baru');
+  }
+  el.tombolHasil.textContent = 'Buka bengkel lagi';
+  umumkan(`Bengkel tutup. Nilai hari ini ${sesi.total}. ${el.sebab.textContent} Saran: ${saran}`);
+  perbaruiHud(true);
+  tampilkanLembar('sesi');
+}
+
+// ---------- Teks layar ----------
+let pesanSementara = { teks: '', sampai: 0 };
+function pesan(t) { pesanSementara = { teks: t, sampai: jamHias + 2.6 }; }
+let umumTerakhir = '';
+function umumkan(t) {
+  if (t === umumTerakhir) t += ' ';
+  umumTerakhir = t;
+  el.pengumum.textContent = t;
+}
+function fokusUtama() { requestAnimationFrame(() => { if (!el.dialog.open) el.utama.focus({ preventScroll: true }); }); }
+
+function teksPetunjuk() {
+  if (pesanSementara.teks && jamHias < pesanSementara.sampai) return pesanSementara.teks;
+  if (status === 'siap') return 'Bengkel siap buka. Pelanggan pertama sudah menunggu.';
+  if (status !== 'main') return 'Lihat hasilnya, lalu lanjut.';
+  const k = pel.kerja;
+  if (fase === 'celup') {
+    const paku = pakuDiPenanda();
+    if (paku) return 'Paku di pita kapur. Tahan Cabut paku sampai lepas.';
+    if (pel.lubang.some(pakuAktif)) return 'Ada paku menancap. Putar paku ke pita kapur, lalu tahan Cabut paku.';
+    if (tandaDiPenanda()) return 'Sudah ada tanda di sini. Tekan Hapus tanda kalau meleset.';
+    if (pel.sudahTambal) {
+      if (pel.tanda.length) return `Tanda baru: ${pel.tanda.length}. Tambal dulu, lalu uji lagi.`;
+      return persenCakupan() >= 100 ? 'Sudah satu keliling. Tidak ada gelembung? Serahkan ban.' : 'Uji: putar sampai satu keliling penuh. Masih bergelembung? Tandai lagi.';
+    }
+    if (pel.tanda.length) return `Tanda: ${pel.tanda.length}. Cari bocor lain, atau tekan Tambal.`;
+    return 'Putar ban. Saat gelembung naik di pita kapur, tekan Tandai kapur.';
+  }
+  if (fase === 'amplas') {
+    if (k.amplas >= KONFIG.amplasTipis) return 'Karet mulai menipis. Berhenti dan oles lem.';
+    if (k.amplas >= KONFIG.amplasCukup) return 'Sudah kusam merata. Tekan Cukup, oles lem.';
+    return 'Gosok bolak-balik sampai karet kusam dan jarum masuk pita Cukup.';
+  }
+  if (fase === 'lem') {
+    const s = keadaanLem(k);
+    if (s === 'kosong') return 'Tahan untuk mengoles lem. Lepas saat jarum di pita Pas.';
+    if (s === 'oles') return k.tebal > KONFIG.lemPasMaks ? 'Lem sudah tebal. Lepas sekarang.' : 'Mengoles lem. Lepas saat jarum di pita Pas.';
+    if (s === 'basah') return 'Lem masih basah dan mengilap. Tunggu jarum masuk pita Siap.';
+    if (s === 'siap') return 'Lem setengah kering. Tempel tambalan sekarang.';
+    return 'Lem terlalu kering, kurang lengket. Tempel sekarang atau tambah lem.';
+  }
+  if (fase === 'tekan') return 'Tahan tekan sampai bilah penuh supaya tambalan menempel.';
+  return '';
+}
+
+// Meteran serbaguna: zona berlabel, isi, dan jarum.
+const isiMeter = { kunci: '' };
+function aturMeter(m) {
+  const kunci = JSON.stringify([m.label, m.nilai, m.isi != null ? Math.round(m.isi * 400) : -1, m.jarum != null ? Math.round(m.jarum * 400) : -1, m.zona]);
+  if (kunci === isiMeter.kunci) return;
+  isiMeter.kunci = kunci;
+  el.meterLabel.textContent = m.label;
+  el.meterNilai.textContent = m.nilai;
+  el.zona.forEach((z, i) => {
+    const d = m.zona && m.zona[i];
+    if (!d) { z.hidden = true; return; }
+    z.hidden = false;
+    z.className = 'zona ' + d.jenis + (d.aktif ? ' aktif' : '');
+    z.style.left = (d.dari * 100) + '%';
+    z.style.width = ((d.sampai - d.dari) * 100) + '%';
+    z.textContent = d.teks || '';
+  });
+  el.isiUkur.hidden = m.isi == null;
+  if (m.isi != null) el.isiUkur.style.width = (clamp(m.isi, 0, 1) * 100) + '%';
+  el.jarumUkur.hidden = m.jarum == null;
+  if (m.jarum != null) el.jarumUkur.style.left = (clamp(m.jarum, 0, 1) * 100) + '%';
+}
+function meterSekarang() {
+  if (!pel || status === 'siap') return { label: 'Sudah dicelup', nilai: `${pel ? persenCakupan() : 0}% keliling`, isi: pel ? persenCakupan() / 100 : 0 };
+  const k = pel.kerja;
+  if (fase === 'celup') {
+    const paku = pel.lubang.find(l => pakuAktif(l) && l.cabut > 0);
+    if (paku) return { label: 'Mencabut paku', nilai: `${Math.round(paku.cabut / KONFIG.cabutPerlu * 100)}%`, isi: paku.cabut / KONFIG.cabutPerlu };
+    const c = persenCakupan();
+    return { label: pel.sudahTambal ? 'Uji: sudah dicelup' : 'Sudah dicelup', nilai: `${c}% keliling`, isi: c / 100 };
+  }
+  if (fase === 'amplas') {
+    const M = KONFIG.amplasMaks, a = k.amplas;
+    const kata = a < KONFIG.amplasLicin ? 'licin' : a < KONFIG.amplasCukup ? 'kurang' : a < KONFIG.amplasTipis ? 'cukup' : 'menipis';
+    return { label: 'Kasar permukaan', nilai: `${bulat(a)}%, ${kata}`, jarum: a / M, zona: [
+      { dari: 0, sampai: KONFIG.amplasLicin / M, jenis: 'arsir', teks: 'licin' },
+      { dari: KONFIG.amplasCukup / M, sampai: KONFIG.amplasTipis / M, jenis: 'pas', teks: 'Cukup', aktif: a >= KONFIG.amplasCukup && a < KONFIG.amplasTipis },
+      { dari: KONFIG.amplasTipis / M, sampai: 1, jenis: 'arsir', teks: 'tipis' }
+    ] };
+  }
+  if (fase === 'lem') {
+    const s = keadaanLem(k);
+    if (s === 'kosong' || s === 'oles') {
+      const t = k.tebal;
+      return { label: 'Tebal lem', nilai: `${bulat(t)}%`, jarum: t / 100, zona: [
+        { dari: 0, sampai: KONFIG.lemPasMin / 100, jenis: 'arsir', teks: 'tipis' },
+        { dari: KONFIG.lemPasMin / 100, sampai: KONFIG.lemPasMaks / 100, jenis: 'pas', teks: 'Pas', aktif: t >= KONFIG.lemPasMin && t <= KONFIG.lemPasMaks },
+        { dari: KONFIG.lemPasMaks / 100, sampai: 1, jenis: 'arsir', teks: 'tebal' }
+      ] };
+    }
+    const se = lamaSetengah(k.tebal), total = se + KONFIG.jendelaSiap + 3;
+    const kata = s === 'basah' ? 'basah' : s === 'siap' ? 'setengah kering' : 'terlalu kering';
+    return { label: `Lem ${bulat(k.tebal)}%`, nilai: kata, jarum: k.umur / total, zona: [
+      { dari: 0, sampai: se / total, jenis: 'arsir', teks: 'basah' },
+      { dari: se / total, sampai: (se + KONFIG.jendelaSiap) / total, jenis: 'pas', teks: 'Siap', aktif: s === 'siap' },
+      { dari: (se + KONFIG.jendelaSiap) / total, sampai: 1, jenis: 'arsir', teks: 'kering' }
+    ] };
+  }
+  if (fase === 'tekan') return { label: 'Tekan tambalan', nilai: `${Math.round(k.tekan / KONFIG.tekanPerlu * 100)}%`, isi: k.tekan / KONFIG.tekanPerlu };
+  return { label: '', nilai: '', isi: 0 };
+}
+
+const cacheTeks = new WeakMap();
+function aturTeks(node, t) { if (cacheTeks.get(node) !== t) { cacheTeks.set(node, t); node.textContent = t; } }
+const cacheTombol = {};
+function aturTombol(slot) {
+  const b = ELEMEN_SLOT[slot];
+  const m = modeSlot(slot);
+  const kunci = m ? `${m.id}|${m.nama}|${m.kunci}|${m.mati ? 1 : 0}` : 'kosong';
+  if (cacheTombol[slot] === kunci) return;
+  cacheTombol[slot] = kunci;
+  if (!m) {
+    b.classList.add('kosong');
+    b.setAttribute('aria-hidden', 'true');
+    b.tabIndex = -1;
+    if (document.activeElement === b) fokusUtama();
+    return;
+  }
+  b.classList.remove('kosong');
+  b.removeAttribute('aria-hidden');
+  b.tabIndex = 0;
+  b.innerHTML = `<span class="nama"></span><span class="kunci">${m.kunci}</span>`;
+  b.firstChild.textContent = m.nama;
+  if (m.mati) b.setAttribute('aria-disabled', 'true'); else b.removeAttribute('aria-disabled');
+}
+
+let hudKunci = '';
+function perbaruiHud(paksa) {
+  if (!pel) return;
+  const d = pel.data;
+  const sisa = clamp(pel.sabar / pel.sabarAwal, 0, 1);
+  const kata = status === 'hasil' || status === 'selesai'
+    ? (pel.keadaanAkhir && pel.keadaanAkhir.jenis === 'lulus' ? 'puas' : 'kecewa')
+    : sisa > 0.5 ? 'tenang' : sisa > 0.25 ? 'mulai gelisah' : 'kesal';
+  const kunci = [pel.indeks, Math.ceil(pel.sabar), kata, sesi.total, rekor ? rekor.nilai : -1, status].join('|');
+  if (kunci !== hudKunci || paksa) {
+    hudKunci = kunci;
+    el.labelPel.textContent = `Pelanggan ${pel.indeks + 1} dari 5`;
+    el.namaPel.textContent = d.nama;
+    el.peranPel.textContent = d.peran;
+    el.sabarDetik.textContent = `${Math.max(0, Math.ceil(pel.sabar))} dtk`;
+    el.sabarKata.textContent = kata;
+    el.nilai.textContent = String(sesi.total);
+    el.hudRekor.textContent = rekor ? `Rekor ${rekor.nilai}` : 'Belum ada rekor';
+    if (!el.ucapan.textContent) el.ucapan.textContent = `${d.nama}: "${d.ucap}"`;
+  }
+  el.isiSabar.style.width = (sisa * 100).toFixed(1) + '%';
+  if (pel.suasana !== kata && status === 'main') {
+    if (kata === 'mulai gelisah') { ucap('Masih lama ya?', 3.5); umumkan(`${d.nama} mulai gelisah.`); }
+    if (kata === 'kesal') { ucap('Saya bisa telat ini.', 3.5); umumkan(`${d.nama} kesal. Kesabarannya hampir habis.`); }
+  }
+  pel.suasana = kata;
+  // Daftar langkah di kolom kiri layar lebar
+  const sekarang = status === 'main' ? (fase === 'celup' ? (pel.sudahTambal ? 'uji' : 'cari') : fase) : null;
+  const urut = sekarang ? LANGKAH[sekarang][0] : 0;
+  for (const li of el.langkah.children) {
+    const n = LANGKAH[li.dataset.langkah][0];
+    if (li.dataset.langkah === sekarang) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
+    li.classList.toggle('lewat', !!sekarang && n < urut);
+  }
+}
+function perbaruiPanel() {
+  for (const s of ['kiri', 'utama', 'kanan', 'lanjut']) aturTombol(s);
+  aturTeks(el.petunjuk, teksPetunjuk());
+  if (pel && status === 'main') {
+    const ls = fase === 'celup' ? (pel.sudahTambal ? 'uji' : 'cari') : fase;
+    const [n, nama] = LANGKAH[ls];
+    let tambahan = '';
+    if (fase !== 'celup' && pel.putaranTambal && pel.putaranTambal.total > 1) tambahan = `, tanda ${pel.putaranTambal.nomor}/${pel.putaranTambal.total}`;
+    aturTeks(el.langkahTeks, `${n}/5 ${nama}${tambahan}`);
+  } else aturTeks(el.langkahTeks, status === 'siap' ? 'Siap buka' : 'Selesai');
+  aturMeter(meterSekarang());
+}
+
+// ---------- Simulasi ----------
+function perbarui(dt) {
+  jamHias += dt;
+  if (gerakHias) for (const p of letupan) p.umur += dt;
+  letupan = letupan.filter(p => p.umur < 0.35);
+  if (transisi > 0) transisi = Math.max(0, transisi - dt);
+  if (status !== 'main' || jeda || !pel) {
+    gerakGelembung(dt);
+    return;
+  }
+  jam += dt;
+  pel.waktuMain += dt;
+  pel.sabar -= dt;
+  pel.waktu[aktivitas()] += dt;
+  if (pel.sabar <= 0) { pel.sabar = 0; akhiriPelanggan('pergi', []); return; }
+
+  if (fase === 'celup') {
+    for (const slot of ['kiri', 'kanan']) {
+      const id = tahan[slot];
+      if (id !== 'putarKiri' && id !== 'putarKanan') continue;
+      lamaTahan[slot] += dt;
+      // Awal tahan pelan untuk membidik, lalu makin cepat untuk menyapu keliling.
+      const kec = lamaTahan[slot] < 0.18 ? 0 : lerp(KONFIG.putarLambat, KONFIG.putarCepat, clamp((lamaTahan[slot] - 0.18) / KONFIG.rampPutar, 0, 1));
+      pel.putar = modDeg(pel.putar + (id === 'putarKiri' ? 1 : -1) * kec * dt);
+    }
+    catatCakupan();
+    const l = pel.lubang.find(x => pakuAktif(x));
+    if (l) {
+      if (tahan.utama === 'cabut' && selisih(l.sudut, sudutDiPenanda()) <= KONFIG.tolPaku) {
+        l.cabut += dt;
+        if (l.cabut >= KONFIG.cabutPerlu) selesaiCabut(l);
+      } else l.cabut = 0;
+    }
+    pancarkanGelembung(dt);
+  } else if (fase === 'amplas') {
+    const k = pel.kerja;
+    k.alat = lerp(k.alat, k.alatSasaran, 1 - Math.exp(-dt * 22));
+  } else if (fase === 'lem') {
+    const k = pel.kerja;
+    if (k.mengoles) { k.tebal = Math.min(100, k.tebal + KONFIG.lemLaju * dt); k.umur = 0; }
+    else if (k.adaLem) k.umur += dt;
+  } else if (fase === 'tekan') {
+    const k = pel.kerja;
+    k.animTempel = Math.min(1, k.animTempel + dt / 0.22);
+    if (tahan.utama === 'tekan' || tahan.panggung === 'tekan') {
+      k.tekan += dt;
+      if (k.tekan >= KONFIG.tekanPerlu) { k.tekan = KONFIG.tekanPerlu; selesaiTekan(); }
+    } else k.tekan = Math.max(0, k.tekan - KONFIG.tekanLuruh * dt);
+  }
+  for (const x of pel.lubang) if (x.animCabut > 0) x.animCabut = x.animCabut + dt > 0.45 ? 0 : x.animCabut + dt;
+  gerakGelembung(dt);
+}
+
+function pancarkanGelembung(dt) {
+  const g = geo();
+  const tebalBan = g.w / g.R;
+  for (const s of sumberBocor()) {
+    const lay = sudutLayar(s.sudut) * RAD;
+    const sn = Math.sin(lay);
+    if (sn <= KONFIG.airSin + 0.03) continue;
+    if (s.tambalan) { s.tambalan.celupGagal += dt; if (s.tambalan.celupGagal > 0.3) s.tambalan.terlihat = true; }
+    s.obj.jeda -= dt;
+    if (s.obj.jeda > 0) continue;
+    s.obj.jeda = (1 / s.laju) * (0.6 + Math.random() * 0.8);
+    const rr = 1 + tebalBan * 0.5;
+    gelembung.push({
+      x: Math.cos(lay) * rr, y: sn * rr,
+      r: lerp(s.r[0], s.r[1], Math.random()), vy: 0, umur: 0, fase: Math.random() * TAU
+    });
+  }
+}
+function gerakGelembung(dt) {
+  if (!gelembung.length) return;
+  const sisa = [];
+  for (const b of gelembung) {
+    b.umur += dt;
+    b.vy = Math.min(0.62 + b.r * 6, b.vy + dt * 3);
+    b.y -= b.vy * dt;
+    if (gerakHias) b.x += Math.sin(b.umur * 9 + b.fase) * 0.035 * dt;
+    if (b.y <= KONFIG.airSin + b.r * 0.4) {
+      if (gerakHias) letupan.push({ x: b.x, y: KONFIG.airSin, r: b.r, umur: 0 });
+      continue;
+    }
+    sisa.push(b);
+  }
+  gelembung = sisa.length > 260 ? sisa.slice(-260) : sisa;
+}
+
+// ---------- Warna ----------
+const C = {};
+const NAMA_WARNA = ['kertas', 'lembar', 'tinta', 'tinta-2', 'oranye', 'aksen-teks', 'garis', 'garis-halus',
+  'dinding', 'dinding-bawah', 'lantai', 'lantai-gelap', 'terpal', 'terpal-gelap', 'kayu', 'kayu-gelap', 'karet', 'karet-kilap',
+  'karet-gelap', 'seng', 'seng-gelap', 'seng-dalam', 'air', 'air-muka', 'kapur', 'kuningan', 'besi', 'lem', 'lem-kering',
+  'tepi-tambalan', 'amplas', 'kulit-tangan', 'lengan', 'garis-dunia'];
+let temaGelap = false;
+function bacaWarna() {
+  const cs = getComputedStyle(document.documentElement);
+  for (const n of NAMA_WARNA) C[n] = cs.getPropertyValue('--' + n).trim();
+  temaGelap = cs.getPropertyValue('color-scheme').trim() === 'dark';
+  C.fontJudul = cs.getPropertyValue('--font-judul').trim();
+  C.fontTeks = cs.getPropertyValue('--font-teks').trim();
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', bacaWarna);
+new MutationObserver(bacaWarna).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+function campur(a, b, t) {
+  const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const x = p(a), y = p(b);
+  return `rgb(${x.map((v, i) => Math.round(lerp(v, y[i], clamp(t, 0, 1)))).join(',')})`;
+}
+
+// ---------- Ukuran ----------
+const ukuran = { w: 1, h: 1, dpr: 1 };
+function ukurKanvas() {
+  const r = el.panggung.getBoundingClientRect();
+  ukuran.w = Math.max(1, r.width); ukuran.h = Math.max(1, r.height);
+  ukuran.dpr = Math.min(2.5, window.devicePixelRatio || 1);
+  el.kanvas.width = Math.round(ukuran.w * ukuran.dpr);
+  el.kanvas.height = Math.round(ukuran.h * ukuran.dpr);
+  geoCache = null;
+}
+new ResizeObserver(ukurKanvas).observe(el.panggung);
+
+let geoCache = null;
+function geo() {
+  if (geoCache && geoCache.W === ukuran.w && geoCache.H === ukuran.h) return geoCache;
+  const W = ukuran.w, H = ukuran.h;
+  const R = Math.max(36, Math.min(W * 0.3, (H - 18) / 2.42, 235));
+  const w = R * 0.2;
+  const cx = W / 2, cy = H - 10 - R * 1.24;
+  const yAir = cy + R * KONFIG.airSin;
+  const sisi = (W - 2.4 * R) / 2;
+  const lebar = sisi > 150;
+  const tTerpal = Math.max(12, Math.min(26, H * 0.045));
+  let lantai, P, M, papan;
+  if (lebar) {
+    lantai = H * 0.56;
+    const u = Math.min(H * 0.0036, sisi * 0.0075);
+    P = { x: sisi * 0.45, y: lantai, u };
+    M = { x: W - sisi * 0.47, y: lantai, u };
+    papan = { x: W - sisi * 0.5, r: 30 * u, y: tTerpal + 12 + 30 * u };
+  } else {
+    lantai = Math.max(H * 0.2, cy - R * 0.72);
+    const u = Math.min(lantai * 0.0068, W * 0.0028);
+    P = { x: Math.max(36 * u + 4, W * 0.12), y: lantai, u };
+    M = { x: W - Math.max(56 * u + 4, W * 0.13), y: lantai, u };
+    // Papan nama di tengah atas kalau ruang di atas ban cukup; kalau sempit (HP potret), di atas motor.
+    const ruangAtas = cy - R - w / 2 - tTerpal;
+    if (ruangAtas >= 52 * u + 12) {
+      const r = Math.min(30 * u, (ruangAtas - 20) / 2);
+      papan = { x: W / 2, r, y: tTerpal + 6 + r };
+    } else {
+      const r = Math.max(14, Math.min(26 * u, (lantai - 78 * u - tTerpal - 10) / 2));
+      papan = { x: M.x, r, y: tTerpal + 5 + r };
+    }
+  }
+  // Meja kerja dimulai sedikit di bawah garis lantai, jadi pelanggan di bangku tetap terlihat utuh.
+  // Di panggung pendek (HP mendatar) meja dinaikkan supaya area kerja tetap cukup besar untuk digosok.
+  const yMeja = Math.min(lantai + 8, H - Math.max(120, H * 0.4));
+  const tk = Math.min((H - yMeja) * 0.55, W * 0.3, 160);
+  const yT = yMeja + (H - yMeja) * 0.48;
+  const rc = tk * 0.4;
+  const mejaL = 0, mejaR = W;
+  geoCache = { W, H, R, w, cx, cy, yAir, lebar, lantai, P, M, papan, tTerpal, yMeja, tk, yT, rc, cxK: W / 2, mejaL, mejaR };
+  return geoCache;
+}
+
+// ---------- Gambar ----------
+function rrect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function garisDunia(lw) { ctx.lineWidth = lw; ctx.strokeStyle = C['garis-dunia']; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; }
+
+function gambar() {
+  const g = geo(), d = ukuran.dpr;
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+  ctx.clearRect(0, 0, g.W, g.H);
+  const tampil = !pel || fase === 'celup' || status !== 'main' ? 'celup' : 'kerja';
+  gambarLatar(g, tampil);
+  if (tampil === 'celup') gambarCelup(g); else gambarKerja(g);
+  if (temaGelap) gambarMalam(g, tampil);
+  gambarUcapan(g);
+  if (transisi > 0) {
+    ctx.globalAlpha = clamp(transisi / 0.28, 0, 1) * 0.85;
+    ctx.fillStyle = C.kertas;
+    ctx.fillRect(0, 0, g.W, g.H);
+    ctx.globalAlpha = 1;
+  }
+}
+
+function gambarLatar(g, tampil) {
+  const { W, H, lantai } = g;
+  ctx.fillStyle = C.dinding;
+  ctx.fillRect(0, 0, W, lantai);
+  ctx.fillStyle = C['dinding-bawah'];
+  ctx.fillRect(0, lantai - g.P.u * 16, W, g.P.u * 16);
+  ctx.fillStyle = C.lantai;
+  ctx.fillRect(0, lantai, W, H - lantai);
+  // Noda oli di lantai semen: bengkel yang sudah lama dipakai
+  ctx.fillStyle = C['lantai-gelap'];
+  for (const [fx, fy, rx] of [[0.2, 0.18, 0.05], [0.72, 0.35, 0.07], [0.43, 0.7, 0.04], [0.9, 0.8, 0.05]]) {
+    ctx.beginPath();
+    ctx.ellipse(W * fx, lantai + (H - lantai) * fy, W * rx, W * rx * 0.28, 0, 0, TAU);
+    ctx.fill();
+  }
+  gambarPapanNama(g);
+  gambarMotor(g);
+  gambarPelanggan(g);
+  gambarTerpal(g);
+}
+
+function gambarTerpal(g) {
+  const { W, tTerpal: t } = g;
+  const jarak = Math.max(70, W / Math.max(3, Math.round(W / 110)));
+  ctx.fillStyle = C.terpal;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(W, 0);
+  ctx.lineTo(W, t * 0.7);
+  for (let x = W; x > 0; x -= jarak) {
+    const x2 = Math.max(0, x - jarak);
+    ctx.quadraticCurveTo((x + x2) / 2, t * 1.25, x2, t * 0.7);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = C['terpal-gelap'];
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  // tali pengikat terpal
+  ctx.fillStyle = C['terpal-gelap'];
+  for (let x = W; x >= 0; x -= jarak) ctx.fillRect(x - 2, 0, 4, t * 0.75);
+}
+
+function gambarPapanNama(g) {
+  const { x, y, r } = g.papan;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(-0.07);
+  // paku gantungan
+  ctx.strokeStyle = C['garis-dunia'];
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(0, -r * 1.02); ctx.lineTo(0, -r * 1.25); ctx.stroke();
+  // ban bekas
+  ctx.fillStyle = C.karet;
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.arc(0, 0, r * 0.42, 0, TAU, true); ctx.fill('evenodd');
+  ctx.strokeStyle = C['karet-kilap'];
+  ctx.lineWidth = Math.max(1, r * 0.05);
+  for (let i = 0; i < 24; i++) {
+    const a = i / 24 * TAU;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * r * 0.9, Math.sin(a) * r * 0.9);
+    ctx.lineTo(Math.cos(a) * r * 0.99, Math.sin(a) * r * 0.99);
+    ctx.stroke();
+  }
+  ctx.fillStyle = C.dinding;
+  ctx.beginPath(); ctx.arc(0, 0, r * 0.42, 0, TAU); ctx.fill();
+  // Tulisan cat putih tangan, ciri papan tambal ban pinggir jalan
+  ctx.fillStyle = C.kapur;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `${Math.round(r * 0.36)}px ${C.fontJudul}`;
+  ctx.fillText('TAMBAL', 0, -r * 0.66);
+  ctx.font = `${Math.round(r * 0.4)}px ${C.fontJudul}`;
+  ctx.fillText('BAN', 0, r * 0.67);
+  ctx.restore();
+}
+
+function gambarMotor(g) {
+  if (!pel) return;
+  const { x, y, u } = g.M;
+  const rp = pel.data.rupa;
+  const s = u;
+  ctx.save();
+  ctx.translate(x, y);
+  garisDunia(Math.max(1.2, 1.6 * s));
+  // roda depan (kiri, menghadap bengkel) dan roda belakang yang kempes karena ban dalamnya sedang ditambal
+  const rd = 13 * s;
+  ctx.fillStyle = C.karet;
+  ctx.beginPath(); ctx.arc(-36 * s, -rd, rd, 0, TAU); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(32 * s, -rd * 0.8, rd * 1.12, rd * 0.8, 0, 0, TAU); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = C.besi;
+  ctx.beginPath(); ctx.arc(-36 * s, -rd, rd * 0.45, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(32 * s, -rd * 0.95, rd * 0.45, 0, TAU); ctx.fill();
+  // badan skuter
+  ctx.fillStyle = rp.motor;
+  ctx.beginPath();
+  ctx.moveTo(-40 * s, -rd * 1.9);
+  ctx.lineTo(-30 * s, -62 * s);
+  ctx.lineTo(-22 * s, -62 * s);
+  ctx.lineTo(-20 * s, -24 * s);
+  ctx.lineTo(8 * s, -22 * s);
+  ctx.lineTo(14 * s, -40 * s);
+  ctx.lineTo(48 * s, -40 * s);
+  ctx.quadraticCurveTo(54 * s, -26 * s, 46 * s, -20 * s);
+  ctx.lineTo(18 * s, -18 * s);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  // jok
+  ctx.fillStyle = C['garis-dunia'];
+  rrect(12 * s, -46 * s, 36 * s, 7 * s, 3 * s); ctx.fill();
+  // setang
+  ctx.beginPath(); ctx.moveTo(-34 * s, -64 * s); ctx.lineTo(-18 * s, -68 * s); ctx.stroke();
+  // bawaan di jok belakang
+  if (rp.bawaan === 'keranjang') {
+    ctx.fillStyle = '#B98B4E';
+    rrect(26 * s, -66 * s, 26 * s, 20 * s, 3 * s); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#8A6334'; ctx.lineWidth = 1;
+    for (let i = 1; i < 5; i++) { ctx.beginPath(); ctx.moveTo((26 + i * 5.2) * s, -66 * s); ctx.lineTo((26 + i * 5.2) * s, -46 * s); ctx.stroke(); }
+    ctx.fillStyle = '#5E8A3A';
+    ctx.beginPath(); ctx.arc(32 * s, -68 * s, 5 * s, 0, TAU); ctx.arc(42 * s, -69 * s, 6 * s, 0, TAU); ctx.fill();
+  } else if (rp.bawaan === 'kardus' || rp.bawaan === 'kotak') {
+    ctx.fillStyle = rp.bawaan === 'kardus' ? '#C49A62' : '#E2DCCD';
+    rrect(22 * s, -76 * s, 32 * s, 30 * s, 2 * s); ctx.fill(); garisDunia(Math.max(1.2, 1.6 * s)); ctx.stroke();
+    if (rp.bawaan === 'kotak') { ctx.fillStyle = rp.baju; ctx.fillRect(22 * s, -66 * s, 32 * s, 6 * s); }
+    else { ctx.strokeStyle = '#8F6B3C'; ctx.beginPath(); ctx.moveTo(38 * s, -76 * s); ctx.lineTo(38 * s, -46 * s); ctx.stroke(); }
+  }
+  ctx.restore();
+}
+
+function gambarPelanggan(g) {
+  const { x, y, u } = g.P;
+  ctx.save();
+  ctx.translate(x, y);
+  garisDunia(Math.max(1.2, 1.6 * u));
+  // bangku kayu
+  ctx.fillStyle = C.kayu;
+  rrect(-36 * u, -32 * u, 78 * u, 7 * u, 2 * u); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = C['kayu-gelap'];
+  ctx.fillRect(-31 * u, -25 * u, 5 * u, 25 * u);
+  ctx.fillRect(32 * u, -25 * u, 5 * u, 25 * u);
+  if (!pel) { ctx.restore(); return; }
+  const rp = pel.data.rupa;
+  const akhir = pel.keadaanAkhir;
+  if (akhir && akhir.jenis === 'pergi') {
+    // yang tersisa hanya bekas duduk: bangku kosong
+    ctx.restore();
+    return;
+  }
+  const sisa = clamp(pel.sabar / pel.sabarAwal, 0, 1);
+  const suasana = akhir ? (akhir.jenis === 'lulus' ? 'puas' : 'kecewa') : status === 'main' ? (sisa > 0.5 ? 'tenang' : sisa > 0.25 ? 'gelisah' : 'kesal') : 'tenang';
+  const t = jamHias;
+  const goyang = gerakHias && suasana === 'kesal' ? Math.sin(t * 14) * 2 * u : 0;
+  const napas = gerakHias ? Math.sin(t * 2.2) * 0.6 * u : 0;
+  // helm di bangku (pengojek) atau tas
+  if (rp.kepala === 'helm' || rp.bawaan === 'tas') {
+    ctx.fillStyle = rp.aksen;
+    if (rp.kepala === 'helm') { ctx.beginPath(); ctx.arc(-22 * u, -39 * u, 8 * u, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+    else { rrect(-30 * u, -46 * u, 14 * u, 14 * u, 2 * u); ctx.fill(); ctx.stroke(); }
+  }
+  // kaki: paha mendatar, betis turun ke lantai
+  ctx.strokeStyle = rp.celana;
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 9 * u;
+  ctx.beginPath(); ctx.moveTo(2 * u, -36 * u); ctx.lineTo(20 * u, -36 * u); ctx.lineTo(22 * u + goyang, -6 * u); ctx.stroke();
+  ctx.fillStyle = C['garis-dunia'];
+  rrect(18 * u + goyang, -6 * u, 12 * u, 5 * u, 2 * u); ctx.fill();
+  // badan
+  const by = -38 * u + napas;
+  ctx.fillStyle = rp.baju;
+  garisDunia(Math.max(1.2, 1.6 * u));
+  rrect(-9 * u, by - 34 * u, 20 * u, 37 * u, 7 * u); ctx.fill(); ctx.stroke();
+  // kepala
+  const hx = 2 * u, hy = by - 44 * u;
+  ctx.fillStyle = rp.kulit;
+  ctx.beginPath(); ctx.arc(hx, hy, 9 * u, 0, TAU); ctx.fill(); ctx.stroke();
+  // penutup kepala
+  ctx.fillStyle = rp.kepala === 'kerudung' ? rp.aksen : rp.kepala === 'topi' ? rp.aksen : '#1B1612';
+  if (rp.kepala === 'kerudung') {
+    ctx.beginPath(); ctx.arc(hx, hy - 1 * u, 11 * u, Math.PI * 0.85, Math.PI * 2.15); ctx.lineTo(hx + 9 * u, hy + 14 * u); ctx.lineTo(hx - 10 * u, hy + 14 * u); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = rp.kulit; ctx.beginPath(); ctx.arc(hx + 2 * u, hy + 1 * u, 6.5 * u, 0, TAU); ctx.fill();
+  } else if (rp.kepala === 'topi') {
+    ctx.beginPath(); ctx.arc(hx, hy - 2 * u, 9.5 * u, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillRect(hx, hy - 3.5 * u, 13 * u, 3 * u);
+  } else if (rp.kepala === 'kuncir') {
+    ctx.beginPath(); ctx.arc(hx, hy - 2 * u, 9.5 * u, Math.PI * 0.9, Math.PI * 2.05); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(hx - 11 * u, hy + 2 * u, 3.5 * u, 7 * u, 0.4, 0, TAU); ctx.fill();
+  } else if (rp.kepala === 'handuk') {
+    ctx.beginPath(); ctx.arc(hx, hy - 2 * u, 9.5 * u, Math.PI * 0.95, Math.PI * 2.05); ctx.fill();
+    ctx.fillStyle = rp.aksen;
+    rrect(-8 * u, by - 36 * u, 18 * u, 6 * u, 3 * u); ctx.fill(); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.arc(hx, hy - 2 * u, 9.5 * u, Math.PI * 0.95, Math.PI * 2.05); ctx.fill();
+  }
+  // wajah: mata, alis sesuai suasana hati
+  ctx.fillStyle = C['garis-dunia'];
+  ctx.beginPath(); ctx.arc(hx + 5 * u, hy - 0.5 * u, 1.1 * u, 0, TAU); ctx.fill();
+  ctx.strokeStyle = C['garis-dunia'];
+  ctx.lineWidth = Math.max(1, 1.2 * u);
+  ctx.beginPath();
+  if (suasana === 'kesal' || suasana === 'kecewa') { ctx.moveTo(hx + 2.5 * u, hy - 4.5 * u); ctx.lineTo(hx + 7.5 * u, hy - 3 * u); }
+  else { ctx.moveTo(hx + 3 * u, hy - 3.8 * u); ctx.lineTo(hx + 7.5 * u, hy - 4 * u); }
+  ctx.stroke();
+  ctx.beginPath();
+  if (suasana === 'puas') ctx.arc(hx + 4.5 * u, hy + 3 * u, 2.4 * u, 0.1, Math.PI - 0.1);
+  else if (suasana === 'kesal' || suasana === 'kecewa') { ctx.moveTo(hx + 2.5 * u, hy + 5 * u); ctx.lineTo(hx + 7 * u, hy + 4.2 * u); }
+  else { ctx.moveTo(hx + 3 * u, hy + 4.4 * u); ctx.lineTo(hx + 6.5 * u, hy + 4.4 * u); }
+  ctx.stroke();
+  // lengan sesuai suasana: tenang di lutut, gelisah memegang ponsel, kesal bersedekap, puas melambai
+  ctx.strokeStyle = rp.baju;
+  ctx.lineWidth = 6.5 * u;
+  ctx.lineCap = 'round';
+  const bahu = { x: 2 * u, y: by - 27 * u };
+  ctx.beginPath();
+  if (suasana === 'gelisah') {
+    ctx.moveTo(bahu.x, bahu.y); ctx.lineTo(10 * u, by - 12 * u); ctx.lineTo(9 * u, by - 30 * u);
+  } else if (suasana === 'kesal' || suasana === 'kecewa') {
+    ctx.moveTo(bahu.x, bahu.y); ctx.lineTo(12 * u, by - 14 * u); ctx.lineTo(-4 * u, by - 15 * u);
+  } else if (suasana === 'puas') {
+    const lambai = gerakHias ? Math.sin(t * 8) * 4 * u : 0;
+    ctx.moveTo(bahu.x, bahu.y); ctx.lineTo(13 * u, by - 40 * u); ctx.lineTo(16 * u + lambai, by - 54 * u);
+  } else {
+    ctx.moveTo(bahu.x, bahu.y); ctx.lineTo(8 * u, by - 10 * u); ctx.lineTo(18 * u, by + 1 * u);
+  }
+  ctx.stroke();
+  // ponsel di tangan saat gelisah
+  if (suasana === 'gelisah') {
+    ctx.fillStyle = '#2B3036';
+    rrect(6.5 * u, by - 37 * u, 6 * u, 9 * u, 1.2 * u); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function gambarCelup(g) {
+  const { cx, cy, R, w, yAir, H } = g;
+  const yRim = yAir - 0.14 * R, aRim = 1.34 * R, bRim = 0.13 * R;
+  const yDasar = cy + R + w / 2 + 0.1 * R, aDasar = 1.12 * R;
+  const bentuk = () => {
+    ctx.beginPath();
+    ctx.ellipse(cx, yRim, aRim, bRim, 0, Math.PI, 0);
+    ctx.lineTo(cx + aDasar, yDasar);
+    ctx.ellipse(cx, yDasar, aDasar, bRim * 0.8, 0, 0, Math.PI);
+    ctx.closePath();
+  };
+  // bayangan baskom di lantai
+  ctx.fillStyle = C['lantai-gelap'];
+  ctx.beginPath(); ctx.ellipse(cx, yDasar + 3, aDasar * 1.12, bRim, 0, 0, TAU); ctx.fill();
+  // badan baskom seng dari dalam (dinding belakang)
+  ctx.fillStyle = C['seng-dalam'];
+  bentuk(); ctx.fill();
+  // Ban dalam
+  if (pel) gambarCincin(g);
+  // Air: baskom digambar terpotong supaya bagian ban yang tercelup dan gelembungnya terlihat.
+  ctx.save();
+  bentuk(); ctx.clip();
+  ctx.globalAlpha = 0.55;
+  ctx.fillStyle = C.air;
+  ctx.beginPath();
+  ctx.ellipse(cx, yAir, aRim * 0.97, bRim * 0.9, 0, Math.PI, 0);
+  ctx.lineTo(cx + aRim, H + 10);
+  ctx.lineTo(cx - aRim, H + 10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  // pita kapur penanda di tengah baskom
+  const lebarPita = Math.sin(KONFIG.tolTanda * RAD) * R;
+  ctx.fillStyle = 'rgba(247,244,234,0.13)';
+  ctx.fillRect(cx - lebarPita, yAir, lebarPita * 2, yDasar - yAir);
+  ctx.strokeStyle = C.kapur;
+  ctx.globalAlpha = 0.85;
+  ctx.lineWidth = 1.6;
+  ctx.setLineDash([5, 5]);
+  for (const sx of [-lebarPita, lebarPita]) { ctx.beginPath(); ctx.moveTo(cx + sx, yAir + 4); ctx.lineTo(cx + sx, yDasar); ctx.stroke(); }
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+  // gelembung
+  for (const b of gelembung) {
+    const r = Math.max(1.5, b.r * R);
+    const x = cx + b.x * R, y = cy + b.y * R;
+    const muncul = clamp(b.umur / 0.08, 0.35, 1);
+    ctx.fillStyle = 'rgba(255,255,255,0.28)';
+    ctx.beginPath(); ctx.arc(x, y, r * muncul, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = Math.max(1, r * 0.32);
+    ctx.stroke();
+    if (r > 2.6) { ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.arc(x - r * 0.35, y - r * 0.35, r * 0.25, 0, TAU); ctx.fill(); }
+  }
+  ctx.restore();
+  // permukaan air
+  ctx.strokeStyle = C['air-muka'];
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.9;
+  ctx.beginPath();
+  const n = 40;
+  for (let i = 0; i <= n; i++) {
+    const a = Math.PI * (i / n);
+    const riak = gerakHias ? Math.sin(jamHias * 3 + i * 0.7) * 1.2 : 0;
+    const x = cx + Math.cos(a) * aRim * 0.97, y = yAir + Math.sin(a) * bRim * 0.9 + riak;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  // letupan gelembung di permukaan (hiasan)
+  ctx.strokeStyle = C['air-muka'];
+  ctx.lineWidth = 1.2;
+  for (const p of letupan) {
+    const k = p.umur / 0.35;
+    ctx.globalAlpha = 1 - k;
+    ctx.beginPath(); ctx.ellipse(cx + p.x * R, yAir, (p.r * R + 2) * (1 + k * 1.6), (p.r * R + 1) * 0.5 * (1 + k), 0, 0, TAU); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  // bibir baskom
+  const lwRim = Math.max(3, R * 0.05);
+  ctx.strokeStyle = C.seng;
+  ctx.lineWidth = lwRim;
+  ctx.beginPath(); ctx.ellipse(cx, yRim, aRim, bRim, 0, 0, TAU); ctx.stroke();
+  garisDunia(1.5);
+  ctx.beginPath(); ctx.ellipse(cx, yRim, aRim + lwRim / 2, bRim + lwRim / 2, 0, 0, TAU); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx - aRim, yRim); ctx.lineTo(cx - aDasar, yDasar);
+  ctx.ellipse(cx, yDasar, aDasar, bRim * 0.8, 0, Math.PI, 0, true);
+  ctx.lineTo(cx + aRim, yRim);
+  ctx.stroke();
+  // segitiga kapur di bibir baskom menunjuk pita penanda
+  const ty = yRim + bRim + 3;
+  ctx.fillStyle = C.kapur;
+  ctx.strokeStyle = C['garis-dunia'];
+  ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(cx - 8, ty - 3); ctx.lineTo(cx + 8, ty - 3); ctx.lineTo(cx, ty + 9); ctx.closePath(); ctx.fill(); ctx.stroke();
+  // tangan tukang memegang ban
+  if (pel && status !== 'siap') gambarTangan(g);
+}
+
+function titikCincin(g, sudutL, jari) {
+  return { x: g.cx + Math.cos(sudutL * RAD) * jari, y: g.cy + Math.sin(sudutL * RAD) * jari };
+}
+function lingkaranKapur(x, y, r, benih, lw) {
+  const acak = buatAcak(benih);
+  ctx.strokeStyle = C.kapur;
+  ctx.lineWidth = lw;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  const n = 16;
+  for (let i = 0; i <= n + 2; i++) {
+    const a = i / n * TAU;
+    const rr = r * (0.92 + acak() * 0.16);
+    const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr;
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+}
+function gambarCincin(g) {
+  const { cx, cy, R, w } = g;
+  // badan ban
+  ctx.strokeStyle = C.karet;
+  ctx.lineWidth = w;
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
+  // sisi luar lebih gelap, kilap di sisi dalam kiri atas (cahaya dari kiri atas)
+  ctx.strokeStyle = C['karet-gelap'];
+  ctx.lineWidth = w * 0.22;
+  ctx.beginPath(); ctx.arc(cx, cy, R + w * 0.39, 0, TAU); ctx.stroke();
+  ctx.strokeStyle = C['karet-kilap'];
+  ctx.globalAlpha = 0.75;
+  ctx.lineWidth = w * 0.18;
+  ctx.beginPath(); ctx.arc(cx, cy, R - w * 0.12, 190 * RAD, 300 * RAD); ctx.stroke();
+  ctx.globalAlpha = 1;
+  garisDunia(1.4);
+  ctx.beginPath(); ctx.arc(cx, cy, R + w / 2, 0, TAU); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, R - w / 2, 0, TAU); ctx.stroke();
+  // garis cetakan dan huruf timbul supaya putaran terlihat
+  ctx.strokeStyle = C['karet-kilap'];
+  ctx.lineWidth = Math.max(1, w * 0.07);
+  for (let i = 0; i < 15; i++) {
+    const a = sudutLayar(i * 24 + 12) * RAD;
+    const r1 = R + w * 0.05, r2 = R + w * 0.3;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(a - 0.03) * r1, cy + Math.sin(a - 0.03) * r1);
+    ctx.lineTo(cx + Math.cos(a + 0.03) * r2, cy + Math.sin(a + 0.03) * r2);
+    ctx.stroke();
+  }
+  // pentil di sisi dalam
+  const av = sudutLayar(0) * RAD;
+  const p0 = { x: cx + Math.cos(av) * (R - w / 2), y: cy + Math.sin(av) * (R - w / 2) };
+  const p1 = { x: cx + Math.cos(av) * (R - w / 2 - R * 0.19), y: cy + Math.sin(av) * (R - w / 2 - R * 0.19) };
+  ctx.strokeStyle = C.kuningan;
+  ctx.lineWidth = Math.max(3, w * 0.28);
+  ctx.lineCap = 'butt';
+  ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(p1.x, p1.y); ctx.stroke();
+  ctx.fillStyle = C['garis-dunia'];
+  ctx.beginPath(); ctx.arc(p1.x, p1.y, Math.max(2.5, w * 0.2), 0, TAU); ctx.fill();
+  // tambalan
+  for (const t of pel.tambalan) {
+    const p = titikCincin(g, sudutLayar(t.sudut), R);
+    const rr = R * 0.12;
+    ctx.fillStyle = '#2C2927';
+    ctx.beginPath(); ctx.arc(p.x, p.y, rr, 0, TAU); ctx.fill();
+    ctx.strokeStyle = C['tepi-tambalan'];
+    ctx.lineWidth = Math.max(2, R * 0.03);
+    ctx.stroke();
+    if (t.gagal && t.terlihat) {
+      // tepi yang mengelupas: lidah tambalan terangkat keluar dari permukaan ban
+      const a = sudutLayar(t.sudut) * RAD;
+      ctx.fillStyle = '#5A534E';
+      ctx.beginPath();
+      ctx.ellipse(p.x + Math.cos(a) * rr * 0.75, p.y + Math.sin(a) * rr * 0.75, rr * 0.8, rr * 0.38, a + Math.PI / 2, 0, TAU);
+      ctx.fill();
+      ctx.strokeStyle = C['tepi-tambalan'];
+      ctx.lineWidth = Math.max(1.5, R * 0.02);
+      ctx.stroke();
+    }
+  }
+  // tanda kapur
+  for (const t of pel.tanda) {
+    const p = titikCincin(g, sudutLayar(t.sudut), R);
+    lingkaranKapur(p.x, p.y, R * Math.sin(KONFIG.tolTanda * RAD) * 1.08, t.benih, Math.max(1.8, R * 0.018));
+  }
+  // paku
+  for (const l of pel.lubang) {
+    if (!l.paku || (l.dicabut && !l.animCabut)) continue;
+    const a = sudutLayar(l.sudut);
+    const keluar = l.dicabut ? l.animCabut / 0.45 : l.cabut / KONFIG.cabutPerlu * 0.25;
+    const pa = titikCincin(g, a, R + w * (0.1 + keluar * 1.6));
+    const pb = titikCincin(g, a, R + w * (0.95 + keluar * 1.6));
+    ctx.globalAlpha = l.dicabut ? 1 - l.animCabut / 0.45 : 1;
+    const ar = a * RAD;
+    const nx = -Math.sin(ar), ny = Math.cos(ar);
+    // batang dan kepala paku bergaris tinta supaya tetap terlihat walau di dalam air
+    for (const [warna, tambah] of [[C['garis-dunia'], 2.5], [C.besi, 0]]) {
+      ctx.strokeStyle = warna;
+      ctx.lineCap = 'butt';
+      ctx.lineWidth = Math.max(2.5, w * 0.17) + tambah;
+      ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke();
+      ctx.lineWidth = Math.max(3, w * 0.22) + tambah;
+      ctx.beginPath(); ctx.moveTo(pb.x - nx * w * 0.34, pb.y - ny * w * 0.34); ctx.lineTo(pb.x + nx * w * 0.34, pb.y + ny * w * 0.34); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    // tang saat mencabut
+    if (!l.dicabut && l.cabut > 0) {
+      const pt = titikCincin(g, a, R + w * 1.2);
+      ctx.strokeStyle = '#B5482A';
+      ctx.lineWidth = Math.max(3, w * 0.22);
+      ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(pb.x + nx * 3, pb.y + ny * 3); ctx.lineTo(pt.x + nx * w * 0.9, pt.y + ny * w * 0.9 + w * 0.6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(pb.x - nx * 3, pb.y - ny * 3); ctx.lineTo(pt.x - nx * w * 0.2, pt.y - ny * w * 0.2 + w * 1.1); ctx.stroke();
+    }
+  }
+}
+
+function gambarTangan(g) {
+  const { cx, cy, R, w, H } = g;
+  for (const [sl, sisi] of [[200, -1], [340, 1]]) {
+    const p = titikCincin(g, sl, R);
+    const pangkal = { x: cx + sisi * R * 1.62, y: H + 12 };
+    const siku = { x: lerp(pangkal.x, p.x, 0.58), y: lerp(pangkal.y, p.y, 0.58) };
+    // lengan baju lalu lengan bawah; garis tinta dulu supaya bentuknya tetap terbaca di atas air
+    for (const [a, b, warna, tebal] of [[pangkal, siku, C.lengan, w * 0.95], [siku, { x: p.x + sisi * w * 0.1, y: p.y + w * 0.3 }, C['kulit-tangan'], w * 0.72]]) {
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = C['garis-dunia'];
+      ctx.lineWidth = tebal + 3;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      ctx.strokeStyle = warna;
+      ctx.lineWidth = tebal;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    }
+    // genggaman menutupi ban: empat jari di sisi luar, ibu jari di sisi dalam
+    ctx.fillStyle = C['kulit-tangan'];
+    garisDunia(1.3);
+    rrect(p.x - w * 0.62, p.y - w * 0.66, w * 1.24, w * 1.32, w * 0.5); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(27,23,21,0.5)';
+    ctx.lineWidth = 1;
+    for (let i = 1; i < 4; i++) { const yy = p.y - w * 0.66 + i * w * 0.33; ctx.beginPath(); ctx.moveTo(p.x + sisi * w * 0.62, yy); ctx.lineTo(p.x + sisi * w * 0.05, yy); ctx.stroke(); }
+    ctx.fillStyle = C['kulit-tangan'];
+    garisDunia(1.3);
+    rrect(p.x - sisi * w * 0.62 - w * 0.26, p.y - w * 0.2, w * 0.52, w * 0.72, w * 0.24); ctx.fill(); ctx.stroke();
+  }
+}
+
+function gambarKerja(g) {
+  const { H, yMeja, tk, yT, rc, cxK } = g;
+  const k = pel.kerja;
+  // Meja kerja kayu di depan. Di layar lebar meja hanya di tengah, supaya pelanggan di bangku
+  // dan motornya tetap terlihat: pose pelanggan adalah petunjuk kesabaran.
+  const xL = g.mejaL, xR = g.mejaR;
+  ctx.fillStyle = C.kayu;
+  ctx.fillRect(xL, yMeja, xR - xL, H - yMeja);
+  ctx.strokeStyle = C['kayu-gelap'];
+  ctx.lineWidth = 2;
+  for (let y = yMeja + 18; y < H; y += 26) { ctx.beginPath(); ctx.moveTo(xL, y); ctx.lineTo(xR, y); ctx.stroke(); }
+  garisDunia(2);
+  ctx.beginPath(); ctx.moveTo(xL, H + 2); ctx.lineTo(xL, yMeja); ctx.lineTo(xR, yMeja); ctx.lineTo(xR, H + 2); ctx.stroke();
+  // Potongan ban dalam terbentang di meja; kedua ujungnya menjuntai ke bawah tepi meja karena ban masih berupa lingkaran.
+  const r0 = tk * 0.7;
+  const jalur = () => {
+    ctx.beginPath();
+    ctx.moveTo(xL - r0, H + tk);
+    ctx.lineTo(xL - r0, yT + r0);
+    ctx.arcTo(xL - r0, yT, xL, yT, r0);
+    ctx.lineTo(xR, yT);
+    ctx.arcTo(xR + r0, yT, xR + r0, yT + r0, r0);
+    ctx.lineTo(xR + r0, H + tk);
+  };
+  ctx.lineCap = 'butt';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = C['garis-dunia'];
+  ctx.lineWidth = tk + 3;
+  jalur(); ctx.stroke();
+  ctx.strokeStyle = C.karet;
+  ctx.lineWidth = tk;
+  jalur(); ctx.stroke();
+  // bayang bawah dan kilap atas memberi kesan silinder
+  ctx.strokeStyle = C['karet-gelap'];
+  ctx.globalAlpha = 0.7;
+  ctx.lineWidth = tk * 0.12;
+  ctx.beginPath(); ctx.moveTo(xL, yT + tk * 0.43); ctx.lineTo(xR, yT + tk * 0.43); ctx.stroke();
+  ctx.strokeStyle = C['karet-kilap'];
+  ctx.globalAlpha = 0.55;
+  ctx.lineWidth = tk * 0.07;
+  ctx.beginPath(); ctx.moveTo(xL, yT - tk * 0.28); ctx.lineTo(xR, yT - tk * 0.28); ctx.stroke();
+  ctx.globalAlpha = 1;
+  // garis cetakan
+  ctx.strokeStyle = C['karet-kilap'];
+  ctx.lineWidth = 1.5;
+  for (let x = cxK - 70 * Math.ceil((cxK - xL) / 70); x < xR; x += 70) {
+    if (Math.abs(x - cxK) < rc * 1.6 || x < xL + 6) continue;
+    ctx.beginPath(); ctx.moveTo(x, yT - tk * 0.12); ctx.lineTo(x + 8, yT + tk * 0.12); ctx.stroke();
+  }
+  const t = k.tanda;
+  // area yang diamplas: makin kasar makin kusam abu-abu, dengan goresan searah gosokan
+  const kasar = clamp(k.amplas / KONFIG.amplasCukup, 0, 1);
+  const tipis = clamp((k.amplas - KONFIG.amplasTipis) / (KONFIG.amplasMaks - KONFIG.amplasTipis), 0, 1);
+  if (k.amplas > 0) {
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cxK, yT, rc * 0.96, 0, TAU); ctx.clip();
+    ctx.fillStyle = tipis > 0 ? campur(C.amplas, '#9A8C7F', tipis) : campur(C.karet, C.amplas, kasar);
+    ctx.fillRect(cxK - rc, yT - rc, rc * 2, rc * 2);
+    const acak = buatAcak(t.benih + 3);
+    const n = Math.round(clamp(k.amplas, 0, 150) / 100 * 28);
+    ctx.strokeStyle = 'rgba(205,195,184,0.5)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < n; i++) {
+      const x = cxK + (acak() * 2 - 1) * rc, y = yT + (acak() * 2 - 1) * rc, l = rc * (0.25 + acak() * 0.35);
+      ctx.beginPath(); ctx.moveTo(x - l / 2, y + (acak() - 0.5) * 2); ctx.lineTo(x + l / 2, y + (acak() - 0.5) * 2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  // lubang (kalau tanda kena)
+  if (t.lubangId != null && !k.tempel) {
+    const l = lubangById(t.lubangId);
+    const off = (t.selisih || 0) / KONFIG.tolTanda * rc * 0.8;
+    const c = UKURAN[l.ukuran].celah * (tk / 110);
+    ctx.fillStyle = '#050505';
+    ctx.strokeStyle = C['karet-kilap'];
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    if (l.paku) ctx.arc(cxK - off, yT, c * 0.45, 0, TAU);
+    else ctx.ellipse(cxK - off, yT, c * 0.6, Math.max(1, c * 0.16), -0.5, 0, TAU);
+    ctx.fill(); ctx.stroke();
+  }
+  // lapisan lem: basah mengilap, setengah kering kusam
+  if (k.adaLem && k.tebal > 0) {
+    const s = keadaanLem(k);
+    const kilap = s === 'oles' ? 1 : clamp(1 - k.umur / lamaSetengah(k.tebal), 0, 1);
+    const kering = s === 'kering' ? 1 : 0;
+    const rLem = rc * (0.45 + 0.5 * clamp(k.tebal / 55, 0, 1));
+    ctx.globalAlpha = clamp(0.45 + k.tebal / 100 * 0.5, 0, 0.95);
+    ctx.fillStyle = kering ? '#6F5E3C' : campur(C['lem-kering'], C.lem, kilap);
+    ctx.beginPath(); ctx.arc(cxK, yT, rLem, 0, TAU); ctx.fill();
+    ctx.globalAlpha = 1;
+    if (kilap > 0.02) {
+      ctx.fillStyle = `rgba(255,252,236,${0.7 * kilap})`;
+      ctx.beginPath(); ctx.ellipse(cxK - rLem * 0.3, yT - rLem * 0.38, rLem * 0.42, rLem * 0.15, -0.35, 0, TAU); ctx.fill();
+    } else {
+      // permukaan lem setengah kering: bintik kusam merata
+      const acak = buatAcak(t.benih + 9);
+      ctx.fillStyle = 'rgba(60,48,30,0.35)';
+      for (let i = 0; i < 30; i++) {
+        const a = acak() * TAU, r = Math.sqrt(acak()) * rLem * 0.92;
+        ctx.fillRect(cxK + Math.cos(a) * r, yT + Math.sin(a) * r, 1.5, 1.5);
+      }
+    }
+  }
+  // tanda kapur
+  lingkaranKapur(cxK, yT, rc, t.benih, Math.max(2, rc * 0.07));
+  // tambalan setelah ditempel
+  if (k.tempel) {
+    const sk = 1 + (1 - k.animTempel) * 0.25;
+    const rp = rc * 1.12 * sk;
+    ctx.fillStyle = '#2E2B29';
+    ctx.beginPath(); ctx.arc(cxK, yT, rp, 0, TAU); ctx.fill();
+    ctx.strokeStyle = C['tepi-tambalan'];
+    ctx.lineWidth = Math.max(3, rc * 0.17);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(cxK, yT, rp * 0.62, 0, TAU); ctx.stroke();
+  }
+  gambarAlat(g);
+}
+
+function gambarAlat(g) {
+  const { H, tk, yT, rc, cxK } = g;
+  const k = pel.kerja;
+  const bawah = yT + tk / 2;
+  // kaleng lem di kiri bawah
+  const kx = g.mejaL + Math.max(24, (cxK - g.mejaL) * 0.18), ky = Math.min(H - 10, bawah + (H - bawah) * 0.75);
+  const kw = Math.min(30, rc * 0.75), kh = kw * 1.2;
+  ctx.fillStyle = '#C9B98E';
+  garisDunia(1.5);
+  rrect(kx - kw / 2, ky - kh, kw, kh, 3); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = C.lem;
+  ctx.fillRect(kx - kw / 2 + 2, ky - kh * 0.62, kw - 4, kh * 0.3);
+  // lembar tambalan di kanan bawah
+  const tx = g.mejaR - Math.max(24, (g.mejaR - cxK) * 0.18), ty = ky;
+  const tw = Math.min(40, rc * 0.95);
+  ctx.fillStyle = '#E8E1D0';
+  rrect(tx - tw / 2, ty - tw * 0.8, tw, tw * 0.8, 3); ctx.fill(); ctx.stroke();
+  for (let i = 0; i < 2; i++) {
+    if (k.tempel && i === 0) continue;
+    const px = tx - tw * 0.22 + i * tw * 0.44, py = ty - tw * 0.4;
+    ctx.fillStyle = '#2E2B29';
+    ctx.beginPath(); ctx.arc(px, py, tw * 0.17, 0, TAU); ctx.fill();
+    ctx.strokeStyle = C['tepi-tambalan']; ctx.lineWidth = 2; ctx.stroke();
+  }
+  if (fase === 'amplas') {
+    // kikir: alat kasar untuk menggaruk karet
+    const ax = cxK + k.alat * rc, ay = yT - rc * 0.05;
+    ctx.save();
+    ctx.translate(ax, ay);
+    ctx.rotate(-0.12);
+    const pw = rc * 2.3, ph = rc * 0.62;
+    ctx.fillStyle = C.besi;
+    garisDunia(1.6);
+    rrect(-pw / 2, -ph / 2, pw, ph, 4); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(40,40,40,0.45)';
+    ctx.lineWidth = 1;
+    for (let x = -pw / 2 + 5; x < pw / 2 - 2; x += 6) { ctx.beginPath(); ctx.moveTo(x, -ph / 2 + 3); ctx.lineTo(x + 4, ph / 2 - 3); ctx.stroke(); }
+    ctx.fillStyle = C.kayu;
+    garisDunia(1.6);
+    rrect(pw / 2 - 2, -ph * 0.3, rc * 1.3, ph * 0.6, ph * 0.3); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  } else if (fase === 'lem') {
+    // kuas lem: berputar kecil di area kapur saat mengoles, beristirahat di kaleng saat tidak
+    let bx, by;
+    if (k.mengoles) {
+      const putar = jamHias * 9;
+      bx = cxK + Math.cos(putar) * rc * 0.35; by = yT + Math.sin(putar) * rc * 0.25;
+    } else { bx = kx; by = ky - kh - 2; }
+    ctx.save();
+    ctx.translate(bx, by);
+    ctx.rotate(-0.7);
+    ctx.fillStyle = C.kayu;
+    garisDunia(1.4);
+    rrect(-3, -rc * 1.6, 6, rc * 1.3, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#5C4A2E';
+    rrect(-5, -rc * 0.35, 10, rc * 0.38, 2); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  } else if (fase === 'tekan') {
+    // rol penekan bergulir bolak-balik selama ditahan
+    const aktif = tahan.utama === 'tekan' || tahan.panggung === 'tekan';
+    const gx = cxK + (aktif ? Math.sin(jamHias * 7) * rc * 0.5 : rc * 1.6), gy = yT - rc * 0.2;
+    ctx.fillStyle = C.besi;
+    garisDunia(1.6);
+    ctx.beginPath(); ctx.arc(gx, gy, rc * 0.32, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = C['kayu-gelap'];
+    ctx.lineWidth = Math.max(4, rc * 0.14);
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + rc * 0.9, gy - rc * 1.4); ctx.stroke();
+  }
+}
+
+function gambarMalam(g, tampil) {
+  // Malam: satu bohlam di bawah terpal menerangi meja kerja; sisi bengkel lebih gelap.
+  const fx = g.cx, fy = tampil === 'celup' ? g.cy + g.R * 0.2 : g.yT;
+  const r0 = (tampil === 'celup' ? g.R * 1.05 : g.tk * 1.5), r1 = Math.max(g.W, g.H) * 0.8;
+  ctx.save();
+  ctx.globalCompositeOperation = 'multiply';
+  const gr = ctx.createRadialGradient(fx, fy, r0, fx, fy, r1);
+  gr.addColorStop(0, '#F4EBDC');
+  gr.addColorStop(1, '#4C5670');
+  ctx.fillStyle = gr;
+  ctx.fillRect(0, 0, g.W, g.H);
+  ctx.restore();
+  // bohlam
+  const bx = g.lebar ? g.cx + g.R * 1.15 : g.W * 0.7, by = g.tTerpal + 18;
+  ctx.strokeStyle = '#141210';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(bx, g.tTerpal * 0.6); ctx.lineTo(bx, by - 6); ctx.stroke();
+  ctx.fillStyle = '#FFE2A6';
+  ctx.beginPath(); ctx.arc(bx, by, 6, 0, TAU); ctx.fill();
+}
+
+function gambarUcapan(g) {
+  if (!pel || !ucapan.teks || jamHias > ucapan.sampai || modeKartu) return;
+  if (status === 'siap') return;
+  const akhir = pel.keadaanAkhir;
+  if (akhir && akhir.jenis === 'pergi') return;
+  const { P } = g;
+  const fs = g.lebar ? 14 : 12.5;
+  ctx.font = `600 ${fs}px ${C.fontTeks}`;
+  const maksL = g.lebar ? Math.min(240, g.W * 0.3) : Math.min(200, g.W * 0.52);
+  const kata = ucapan.teks.split(' ');
+  const baris = [];
+  let b = '';
+  for (const k of kata) {
+    const c = b ? b + ' ' + k : k;
+    if (ctx.measureText(c).width > maksL && b) { baris.push(b); b = k; } else b = c;
+  }
+  if (b) baris.push(b);
+  const lh = fs * 1.3, pad = 8;
+  const lw = Math.max(...baris.map(x => ctx.measureText(x).width)) + pad * 2;
+  const lhT = baris.length * lh + pad * 2 - 4;
+  const kepalaY = P.y - 92 * P.u;
+  let x = P.x + 14 * P.u, y = kepalaY - lhT - 6;
+  if (y < g.tTerpal + 4) { y = g.tTerpal + 4; x = P.x + 22 * P.u; }
+  x = Math.min(x, g.W - lw - 6);
+  ctx.fillStyle = C.lembar;
+  ctx.strokeStyle = C.garis;
+  ctx.lineWidth = 2;
+  rrect(x, y, lw, lhT, 9); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = C.tinta;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  baris.forEach((s, i) => ctx.fillText(s, x + pad, y + pad - 1 + i * lh));
+}
+
+// ---------- Putaran utama ----------
+let waktuLalu = performance.now();
+function bingkai(t) {
+  const dt = Math.min(0.1, Math.max(0, (t - waktuLalu) / 1000));
+  waktuLalu = t;
+  if (!beku) perbarui(dt);
+  if (!modeKartu) { perbaruiHud(); perbaruiPanel(); }
+  gambar();
+  requestAnimationFrame(bingkai);
+}
+
+// ---------- Mulai ----------
+bacaWarna();
+ukurKanvas();
+sesiBaru();
+perbaruiHud(true);
+tampilkanMulai();
+if (document.fonts && document.fonts.load) {
+  // Papan nama digambar dengan huruf spidol; ulang gambar begitu hurufnya tersedia.
+  document.fonts.load('20px "Permanent Marker"').catch(() => {});
+}
+requestAnimationFrame(t => { waktuLalu = t; requestAnimationFrame(bingkai); });
+
+// ---------- Kait uji ----------
+function keadaan() {
+  const k = pel && pel.kerja;
+  return {
+    status, fase, jeda, langkah: status === 'main' ? (fase === 'celup' ? (pel.sudahTambal ? 'uji' : 'cari') : fase) : null,
+    pelangganKe: pel ? pel.indeks + 1 : 0, nama: pel ? pel.data.nama : null,
+    sabar: pel ? +pel.sabar.toFixed(2) : 0, sabarAwal: pel ? pel.sabarAwal : 0,
+    putar: pel ? +pel.putar.toFixed(2) : 0, sudutDiPenanda: pel ? +sudutDiPenanda().toFixed(2) : 0,
+    lubang: pel ? pel.lubang.map(l => ({ id: l.id, sudut: l.sudut, ukuran: l.ukuran, paku: l.paku, dicabut: l.dicabut, tertutup: tertutup(l),
+      sudutLayar: +sudutLayar(l.sudut).toFixed(2), tercelup: tercelup(l.sudut), keDiPenanda: +selisihBertanda(l.sudut, sudutDiPenanda()).toFixed(2) })) : [],
+    tanda: pel ? pel.tanda.map(t => ({ sudut: +t.sudut.toFixed(2), lubangId: t.lubangId, ulang: t.ulang })) : [],
+    antrian: pel ? pel.antrian.length : 0,
+    tambalan: pel ? pel.tambalan.map(t => ({ sudut: +t.sudut.toFixed(2), lubangId: t.lubangId, gagal: t.gagal, mutu: t.mutu, amplas: Math.round(t.amplas), tebal: Math.round(t.tebal), umurLem: +t.umurLem.toFixed(2), setengah: +t.setengah.toFixed(2) })) : [],
+    kerja: k ? { amplas: +k.amplas.toFixed(1), tebal: +k.tebal.toFixed(1), umur: +k.umur.toFixed(2), lem: keadaanLem(k), setengah: +lamaSetengah(k.tebal).toFixed(2), tekan: +k.tekan.toFixed(2), tandaKena: k.tanda.lubangId != null } : null,
+    cakupan: pel ? persenCakupan() : 0, sudahTambal: pel ? pel.sudahTambal : false,
+    gelembung: gelembung.length, waktu: pel ? Object.fromEntries(Object.entries(pel.waktu).map(([a, b]) => [a, +b.toFixed(2)])) : null,
+    hasilPelanggan: pel && pel.keadaanAkhir ? { jenis: pel.keadaanAkhir.jenis, judul: pel.keadaanAkhir.judul, sebab: pel.keadaanAkhir.sebab, saran: pel.keadaanAkhir.saran, nilai: pel.keadaanAkhir.nilai, mutu: pel.keadaanAkhir.mutu } : null,
+    sesi: sesi ? { total: sesi.total, ke: sesi.ke + 1, catatan: sesi.catatan.map(h => h && { nama: h.nama, jenis: h.jenis, nilai: h.nilai, ringkas: h.ringkas }) } : null,
+    rekor, lembar: el.hasil.hidden ? null : jenisLembar, judulLembar: el.hasil.hidden ? null : el.teksJudulHasil.textContent,
+    tombol: Object.fromEntries(['kiri', 'utama', 'kanan', 'lanjut'].map(s => { const m = modeSlot(s); return [s, m ? m.nama : null]; })),
+    petunjuk: el.petunjuk.textContent, gerakHias, temaGelap,
+    fokus: document.activeElement ? document.activeElement.id || document.activeElement.tagName : null,
+    geo: (() => { const g = geo(); return { R: +g.R.toFixed(1), cx: +g.cx.toFixed(1), cy: +g.cy.toFixed(1), rc: +g.rc.toFixed(1), yT: +g.yT.toFixed(1), lebar: g.lebar }; })()
+  };
+}
+function majuInternal(detik, langkah = 1 / 60) {
+  let n = Math.round(detik / langkah);
+  while (n-- > 0) perbarui(langkah);
+}
+function putarKeSudut(sudutBan, kec, langkah = 1 / 60) {
+  // putar perlahan (seperti pemain) sampai sudutBan berada di pita penanda
+  let aman = 0;
+  while (status === 'main' && aman++ < 20000) {
+    const d = selisihBertanda(KONFIG.sudutPenanda - sudutBan, pel.putar);
+    if (Math.abs(d) < 0.01) break;
+    const s = Math.sign(d) * Math.min(Math.abs(d), kec * langkah);
+    pel.putar = modDeg(pel.putar + s);
+    perbarui(langkah);
+  }
+}
+window.__tambalBan = {
+  KONFIG, UKURAN, PELANGGAN: PELANGGAN.map(p => ({ nama: p.nama, peran: p.peran, sabar: p.sabar, lubang: p.lubang.slice(), paku: p.paku })),
+  keadaan,
+  // mulaiSesi(benih, ke): sesi baru dengan benih tetap, langsung main di pelanggan ke (1..5)
+  mulaiSesi: (benih, ke = 1) => {
+    sesiBaru(benih ?? 12345);
+    if (ke > 1) { sesi.ke = ke - 1; siapkanPelanggan(ke - 1); }
+    mulaiMain();
+    return keadaan();
+  },
+  maju: d => { majuInternal(d); return keadaan(); },
+  bekukan: on => { beku = !!on; },
+  aturPutaran: deg => { pel.putar = modDeg(deg); catatCakupan(); return keadaan(); },
+  // taruh lubang ke-i (0..) di pita penanda, dengan geser derajat opsional
+  putarKeLubang: (i, geser = 0) => { const l = pel.lubang[i]; pel.putar = modDeg(KONFIG.sudutPenanda - l.sudut - geser); catatCakupan(); return keadaan(); },
+  tekanSlot: (slot, turun) => { tekanSlot(slot, turun); return keadaan(); },
+  tandai: () => { tandai(); return keadaan(); },
+  lanjut: () => { const m = modeSlot('lanjut'); if (m && !m.tahan) jalankan(m.id); return keadaan(); },
+  gosok: (n = 1) => { for (let i = 0; i < n; i++) gosokKetuk(i % 2 ? 1 : -1); return keadaan(); },
+  cukup: () => { cukupAmplas(); return keadaan(); },
+  oles: detik => { mulaiOles(); majuInternal(detik); lepasOles(); return keadaan(); },
+  tempel: () => { if (pel.kerja) pel.kerja.guardSampai = 0; tempel(); return keadaan(); },
+  tekan: detik => { tahan.utama = 'tekan'; majuInternal(detik ?? KONFIG.tekanPerlu + 0.05); tahan.utama = null; return keadaan(); },
+  cabutPaku: () => { const l = pel.lubang.find(pakuAktif); if (l) selesaiCabut(l); return keadaan(); },
+  serahkan: () => { serahkan(); return keadaan(); },
+  lanjutLembar: () => { waktuLembar = 0; el.tombolHasil.click(); return keadaan(); },
+  // Pemain otomatis untuk kalibrasi: menyelesaikan pelanggan sekarang dengan kebiasaan yang bisa diatur.
+  tambalOtomatis: (o = {}) => {
+    const kec = o.kecepatan ?? 70, reaksi = o.reaksi ?? 0.6, L = 1 / 60;
+    if (status !== 'main') return keadaan();
+    for (const l of pel.lubang.filter(pakuAktif)) {
+      if (o.lewatiPaku) break;
+      putarKeSudut(l.sudut, kec); majuInternal(reaksi);
+      tahan.utama = 'cabut';
+      let aman = 0;
+      while (pakuAktif(l) && aman++ < 200) perbarui(L);
+      tahan.utama = null;
+    }
+    // sapu satu keliling dulu seperti pemain yang mencari, lalu tandai tiap lubang
+    if (o.sapu !== false) { const awal = pel.putar; for (let i = 0; i < 360 / (kec * L) && status === 'main'; i++) { pel.putar = modDeg(awal + i * kec * L); perbarui(L); } }
+    const urut = pel.lubang.filter(l => !(o.lewatiPaku && l.paku)).slice(0, o.tandaiN ?? 99);
+    for (const l of urut) {
+      putarKeSudut(l.sudut + (o.meleset || 0), kec);
+      majuInternal(reaksi);
+      tandai();
+    }
+    if (status !== 'main') return keadaan();
+    mulaiTambal();
+    while (status === 'main' && fase !== 'celup') {
+      for (let i = 0; i < (o.gosok ?? 9); i++) { gosokKetuk(i % 2 ? 1 : -1); majuInternal(0.22); }
+      majuInternal(0.3); cukupAmplas();
+      mulaiOles(); majuInternal((o.tebal ?? 60) / KONFIG.lemLaju); lepasOles();
+      if (o.tempel === 'basah') majuInternal(0.5);
+      else { let aman = 0; while (status === 'main' && keadaanLem(pel.kerja) === 'basah' && aman++ < 3000) perbarui(L); majuInternal(o.tempelLebih ?? 0.4); }
+      if (status !== 'main') break;
+      pel.kerja.guardSampai = 0; tempel();
+      tahan.utama = 'tekan';
+      let aman = 0;
+      while (status === 'main' && fase === 'tekan' && aman++ < 1000) perbarui(L);
+      tahan.utama = null;
+    }
+    if (status !== 'main') return keadaan();
+    if (o.uji !== false) { const awal = pel.putar; const n = Math.round(250 / (kec * 1.4 * L)); for (let i = 0; i < n && status === 'main'; i++) { pel.putar = modDeg(awal + i * kec * 1.4 * L); perbarui(L); } majuInternal(reaksi); }
+    if (o.serahkan !== false) serahkan();
+    return keadaan();
+  },
+  modeKartu: on => {
+    modeKartu = !!on;
+    el.app.classList.toggle('mode-kartu', modeKartu);
+    ukurKanvas();
+    return keadaan();
+  },
+  // Adegan gambar kartu 480x480 (Pak Harun): gelembung lubang besar naik di pita kapur, satu lubang lain sudah
+  // dilingkari kapur di sisi kanan atas, satu tambalan oranye di sisi kiri dekat permukaan air, pentil di kiri atas.
+  contohKartu: () => {
+    const k = window.__tambalBan;
+    k.modeKartu(true);
+    sesiBaru(4242);
+    sesi.ke = 2; siapkanPelanggan(2);
+    status = 'main';
+    pel.waktuMain = 10;
+    // sudut layar = sudut ban + putaran; putaran 250 menaruh pentil di kiri atas
+    pel.putar = 250;
+    pel.lubang[0].ukuran = 'besar';
+    pel.lubang[0].sudut = modDeg(93 - 250);
+    pel.lubang[1].sudut = modDeg(300 - 250);
+    pel.tanda.push({ id: ++idSeq, sudut: pel.lubang[1].sudut, lubangId: pel.lubang[1].id, selisih: 0, terdekat: null, ulang: null, benih: 11 });
+    pel.tambalan.push({ id: ++idSeq, sudut: modDeg(158 - 250), lubangId: null, gagal: null, mutu: 100, amplas: 100, tebal: 60, umurLem: 4, setengah: 3, terlihat: false, celupGagal: 0, benih: 5 });
+    ucapan = { teks: '', sampai: 0 };
+    gelembung = [];
+    for (let i = 0; i < 150; i++) { pel.sabar = pel.sabarAwal; perbarui(1 / 60); }
+    beku = true;
+    return keadaan();
+  }
+};
+})();
+</script>
+</body>
+</html>

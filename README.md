@@ -10,6 +10,9 @@ Arah desain ada di [DESIGN.md](DESIGN.md).
 
 | Game | Folder | Catatan desain |
 |---|---|---|
+| Layangan Putus | `public/games/layangan-putus/` | `docs/games/layangan-putus.md` |
+| Antre Gorengan | `public/games/antre-gorengan/` | `docs/games/antre-gorengan.md` |
+| Tambal Ban | `public/games/tambal-ban/` | `docs/games/tambal-ban.md` |
 | Panjat Pinang | `public/games/panjat-pinang/` | `docs/games/panjat-pinang.md` |
 | Es Teh Plastik | `public/games/es-teh-plastik/` | `docs/games/es-teh-plastik.md` |
 | Gebok Sandal | `public/games/gebok-sandal/` | `docs/games/gebok-sandal.md` (memakai planck.js, MIT) |

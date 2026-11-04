@@ -3,6 +3,36 @@
 // `rilis` dipakai untuk urutan "Terbaru"; `kategori` harus salah satu kunci KATEGORI di app.js.
 window.GAMES = [
   {
+    id: 'layangan-putus',
+    judul: 'Layangan Putus',
+    rilis: '2026-11-04',
+    kategori: 'singkat',
+    deskripsi: {
+      id: 'Adu layangan dari atap rumah. Saat benang bersilangan, tarik lebih cepat dari lawan untuk memutus benangnya. Lima level, angin makin bandel.',
+      en: 'Fight kites from the rooftops. When the strings cross, pull faster than your rival to cut their line. Five levels, each windier than the last.'
+    }
+  },
+  {
+    id: 'antre-gorengan',
+    judul: 'Antre Gorengan',
+    rilis: '2026-11-04',
+    kategori: 'singkat',
+    deskripsi: {
+      id: 'Ingat pesanan pembeli sebelum balon katanya hilang, lalu bungkus bakwan, tahu isi, dan cabainya dengan pas. Satu hari jualan, 90 detik.',
+      en: 'Remember each order before the speech bubble fades, then bag the fritters and chillies exactly right. One day at the stall, 90 seconds.'
+    }
+  },
+  {
+    id: 'tambal-ban',
+    judul: 'Tambal Ban',
+    rilis: '2026-11-04',
+    kategori: 'singkat',
+    deskripsi: {
+      id: 'Celup ban dalam ke baskom, cari bocornya dari gelembung, lalu amplas, lem, dan tempel tambalan. Lima pelanggan, ada yang bannya tertancap paku.',
+      en: 'Dunk the inner tube in a basin, find the leak by its bubbles, then sand, glue and patch it. Five customers, one with a nail still stuck in.'
+    }
+  },
+  {
     id: 'panjat-pinang',
     judul: 'Panjat Pinang',
     rilis: '2026-11-04',
