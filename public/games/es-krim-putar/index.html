@@ -1,0 +1,1652 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Es Krim Putar</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Tata letak: satu layar tanpa gulir. Potret: kepala, panggung 3D, bantalan putar di bawah jempol.
+   Lanskap: panggung 3D di kiri, kepala dan bantalan di kolom kanan. */
+:root {
+  --latar: #FCF3E2;
+  --tinta: #3B281E;
+  --tinta-2: #6A5040;
+  --wafer: #F1DDBA;
+  --wafer-garis: #9A7046;
+  --garis-kuat: #8E7462;
+  --aksen: #B3325A;
+  --aksen-teks: #FFFFFF;
+  --lembar: #FFFAF2;
+  --bayang: rgba(59, 40, 30, .2);
+  --tirai: rgba(40, 26, 18, .45);
+  --font-judul: "Fredoka", "Baloo 2", system-ui, sans-serif;
+  --font-teks: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --latar: #1F1611;
+    --tinta: #F5E8D4;
+    --tinta-2: #CDB69E;
+    --wafer: #30241C;
+    --wafer-garis: #B08A63;
+    --garis-kuat: #9C8270;
+    --aksen: #F08AA6;
+    --aksen-teks: #2A0F18;
+    --lembar: #2A1E18;
+    --bayang: rgba(0, 0, 0, .5);
+    --tirai: rgba(0, 0, 0, .6);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --latar: #1F1611;
+  --tinta: #F5E8D4;
+  --tinta-2: #CDB69E;
+  --wafer: #30241C;
+  --wafer-garis: #B08A63;
+  --garis-kuat: #9C8270;
+  --aksen: #F08AA6;
+  --aksen-teks: #2A0F18;
+  --lembar: #2A1E18;
+  --bayang: rgba(0, 0, 0, .5);
+  --tirai: rgba(0, 0, 0, .6);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--latar);
+  color: var(--tinta);
+  font-family: var(--font-teks);
+  font-size: 15px;
+  -webkit-tap-highlight-color: transparent;
+}
+h1, h2, h3, p, ol, ul { margin: 0; }
+button { font: inherit; color: inherit; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.app {
+  position: relative;
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: "kepala" "panggung" "kendali";
+  gap: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px 14px;
+}
+
+/* Kepala */
+.kepala {
+  grid-area: kepala;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "judul cara" "rasa rasa";
+  align-items: center;
+  gap: 6px 12px;
+}
+.kepala h1 {
+  grid-area: judul;
+  font-family: var(--font-judul);
+  font-weight: 600;
+  font-size: clamp(1.4rem, 1.15rem + 1vw, 1.8rem);
+  line-height: 1.1;
+  text-wrap: balance;
+}
+.tombol-kecil {
+  grid-area: cara;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--garis-kuat);
+  background: transparent;
+  font-weight: 600;
+  font-size: .9rem;
+  cursor: pointer;
+}
+.rasa {
+  grid-area: rasa;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 4px;
+  min-width: 0;
+}
+.rasa-label { font-size: .85rem; color: var(--tinta-2); margin-right: 2px; }
+.pilih-rasa {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.pilih-rasa input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.contoh {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--a) 50%, var(--b) 50%);
+  box-shadow: inset 0 0 0 1.5px var(--garis-kuat);
+}
+.pilih-rasa input:checked + .contoh {
+  box-shadow: inset 0 0 0 1.5px var(--garis-kuat), 0 0 0 3px var(--latar), 0 0 0 5.5px var(--tinta);
+}
+.pilih-rasa input:focus-visible + .contoh { outline: 3px solid var(--aksen); outline-offset: 7px; }
+.pilih-rasa input:disabled { cursor: default; }
+.pilih-rasa input:disabled + .contoh { opacity: .45; }
+.nama-rasa { font-weight: 600; font-size: .95rem; margin-left: 6px; }
+
+/* Panggung 3D */
+.panggung { grid-area: panggung; position: relative; min-height: 0; }
+#kanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hud {
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  text-align: right;
+  pointer-events: none;
+}
+.hud-label { font-size: .8rem; font-weight: 600; color: var(--tinta-2); }
+.hud-angka {
+  font-family: var(--font-judul);
+  font-weight: 600;
+  font-size: clamp(2.3rem, 1.7rem + 3vw, 3.4rem);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.hud-angka small { font-size: .45em; font-weight: 500; }
+.hud-rekor { font-size: .82rem; color: var(--tinta-2); }
+.ada-hasil .hud { visibility: hidden; }
+.layar-status {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 16px;
+  text-align: center;
+  background: var(--latar);
+  z-index: 2;
+}
+.layar-status h2 { font-family: var(--font-judul); font-weight: 600; font-size: 1.3rem; }
+.layar-status p { max-width: 36ch; color: var(--tinta-2); line-height: 1.5; }
+
+/* Bantalan putar */
+.kendali { grid-area: kendali; position: relative; height: clamp(190px, 34dvh, 300px); }
+.bantalan {
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background: var(--wafer);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  cursor: grab;
+  overflow: hidden;
+}
+.bantalan.aktif { cursor: grabbing; }
+.bantalan:focus-visible { outline: 3px solid var(--tinta); outline-offset: 3px; }
+.bantalan svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.panduan { fill: none; stroke: var(--wafer-garis); stroke-width: 2.5; stroke-dasharray: 1 9; stroke-linecap: round; }
+.titik-mulai { fill: var(--aksen); }
+.jejak { fill: none; stroke: var(--tinta); stroke-width: 2.5; }
+.peraga circle { fill: var(--tinta); opacity: .55; }
+.peraga { transform-box: view-box; animation: putar-peraga 1.9s linear 3 forwards; }
+@keyframes putar-peraga { to { transform: rotate(360deg); } }
+.bantalan.aktif .peraga, .bantalan.sudah-main .peraga { display: none; }
+.petunjuk {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 10px;
+  text-align: center;
+  font-size: .85rem;
+  line-height: 1.35;
+  color: var(--tinta-2);
+  pointer-events: none;
+}
+.bantalan.aktif .petunjuk { visibility: hidden; }
+
+/* Lembar hasil: mengapung di atas bantalan, jadi pakai bayangan sebagai penanda ketinggian */
+.hasil {
+  position: absolute;
+  z-index: 5;
+  left: max(16px, env(safe-area-inset-left, 0px));
+  right: max(16px, env(safe-area-inset-right, 0px));
+  bottom: 14px;
+  max-height: calc(100% - 28px);
+  overflow: auto;
+  display: grid;
+  gap: 12px;
+  padding: 18px 18px 16px;
+  border-radius: 24px;
+  background: var(--lembar);
+  box-shadow: 0 12px 32px var(--bayang);
+}
+.hasil h2 { font-family: var(--font-judul); font-weight: 600; font-size: 1.5rem; line-height: 1.15; }
+.keterangan { color: var(--tinta-2); line-height: 1.45; max-width: 46ch; }
+.baris-angka { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; }
+.angka-hasil { display: grid; gap: 2px; }
+.angka-hasil span { font-size: .82rem; font-weight: 600; color: var(--tinta-2); }
+.angka-hasil strong { font-family: var(--font-judul); font-weight: 600; font-size: 2.3rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.nilai { display: flex; gap: 5px; }
+.nilai svg { width: 26px; height: 26px; display: block; }
+.nilai .isi { fill: var(--aksen); }
+.nilai .kosong { fill: none; stroke: var(--garis-kuat); stroke-width: 1.5; }
+.rekor { font-size: .9rem; color: var(--tinta-2); }
+.rekor b { color: var(--tinta); }
+.aksi { display: flex; flex-wrap: wrap; gap: 8px; }
+.tombol {
+  flex: 1 1 0;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--garis-kuat);
+  background: transparent;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tombol.utama {
+  flex-basis: 100%;
+  border-color: var(--aksen);
+  background: var(--aksen);
+  color: var(--aksen-teks);
+  font-family: var(--font-judul);
+  font-size: 1.15rem;
+}
+.tombol:disabled { opacity: .55; cursor: default; }
+.tombol:not(:disabled):active, .tombol-kecil:active { transform: translateY(1px); }
+.tombol:focus-visible, .tombol-kecil:focus-visible, .tautan:focus-visible { outline: 3px solid var(--tinta); outline-offset: 3px; }
+.status-simpan { font-size: .85rem; color: var(--tinta-2); min-height: 1.2em; }
+
+/* Dialog cara main */
+dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  border: 0;
+  border-radius: 22px;
+  padding: 22px 22px 18px;
+  background: var(--lembar);
+  color: var(--tinta);
+  box-shadow: 0 16px 40px var(--bayang);
+}
+dialog::backdrop { background: var(--tirai); }
+.isi-dialog { display: grid; gap: 14px; line-height: 1.5; }
+.isi-dialog h2 { font-family: var(--font-judul); font-weight: 600; font-size: 1.45rem; }
+.isi-dialog h3 { font-size: 1rem; font-weight: 700; }
+.isi-dialog ol, .isi-dialog ul { padding-left: 1.3em; display: grid; gap: 4px; }
+.isi-dialog .kecil { font-size: .85rem; color: var(--tinta-2); }
+.tautan { color: inherit; text-underline-offset: 2px; }
+.isi-dialog .tombol { flex: none; justify-self: end; min-width: 120px; }
+kbd { font-family: var(--font-teks); font-weight: 600; font-size: .85em; padding: 1px 6px; border-radius: 6px; border: 1px solid var(--garis-kuat); }
+
+@media (orientation: landscape) and (min-width: 640px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr) clamp(280px, 34vw, 400px);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas: "panggung kepala" "panggung kendali";
+    column-gap: 20px;
+  }
+  .kendali { height: auto; min-height: 0; }
+  .hasil { left: auto; width: clamp(280px, 34vw, 400px); }
+  .ada-hasil .hud { visibility: visible; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .peraga { animation: none; }
+}
+</style>
+
+<div class="app">
+  <header class="kepala">
+    <h1>Es Krim Putar</h1>
+    <button class="tombol-kecil" id="tombol-cara" type="button" aria-haspopup="dialog">Cara main</button>
+    <div class="rasa" role="radiogroup" aria-labelledby="label-rasa">
+      <span class="rasa-label" id="label-rasa">Rasa</span>
+      <label class="pilih-rasa"><input type="radio" name="rasa" id="rasa-vanila" value="vanila" checked><span class="contoh" style="--a:#FFF3D9;--b:#FFF3D9"></span><span class="sr">Vanila</span></label>
+      <label class="pilih-rasa"><input type="radio" name="rasa" id="rasa-cokelat" value="cokelat"><span class="contoh" style="--a:#8A5534;--b:#8A5534"></span><span class="sr">Cokelat</span></label>
+      <label class="pilih-rasa"><input type="radio" name="rasa" id="rasa-pandan" value="pandan"><span class="contoh" style="--a:#A9D892;--b:#A9D892"></span><span class="sr">Pandan</span></label>
+      <label class="pilih-rasa"><input type="radio" name="rasa" id="rasa-ubi" value="ubi"><span class="contoh" style="--a:#B391DA;--b:#B391DA"></span><span class="sr">Ubi ungu</span></label>
+      <label class="pilih-rasa"><input type="radio" name="rasa" id="rasa-campur" value="campur"><span class="contoh" style="--a:#FFF3D9;--b:#8A5534"></span><span class="sr">Campur vanila dan cokelat</span></label>
+      <span class="nama-rasa" id="nama-rasa" aria-hidden="true">Vanila</span>
+    </div>
+  </header>
+
+  <main class="panggung" aria-label="Tampilan 3D cone dan krim">
+    <canvas id="kanvas" aria-hidden="true"></canvas>
+    <div class="hud">
+      <span class="hud-label">Tinggi</span>
+      <span class="hud-angka" id="angka-tinggi">0,0<small> cm</small></span>
+      <span class="hud-rekor" id="hud-rekor">Belum ada rekor</span>
+    </div>
+    <div class="layar-status" id="layar-status" role="status">
+      <h2 id="status-judul">Menyiapkan tampilan 3D</h2>
+      <p id="status-isi">Cone dan mesin sedang disiapkan.</p>
+      <button class="tombol" id="tombol-muat" type="button" hidden>Muat ulang halaman</button>
+    </div>
+  </main>
+
+  <section class="kendali" aria-label="Kendali">
+    <div class="bantalan" id="bantalan" tabindex="0" role="application" aria-roledescription="bantalan putar"
+      aria-label="Bantalan putar. Tekan dan tahan, lalu putar mengikuti lingkaran. Lepas untuk selesai. Dengan papan ketik: tahan Spasi, panah bawah mengecilkan putaran."
+      aria-describedby="petunjuk">
+      <svg id="svg-bantalan" aria-hidden="true">
+        <circle class="panduan" id="panduan" r="60"></circle>
+        <g class="peraga" id="peraga"><circle id="titik-peraga" r="9"></circle></g>
+        <polygon class="titik-mulai" id="titik-mulai"></polygon>
+        <circle class="jejak" id="jejak" r="15" visibility="hidden"></circle>
+      </svg>
+      <p class="petunjuk" id="petunjuk">Tahan, putar mengikuti lingkaran, lalu lepas.</p>
+    </div>
+  </section>
+
+  <section class="hasil" id="hasil" aria-labelledby="judul-hasil" hidden>
+    <h2 id="judul-hasil">Es krimmu jadi</h2>
+    <p class="keterangan" id="keterangan-hasil" hidden></p>
+    <div class="baris-angka">
+      <div class="angka-hasil">
+        <span id="label-tinggi-hasil">Tinggi krim</span>
+        <strong id="tinggi-hasil">0,0 cm</strong>
+      </div>
+      <div class="nilai" id="nilai" role="img" aria-label="Nilai 0 dari 5"></div>
+    </div>
+    <p class="rekor" id="rekor-hasil"></p>
+    <div class="aksi">
+      <button class="tombol utama" id="tombol-lagi" type="button">Putar lagi</button>
+      <button class="tombol" id="tombol-gambar" type="button" hidden>Simpan gambar</button>
+      <button class="tombol" id="tombol-video" type="button" hidden>Simpan video</button>
+    </div>
+    <p class="status-simpan" id="status-simpan" role="status"></p>
+  </section>
+</div>
+
+<dialog id="dialog-cara" aria-labelledby="judul-cara">
+  <div class="isi-dialog">
+    <h2 id="judul-cara">Cara main</h2>
+    <ol>
+      <li>Pilih rasa di bagian atas.</li>
+      <li>Tekan dan tahan bantalan putar. Krim keluar dan mengisi cone lebih dulu.</li>
+      <li>Putar jari mengikuti lingkaran putus-putus. Lingkaran itu sama dengan bibir cone.</li>
+      <li>Tiap putaran, buat lingkaran sedikit lebih kecil supaya krim naik menumpuk.</li>
+      <li>Lepas untuk menutup ujung krim. Tingginya diukur dari bibir cone.</li>
+    </ol>
+    <h3>Yang membuat gagal</h3>
+    <ul>
+      <li>Tumpah: krim jatuh di luar cone.</li>
+      <li>Roboh: tumpukan atas bergeser terlalu jauh dari tengah.</li>
+      <li>Melorot: dasar terlalu sempit untuk menahan krim di atasnya.</li>
+    </ul>
+    <p>Putaran terlalu cepat membuat tali krim tipis lalu putus. Terlalu pelan membuatnya menebal dan melingkar di tempat.</p>
+    <p class="kecil">Papan ketik: pilih bantalan putar dengan <kbd>Tab</kbd>, tahan <kbd>Spasi</kbd> untuk menuang. Panah bawah atau kiri mengecilkan putaran, panah atas atau kanan membesarkannya. Lepas <kbd>Spasi</kbd> untuk selesai.</p>
+    <p class="kecil">Terinspirasi dari <a class="tautan" href="https://softserve.nog.cc/" target="_blank" rel="noopener">simulator soft cream karya nog</a>. Tampilan 3D memakai <a class="tautan" href="https://threejs.org/" target="_blank" rel="noopener">three.js</a> (lisensi MIT). Rekor hanya disimpan di peramban ini.</p>
+    <form method="dialog"><button class="tombol" type="submit" id="tombol-tutup">Tutup</button></form>
+  </div>
+</dialog>
+
+<script type="module">
+// ---------- Konstanta permainan (satuan panjang: cm) ----------
+const KONFIG = {
+  jariCone: 2.7,        // jari-jari bibir cone
+  dalamCone: 10,
+  kubahCap: 0.3,        // tinggi kubah krim yang mengisi cone
+  levelCapAwal: -3.6,
+  isiCone: 6,           // panjang tali yang habis untuk mengisi cone
+  jariTali: 0.55,
+  laju: 7.5,            // panjang tali yang keluar per detik
+  jariLintasan: 2.15,   // titik di lingkaran panduan = tali di jari-jari ini
+  redaman: 18,          // seberapa cepat nosel mengikuti jari
+  redamanTebal: 10,
+  kMaks: 1.3,           // tali paling tebal sebelum mulai melingkar di tempat
+  kPutus: 0.45,         // tali lebih tipis dari ini putus
+  jariGulung: 0.45,
+  luberGulung: 0.3,
+  jarakSampel: 0.12,
+  tapak: 0.55,          // lebar sanggaan di bawah tali, relatif ke jari-jarinya
+  pipih: 0.8,           // tali sedikit gepeng saat mendarat
+  turunMaks: 0.3,
+  tundaCetak: 1.4,      // tali baru tidak menyangga dirinya sendiri sejauh ini
+  batasTumpah: 2.5,
+  tegangan: 3.0,
+  rasioRamping: 1.9,
+  massaMinCek: 4,
+  maksCincin: 6000,
+  batasNilai: [2, 4, 6, 8, 9.5],
+};
+const RASA = {
+  vanila: { nama: 'Vanila', a: '#FFF3D9', b: '#FFF3D9' },
+  cokelat: { nama: 'Cokelat', a: '#8A5534', b: '#8A5534' },
+  pandan: { nama: 'Pandan', a: '#A9D892', b: '#A9D892' },
+  ubi: { nama: 'Ubi ungu', a: '#B391DA', b: '#B391DA' },
+  campur: { nama: 'Campur', a: '#FFF3D9', b: '#8A5534' },
+};
+
+// ---------- Fisika krim ----------
+const GRID = 128, SEL = 0.1, ASAL = -GRID * SEL / 2, KOSONG = -99;
+
+class Mesin {
+  constructor() { this.medan = new Float32Array(GRID * GRID); this.reset(); }
+
+  reset() {
+    this.isi = 0;
+    this.levelCap = KONFIG.levelCapAwal;
+    this.isiMedan();
+    this.nosel = null;
+    this.jatuh = null;
+    this.kHalus = 1;
+    this.gulung = 0;
+    this.lamaGulung = 0;
+    this.fase = 0;
+    this.sisa = 0;
+    this.panjang = 0;
+    this.antre = [];
+    this.cincin = [];
+    this.massa = [];
+    this.ubah = [];
+    this.tetes = [];
+    this.hitungTetes = 0;
+    this.stripId = 0;
+    this.stripBaru = true;
+    this.yLalu = null;
+    this.tumpah = 0;
+    this.puncak = 0;
+    this.putus = false;
+    this.menumpahkan = false;
+    this.titikJatuh = null;
+    this.penuh = false;
+  }
+
+  isiMedan() {
+    const R = KONFIG.jariCone;
+    for (let j = 0; j < GRID; j++) {
+      const z = ASAL + (j + 0.5) * SEL;
+      for (let i = 0; i < GRID; i++) {
+        const x = ASAL + (i + 0.5) * SEL, r = Math.hypot(x, z);
+        this.medan[j * GRID + i] = r < R ? this.levelCap + KONFIG.kubahCap * Math.sqrt(1 - (r / R) ** 2) : KOSONG;
+      }
+    }
+  }
+
+  sanggaan(x, z, rad) {
+    let maks = KOSONG;
+    const i0 = Math.max(0, Math.floor((x - rad - ASAL) / SEL)), i1 = Math.min(GRID - 1, Math.floor((x + rad - ASAL) / SEL));
+    const j0 = Math.max(0, Math.floor((z - rad - ASAL) / SEL)), j1 = Math.min(GRID - 1, Math.floor((z + rad - ASAL) / SEL));
+    const r2 = rad * rad;
+    for (let j = j0; j <= j1; j++) {
+      const dz = ASAL + (j + 0.5) * SEL - z;
+      for (let i = i0; i <= i1; i++) {
+        const dx = ASAL + (i + 0.5) * SEL - x;
+        if (dx * dx + dz * dz <= r2) {
+          const h = this.medan[j * GRID + i];
+          if (h > maks) maks = h;
+        }
+      }
+    }
+    return maks;
+  }
+
+  cetak(x, z, y, rad) {
+    const i0 = Math.max(0, Math.floor((x - rad - ASAL) / SEL)), i1 = Math.min(GRID - 1, Math.floor((x + rad - ASAL) / SEL));
+    const j0 = Math.max(0, Math.floor((z - rad - ASAL) / SEL)), j1 = Math.min(GRID - 1, Math.floor((z + rad - ASAL) / SEL));
+    const r2 = rad * rad;
+    for (let j = j0; j <= j1; j++) {
+      const dz = ASAL + (j + 0.5) * SEL - z;
+      for (let i = i0; i <= i1; i++) {
+        const dx = ASAL + (i + 0.5) * SEL - x, d2 = dx * dx + dz * dz;
+        if (d2 <= r2) {
+          const v = y + Math.sqrt(r2 - d2) * KONFIG.pipih, k = j * GRID + i;
+          if (v > this.medan[k]) this.medan[k] = v;
+        }
+      }
+    }
+  }
+
+  tuang(dt, tx, tz) {
+    if (this.penuh) return;
+    const keluar = KONFIG.laju * dt;
+    if (!this.nosel) this.nosel = { x: tx, z: tz };
+    const a = 1 - Math.exp(-dt * KONFIG.redaman);
+    const nx = this.nosel.x + (tx - this.nosel.x) * a, nz = this.nosel.z + (tz - this.nosel.z) * a;
+    const d = Math.hypot(nx - this.nosel.x, nz - this.nosel.z);
+    this.nosel.x = nx;
+    this.nosel.z = nz;
+
+    if (this.isi < KONFIG.isiCone) {
+      if (Math.hypot(nx, nz) > KONFIG.jariCone - 0.2) {
+        this.tumpah += keluar;
+        this.menumpahkan = true;
+        this.tetesKeluar(nx, nz, 0.5, KONFIG.jariTali);
+        this.titikJatuh = { x: nx, y: -14, z: nz };
+      } else {
+        this.menumpahkan = false;
+        this.isi += keluar;
+        this.levelCap = KONFIG.levelCapAwal * (1 - Math.min(1, this.isi / KONFIG.isiCone));
+        if (this.isi >= KONFIG.isiCone) { this.levelCap = 0; this.isiMedan(); }
+        this.titikJatuh = { x: nx, y: this.levelCap + KONFIG.kubahCap, z: nz };
+      }
+      this.jatuh = { x: nx, z: nz };
+      return;
+    }
+
+    // Tali yang keluar harus diletakkan sepanjang lintasan. Lebih cepat dari laju: tali menipis.
+    // Lebih lambat: tali menebal sampai kMaks, sisanya melingkar di tempat.
+    const KM = KONFIG.kMaks;
+    let k, lebih = 0;
+    if (d * KM * KM >= keluar) k = Math.sqrt(keluar / Math.max(d, 1e-6));
+    else { k = KM; lebih = (keluar - d * KM * KM) / (KM * KM); }
+    if (k < KONFIG.kPutus) {
+      if (!this.stripBaru) this.akhiriStrip();
+      this.putus = true;
+      this.jatuh = { x: nx, z: nz };
+      this.sisa = 0;
+      this.titikJatuh = null;
+      return;
+    }
+    this.putus = false;
+    this.kHalus += (k - this.kHalus) * (1 - Math.exp(-dt * KONFIG.redamanTebal));
+    const melingkar = lebih > keluar * 0.25;
+    this.gulung += ((melingkar ? 1 : 0) - this.gulung) * (1 - Math.exp(-dt * 4));
+    // Krim yang terus melingkar di tempat meluber: lingkarannya makin lebar.
+    this.lamaGulung = melingkar ? this.lamaGulung + dt : Math.max(0, this.lamaGulung - dt * 2);
+    const jg = KONFIG.jariGulung + Math.min(0.6, this.lamaGulung * KONFIG.luberGulung);
+    this.fase += lebih / jg;
+    const px = nx + Math.cos(this.fase) * jg * this.gulung, pz = nz + Math.sin(this.fase) * jg * this.gulung;
+    this.jalur(this.jatuh, px, pz, this.kHalus);
+    this.jatuh = { x: px, z: pz };
+    this.cetakAntrean(false);
+    if (this.cincin.length > KONFIG.maksCincin - 40) this.penuh = true;
+  }
+
+  jalur(dari, x, z, k) {
+    const L = Math.hypot(x - dari.x, z - dari.z);
+    if (L < 1e-9) return;
+    const s = KONFIG.jarakSampel;
+    let t = s - this.sisa;
+    while (t <= L) {
+      const f = t / L;
+      this.sampel(dari.x + (x - dari.x) * f, dari.z + (z - dari.z) * f, k);
+      t += s;
+    }
+    this.sisa = L - (t - s);
+  }
+
+  sampel(x, z, k) {
+    const rr = KONFIG.jariTali * k, m = KONFIG.jarakSampel * k * k;
+    this.panjang += KONFIG.jarakSampel;
+    const s = this.sanggaan(x, z, Math.max(0.1, rr * KONFIG.tapak));
+    if (s <= KOSONG + 1) {
+      this.tumpah += m;
+      this.menumpahkan = true;
+      this.tetesKeluar(x, z, this.yLalu ?? 0.5, rr);
+      if (!this.stripBaru) this.akhiriStrip();
+      this.titikJatuh = { x, y: -14, z };
+      return;
+    }
+    this.menumpahkan = false;
+    let y = s + rr * KONFIG.pipih;
+    if (this.yLalu !== null && y < this.yLalu - KONFIG.turunMaks) y = this.yLalu - KONFIG.turunMaks;
+    const c = { x, y, z, r: this.stripBaru ? rr * 0.45 : rr, rAsli: rr, s: this.panjang, strip: this.stripId };
+    this.stripBaru = false;
+    this.cincin.push(c);
+    this.antre.push(c);
+    this.massa.push({ x, y, z, m });
+    this.yLalu = y;
+    if (y + rr * KONFIG.pipih > this.puncak) this.puncak = y + rr * KONFIG.pipih;
+    this.titikJatuh = c;
+  }
+
+  akhiriStrip() {
+    const n = this.cincin.length;
+    if (n && !this.stripBaru) {
+      const c = this.cincin[n - 1];
+      c.r = c.rAsli * 0.45;
+      this.ubah.push(n - 1);
+    }
+    this.stripBaru = true;
+    this.stripId++;
+    this.yLalu = null;
+  }
+
+  tetesKeluar(x, z, y, r) {
+    if (this.hitungTetes++ % 3 === 0) this.tetes.push({ x, y, z, r });
+  }
+
+  cetakAntrean(semua) {
+    while (this.antre.length && (semua || this.panjang - this.antre[0].s > KONFIG.tundaCetak)) {
+      const c = this.antre.shift();
+      this.cetak(c.x, c.z, c.y, c.rAsli);
+    }
+  }
+
+  // Ujung krim: tali ditarik ke atas sambil mengecil, seperti saat cone dijauhkan dari mesin.
+  akhiri() {
+    const n = this.cincin.length;
+    if (n >= 2 && !this.stripBaru) {
+      const a = this.cincin[n - 2], b = this.cincin[n - 1];
+      let tx = b.x - a.x, tz = b.z - a.z;
+      const l = Math.hypot(tx, tz) || 1;
+      tx /= l; tz /= l;
+      let x = b.x, y = b.y, z = b.z;
+      for (let i = 1; i <= 9; i++) {
+        const t = i / 9;
+        x += tx * 0.11 * (1 - t);
+        z += tz * 0.11 * (1 - t);
+        y += 0.06 + 0.07 * t;
+        const r = Math.max(0.03, b.rAsli * (1 - t) ** 0.85);
+        this.cincin.push({ x, y, z, r, rAsli: r, s: this.panjang, strip: this.stripId });
+        this.puncak = Math.max(this.puncak, y + r * 0.8);
+      }
+    }
+    this.stripBaru = true;
+    this.stripId++;
+    this.cetakAntrean(true);
+  }
+}
+
+// Cek tiap pita setinggi 1 cm: krim di atasnya harus tetap di atas alas pita itu (roboh),
+// dan beratnya dibagi luas alas tidak boleh melewati batas (melorot).
+function cekStabil(massa) {
+  const n = massa.length;
+  if (n < 25) return null;
+  let maksY = 0;
+  for (const p of massa) if (p.y > maksY) maksY = p.y;
+  const nb = Math.floor(maksY) + 1;
+  const m = new Float64Array(nb), sx = new Float64Array(nb), sz = new Float64Array(nb), lebar = new Float64Array(nb);
+  const pita = new Int32Array(n);
+  let total = 0, tx = 0, tz = 0;
+  for (let i = 0; i < n; i++) {
+    const p = massa[i], b = Math.min(nb - 1, Math.max(0, Math.floor(p.y)));
+    pita[i] = b;
+    m[b] += p.m; sx[b] += p.x * p.m; sz[b] += p.z * p.m;
+    total += p.m; tx += p.x * p.m; tz += p.z * p.m;
+  }
+  for (let i = 0; i < n; i++) {
+    const p = massa[i], b = pita[i];
+    const d = Math.hypot(p.x - sx[b] / m[b], p.z - sz[b] / m[b]);
+    if (d > lebar[b]) lebar[b] = d;
+  }
+  const gx = tx / total, gz = tz / total;
+  if (Math.hypot(gx, gz) > KONFIG.jariCone * 0.85) {
+    return { jenis: 'roboh', y: 0, cx: 0, cz: 0, R: KONFIG.jariCone, ax: gx, az: gz };
+  }
+  // Menara yang terlalu ramping (tinggi di atas pita dibanding lebar alasnya) juga melorot.
+  let ma = 0, mx = 0, mz = 0;
+  for (let b = nb - 1; b >= 0; b--) {
+    if (ma >= KONFIG.massaMinCek && m[b] > 0) {
+      const cx = sx[b] / m[b], cz = sz[b] / m[b], R = lebar[b] + KONFIG.jariTali;
+      const ax = mx / ma - cx, az = mz / ma - cz;
+      if (Math.hypot(ax, az) > R) return { jenis: 'roboh', y: b + 1, cx, cz, R, ax, az };
+      if (ma / (Math.PI * R * R) > KONFIG.tegangan || (maksY - b - 1) / (2 * R) > KONFIG.rasioRamping) {
+        return { jenis: 'melorot', y: b + 1, cx, cz, R, ax, az };
+      }
+    }
+    ma += m[b]; mx += sx[b]; mz += sz[b];
+  }
+  return null;
+}
+
+function nilaiDari(tinggi) {
+  return KONFIG.batasNilai.filter(b => tinggi >= b).length;
+}
+
+// Simulasi tanpa gambar, untuk menguji keseimbangan aturan.
+function simulasi(pola, maksDetik = 60) {
+  const m = new Mesin();
+  const dt = 1 / 60;
+  let t = 0, langkah = 0, gagal = null;
+  while (t < maksDetik) {
+    const p = pola(t);
+    if (!p) break;
+    m.tuang(dt, p.x, p.z);
+    t += dt;
+    if (++langkah % 6 === 0) {
+      if (m.tumpah > KONFIG.batasTumpah) { gagal = 'tumpah'; break; }
+      const s = cekStabil(m.massa);
+      if (s) { gagal = s.jenis; break; }
+    }
+  }
+  if (!gagal) {
+    m.akhiri();
+    if (m.tumpah > KONFIG.batasTumpah) gagal = 'tumpah';
+    else { const s = cekStabil(m.massa); if (s) gagal = s.jenis; }
+  }
+  return { gagal, tinggi: +m.puncak.toFixed(2), detik: +t.toFixed(1), tumpah: +m.tumpah.toFixed(2), cincin: m.cincin.length };
+}
+
+// ---------- Elemen halaman ----------
+const $ = id => document.getElementById(id);
+const el = {
+  app: document.querySelector('.app'), kanvas: $('kanvas'), bantalan: $('bantalan'), svg: $('svg-bantalan'), panduan: $('panduan'),
+  peraga: $('peraga'), titikPeraga: $('titik-peraga'), titikMulai: $('titik-mulai'), jejak: $('jejak'),
+  angka: $('angka-tinggi'), hudRekor: $('hud-rekor'), layarStatus: $('layar-status'), statusJudul: $('status-judul'),
+  statusIsi: $('status-isi'), tombolMuat: $('tombol-muat'), hasil: $('hasil'), judulHasil: $('judul-hasil'),
+  keterangan: $('keterangan-hasil'), labelTinggi: $('label-tinggi-hasil'), tinggiHasil: $('tinggi-hasil'),
+  nilai: $('nilai'), rekorHasil: $('rekor-hasil'), tombolLagi: $('tombol-lagi'), tombolGambar: $('tombol-gambar'),
+  tombolVideo: $('tombol-video'), statusSimpan: $('status-simpan'), namaRasa: $('nama-rasa'),
+  dialog: $('dialog-cara'), tombolCara: $('tombol-cara'),
+};
+const formatAngka = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const cm = v => `${formatAngka.format(v)} cm`;
+
+function bintang(r1, r2, n = 8) {
+  const t = [];
+  for (let i = 0; i < n * 2; i++) {
+    const a = -Math.PI / 2 + i * Math.PI / n, r = i % 2 ? r2 : r1;
+    t.push([Math.cos(a) * r, Math.sin(a) * r]);
+  }
+  return t;
+}
+const titikBintang = (pusatX, pusatY, r1, r2) => bintang(r1, r2).map(([x, y]) => `${(pusatX + x).toFixed(1)},${(pusatY + y).toFixed(1)}`).join(' ');
+
+function tampilStatus(judul, isi, bisaMuat) {
+  el.statusJudul.textContent = judul;
+  el.statusIsi.textContent = isi;
+  el.tombolMuat.hidden = !bisaMuat;
+  el.layarStatus.hidden = false;
+}
+el.tombolMuat.addEventListener('click', () => location.reload());
+
+const KUNCI_REKOR = 'es-krim-putar:rekor';
+let penyimpananGagal = false;
+function bacaRekor() {
+  try {
+    const v = JSON.parse(localStorage.getItem(KUNCI_REKOR));
+    return v && typeof v.tinggi === 'number' ? v : null;
+  } catch { return null; }
+}
+function tulisRekor(v) {
+  try { localStorage.setItem(KUNCI_REKOR, JSON.stringify(v)); return true; } catch { return false; }
+}
+function segarkanHudRekor() {
+  const r = bacaRekor();
+  el.hudRekor.textContent = r ? `Rekor ${cm(r.tinggi)}` : 'Belum ada rekor';
+}
+segarkanHudRekor();
+
+// ---------- Memuat three.js ----------
+let THREE;
+try {
+  THREE = await import('https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.min.js');
+} catch {
+  tampilStatus('Tampilan 3D tidak bisa dimuat', 'Pustaka 3D gagal diunduh. Periksa sambungan internet, lalu muat ulang halaman.', true);
+  throw new Error('three.js gagal dimuat');
+}
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas: el.kanvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+} catch {
+  tampilStatus('Tampilan 3D tidak bisa dimulai', 'Peramban ini belum mendukung WebGL 2 atau sedang membatasinya. Buka di Chrome, Safari, atau Firefox versi terbaru, lalu muat ulang.', true);
+  throw new Error('WebGL tidak tersedia');
+}
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setClearColor(0x000000, 0);
+renderer.toneMapping = THREE.NeutralToneMapping ?? THREE.ACESFilmicToneMapping;
+renderer.localClippingEnabled = true;
+
+const adegan = new THREE.Scene();
+const kamera = new THREE.PerspectiveCamera(30, 1, 0.5, 400);
+
+adegan.add(new THREE.HemisphereLight(0xfff6ea, 0xe2c6a2, 1.5));
+const lampuUtama = new THREE.DirectionalLight(0xffffff, 2.5);
+lampuUtama.position.set(-7, 14, 11);
+adegan.add(lampuUtama);
+const lampuIsi = new THREE.DirectionalLight(0xffe2c2, 0.7);
+lampuIsi.position.set(9, 3, 7);
+adegan.add(lampuIsi);
+const lampuTepi = new THREE.DirectionalLight(0xffffff, 0.9);
+lampuTepi.position.set(2, 7, -12);
+adegan.add(lampuTepi);
+
+// Cone wafer
+function teksturWafer() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = '#C98949';
+  g.fillRect(0, 0, 256, 256);
+  const garis = (lebar, warna, geser) => {
+    g.strokeStyle = warna;
+    g.lineWidth = lebar;
+    for (let k = -256; k <= 256; k += 128) {
+      g.beginPath(); g.moveTo(k + geser, 0); g.lineTo(k + 256 + geser, 256); g.stroke();
+      g.beginPath(); g.moveTo(k + geser, 256); g.lineTo(k + 256 + geser, 0); g.stroke();
+    }
+  };
+  garis(22, '#9E6331', 4);
+  garis(16, '#E7B676', 0);
+  garis(4, '#F6D29C', -3);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(8, 4);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+const tekstur = teksturWafer();
+const bahanCone = new THREE.MeshStandardMaterial({ map: tekstur, bumpMap: tekstur, bumpScale: 3, roughness: 0.82, side: THREE.DoubleSide });
+const cone = new THREE.Mesh(new THREE.ConeGeometry(KONFIG.jariCone, KONFIG.dalamCone, 72, 1, true), bahanCone);
+cone.rotation.x = Math.PI;
+cone.position.y = -KONFIG.dalamCone / 2;
+adegan.add(cone);
+const bibir = new THREE.Mesh(new THREE.TorusGeometry(KONFIG.jariCone + 0.02, 0.17, 14, 80), new THREE.MeshStandardMaterial({ color: 0xE6B274, roughness: 0.75 }));
+bibir.rotation.x = Math.PI / 2;
+adegan.add(bibir);
+
+// Krim yang mengisi cone
+const bahanCap = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 });
+const cap = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 10, 0, Math.PI * 2, 0, Math.PI / 2), bahanCap);
+adegan.add(cap);
+
+// Kepala mesin: pipa, leher, dan nosel bintang delapan sudut
+const kepalaMesin = new THREE.Group();
+const bahanLogam = new THREE.MeshStandardMaterial({ color: 0xCFC7BB, metalness: 0.3, roughness: 0.38 });
+const bahanNosel = new THREE.MeshStandardMaterial({ color: 0xA99F92, metalness: 0.35, roughness: 0.35 });
+const bentukNosel = new THREE.Shape();
+bintang(0.66, 0.5).forEach(([x, y], i) => (i ? bentukNosel.lineTo(x, y) : bentukNosel.moveTo(x, y)));
+const nosel = new THREE.Mesh(new THREE.ExtrudeGeometry(bentukNosel, { depth: 0.7, bevelEnabled: true, bevelSize: 0.04, bevelThickness: 0.04, bevelSegments: 2 }), bahanNosel);
+nosel.rotation.x = -Math.PI / 2;
+kepalaMesin.add(nosel);
+const leher = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.78, 0.55, 48), bahanLogam);
+leher.position.y = 1.0;
+kepalaMesin.add(leher);
+const pipa = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 60, 40), bahanLogam);
+pipa.position.y = 31.2;
+kepalaMesin.add(pipa);
+adegan.add(kepalaMesin);
+
+// Aliran krim dari nosel
+const bahanAliran = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.55 });
+const aliran = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 18, 1, true), bahanAliran);
+aliran.visible = false;
+adegan.add(aliran);
+
+// Tetes krim yang jatuh
+const bahanTetes = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.55 });
+const geoTetes = new THREE.SphereGeometry(1, 14, 10);
+const kolamTetes = Array.from({ length: 36 }, () => {
+  const t = new THREE.Mesh(geoTetes, bahanTetes);
+  t.visible = false;
+  t.userData = { vx: 0, vy: 0, vz: 0 };
+  adegan.add(t);
+  return t;
+});
+let tetesBerikut = 0;
+
+// Tali krim: geometri yang disiapkan di muka, diisi cincin demi cincin
+const SEG = 24, ALUR = 8, AMP = 0.1;
+const prof = [], nrm = [];
+for (let j = 0; j < SEG; j++) {
+  const th = j / SEG * Math.PI * 2;
+  const f = 1 + AMP * Math.cos(ALUR * th), nt = AMP * ALUR * Math.sin(ALUR * th), l = Math.hypot(f, nt);
+  prof.push({ c: Math.cos(th), s: Math.sin(th), f, nr: f / l, nt: nt / l, gelap: 0.9 + 0.1 * (0.5 + 0.5 * Math.cos(ALUR * th)), th });
+}
+const MAKS = KONFIG.maksCincin;
+const pos = new Float32Array(MAKS * SEG * 3), nor = new Float32Array(MAKS * SEG * 3), war = new Float32Array(MAKS * SEG * 3);
+const indeks = new Uint32Array(MAKS * SEG * 6);
+const geoTali = new THREE.BufferGeometry();
+const atrPos = new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage);
+const atrNor = new THREE.BufferAttribute(nor, 3).setUsage(THREE.DynamicDrawUsage);
+const atrWar = new THREE.BufferAttribute(war, 3).setUsage(THREE.DynamicDrawUsage);
+const atrIdx = new THREE.BufferAttribute(indeks, 1).setUsage(THREE.DynamicDrawUsage);
+geoTali.setAttribute('position', atrPos);
+geoTali.setAttribute('normal', atrNor);
+geoTali.setAttribute('color', atrWar);
+geoTali.setIndex(atrIdx);
+geoTali.setDrawRange(0, 0);
+const bidangBawah = new THREE.Plane(new THREE.Vector3(0, -1, 0), 1000);
+const bidangAtas = new THREE.Plane(new THREE.Vector3(0, 1, 0), 1000);
+const bidangAtasDasar = new THREE.Plane();
+const bahanTali = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.52, clippingPlanes: [bidangBawah] });
+const bahanTaliAtas = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.52, clippingPlanes: [bidangAtas] });
+const tali = new THREE.Mesh(geoTali, bahanTali);
+tali.frustumCulled = false;
+adegan.add(tali);
+const engsel = new THREE.Group();
+const taliAtas = new THREE.Mesh(geoTali, bahanTaliAtas);
+taliAtas.frustumCulled = false;
+engsel.add(taliAtas);
+engsel.visible = false;
+adegan.add(engsel);
+
+let warnaA = new THREE.Color(), warnaB = new THREE.Color();
+let digambar = 0, jumlahIndeks = 0;
+
+function tulisCincin(cin, i) {
+  const c = cin[i];
+  const sebelum = i > 0 && cin[i - 1].strip === c.strip ? cin[i - 1] : null;
+  const sesudah = i + 1 < cin.length && cin[i + 1].strip === c.strip ? cin[i + 1] : null;
+  const p0 = sebelum || c, p1 = sesudah || c;
+  let tx = p1.x - p0.x, ty = p1.y - p0.y, tz = p1.z - p0.z;
+  let l = Math.hypot(tx, ty, tz);
+  if (l < 1e-6) { tx = 1; ty = 0; tz = 0; l = 1; }
+  tx /= l; ty /= l; tz /= l;
+  // N dibawa dari cincin sebelumnya (diproyeksikan tegak lurus T) supaya alur tidak terpelintir
+  // saat tali berbelok tegak di ujung. Cincin pertama memakai N = T x atas.
+  let nx, ny, nz;
+  if (sebelum && sebelum.nx !== undefined) {
+    const d = sebelum.nx * tx + sebelum.ny * ty + sebelum.nz * tz;
+    nx = sebelum.nx - d * tx; ny = sebelum.ny - d * ty; nz = sebelum.nz - d * tz;
+  } else {
+    nx = -tz; ny = 0; nz = tx;
+  }
+  let ln = Math.hypot(nx, ny, nz);
+  if (ln < 1e-4) { nx = 0; ny = -tz; nz = ty; ln = Math.hypot(ny, nz) || 1; }
+  nx /= ln; ny /= ln; nz /= ln;
+  c.nx = nx; c.ny = ny; c.nz = nz;
+  const bx = ny * tz - nz * ty, by = nz * tx - nx * tz, bz = nx * ty - ny * tx;
+  const putaran = c.s * 1.15;
+  let o = i * SEG * 3;
+  for (let j = 0; j < SEG; j++, o += 3) {
+    const p = prof[j];
+    const erx = p.c * nx + p.s * bx, ery = p.c * ny + p.s * by, erz = p.c * nz + p.s * bz;
+    const etx = -p.s * nx + p.c * bx, ety = -p.s * ny + p.c * by, etz = -p.s * nz + p.c * bz;
+    const r = c.r * p.f;
+    pos[o] = c.x + erx * r; pos[o + 1] = c.y + ery * r; pos[o + 2] = c.z + erz * r;
+    nor[o] = erx * p.nr + etx * p.nt; nor[o + 1] = ery * p.nr + ety * p.nt; nor[o + 2] = erz * p.nr + etz * p.nt;
+    const s = Math.sin(p.th + putaran);
+    const campur = s < -0.3 ? 0 : s > 0.3 ? 1 : (s + 0.3) / 0.6;
+    war[o] = (warnaB.r + (warnaA.r - warnaB.r) * campur) * p.gelap;
+    war[o + 1] = (warnaB.g + (warnaA.g - warnaB.g) * campur) * p.gelap;
+    war[o + 2] = (warnaB.b + (warnaA.b - warnaB.b) * campur) * p.gelap;
+  }
+}
+
+function tandai(attr, mulai, jumlah) {
+  if (jumlah <= 0) return;
+  if (attr.addUpdateRange) attr.addUpdateRange(mulai, jumlah);
+  else { attr.updateRange.offset = mulai; attr.updateRange.count = jumlah; }
+  attr.needsUpdate = true;
+}
+
+function sinkronTali() {
+  const cin = mesin.cincin;
+  if (digambar === cin.length && !mesin.ubah.length) return;
+  let min = Infinity, maks = -1;
+  const idxAwal = jumlahIndeks;
+  for (let i = digambar; i < cin.length; i++) {
+    const sambung = i > 0 && cin[i - 1].strip === cin[i].strip;
+    if (sambung) tulisCincin(cin, i - 1);
+    tulisCincin(cin, i);
+    if (sambung) {
+      const a0 = (i - 1) * SEG, b0 = i * SEG;
+      for (let j = 0; j < SEG; j++) {
+        const j2 = (j + 1) % SEG;
+        indeks[jumlahIndeks++] = a0 + j; indeks[jumlahIndeks++] = b0 + j; indeks[jumlahIndeks++] = a0 + j2;
+        indeks[jumlahIndeks++] = a0 + j2; indeks[jumlahIndeks++] = b0 + j; indeks[jumlahIndeks++] = b0 + j2;
+      }
+      min = Math.min(min, i - 1);
+    }
+    min = Math.min(min, i);
+    maks = Math.max(maks, i);
+  }
+  for (const i of mesin.ubah) {
+    if (i < cin.length) { tulisCincin(cin, i); min = Math.min(min, i); maks = Math.max(maks, i); }
+  }
+  mesin.ubah.length = 0;
+  digambar = cin.length;
+  if (maks >= min) {
+    const mulai = min * SEG * 3, jumlah = (maks - min + 1) * SEG * 3;
+    tandai(atrPos, mulai, jumlah);
+    tandai(atrNor, mulai, jumlah);
+    tandai(atrWar, mulai, jumlah);
+  }
+  tandai(atrIdx, idxAwal, jumlahIndeks - idxAwal);
+  geoTali.setDrawRange(0, jumlahIndeks);
+}
+
+function kosongkanTali() {
+  digambar = 0;
+  jumlahIndeks = 0;
+  geoTali.setDrawRange(0, 0);
+}
+
+// ---------- Keadaan permainan ----------
+const mesin = new Mesin();
+let keadaan = 'memuat'; // memuat | siap | menuang | akhir | hasil
+let sumber = null;       // 'penunjuk' | 'papan'
+let idPenunjuk = null;
+const target = { x: 0, z: 0 };
+const papan = { sudut: -Math.PI / 2, r: 1, kecil: false, besar: false };
+let rasaAktif = 'vanila';
+let jedaCek = 0;
+let hasilAkhir = null;
+let animasi = null;
+let putaranKamera = 0, putaranJalan = false;
+const tampil = { puncak: 0.4, kepalaY: 3, kamPuncak: 1 };
+const reduksiGerak = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+function terapkanRasa() {
+  const r = RASA[rasaAktif];
+  warnaA = new THREE.Color(r.a);
+  warnaB = new THREE.Color(r.b);
+  bahanCap.color.set(r.a);
+  bahanAliran.color.set(r.a);
+  bahanTetes.color.set(r.a);
+  el.namaRasa.textContent = r.nama;
+}
+// Rasa boleh dipilih saat hasil tampil; warnanya baru dipakai di babak berikutnya.
+document.querySelectorAll('input[name="rasa"]').forEach(inp => {
+  inp.addEventListener('change', () => {
+    if (!inp.checked) return;
+    rasaAktif = inp.value;
+    el.namaRasa.textContent = RASA[rasaAktif].nama;
+    if (keadaan === 'siap') terapkanRasa();
+  });
+});
+function kunciRasa(kunci) {
+  document.querySelectorAll('input[name="rasa"]').forEach(inp => { inp.disabled = kunci; });
+}
+
+function siapkanBabak() {
+  mesin.reset();
+  kosongkanTali();
+  terapkanRasa();
+  engsel.visible = false;
+  engsel.position.set(0, 0, 0);
+  engsel.rotation.set(0, 0, 0);
+  engsel.scale.set(1, 1, 1);
+  taliAtas.position.set(0, 0, 0);
+  bidangBawah.constant = 1000;
+  for (const t of kolamTetes) t.visible = false;
+  aliran.visible = false;
+  animasi = null;
+  hasilAkhir = null;
+  putaranJalan = false;
+  tampil.puncak = 0.4;
+  el.angka.innerHTML = `${formatAngka.format(0)}<small> cm</small>`;
+  el.hasil.hidden = true;
+  el.app.classList.remove('ada-hasil');
+  el.statusSimpan.textContent = '';
+  kunciRasa(false);
+  keadaan = 'siap';
+}
+
+// ---------- Bantalan putar ----------
+// Pusat lingkaran sedikit di atas tengah supaya baris petunjuk di bawah tidak menabraknya.
+const RUANG_PETUNJUK = 30;
+const bentukBantalan = { w: 1, h: 1, cx: 0, cy: 0, G: 60 };
+function ukurBantalan() {
+  const r = el.bantalan.getBoundingClientRect();
+  const w = Math.max(1, r.width), h = Math.max(1, r.height);
+  const cx = w / 2, cy = (h - RUANG_PETUNJUK) / 2;
+  const G = Math.max(36, Math.min(w, h - RUANG_PETUNJUK) * 0.31);
+  Object.assign(bentukBantalan, { w, h, cx, cy, G });
+  el.svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  el.panduan.setAttribute('cx', cx);
+  el.panduan.setAttribute('cy', cy);
+  el.panduan.setAttribute('r', G);
+  el.peraga.style.transformOrigin = `${cx}px ${cy}px`;
+  el.titikPeraga.setAttribute('cx', cx);
+  el.titikPeraga.setAttribute('cy', cy - G);
+  el.titikMulai.setAttribute('points', titikBintang(cx, cy, 9, 6.5));
+}
+new ResizeObserver(ukurBantalan).observe(el.bantalan);
+ukurBantalan();
+
+function aturTargetDari(u, v) {
+  const l = Math.hypot(u, v);
+  if (l > 1.9) { u *= 1.9 / l; v *= 1.9 / l; }
+  target.x = u * KONFIG.jariLintasan;
+  target.z = v * KONFIG.jariLintasan;
+  const { cx, cy, G } = bentukBantalan;
+  el.jejak.setAttribute('cx', cx + u * G);
+  el.jejak.setAttribute('cy', cy + v * G);
+}
+function targetDariPenunjuk(e) {
+  const r = el.bantalan.getBoundingClientRect();
+  const { cx, cy, G } = bentukBantalan;
+  aturTargetDari((e.clientX - r.left - cx) / G, (e.clientY - r.top - cy) / G);
+}
+
+el.bantalan.addEventListener('pointerdown', e => {
+  if (keadaan !== 'siap' || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  e.preventDefault();
+  el.bantalan.focus({ preventScroll: true });
+  try { el.bantalan.setPointerCapture(e.pointerId); } catch {}
+  idPenunjuk = e.pointerId;
+  targetDariPenunjuk(e);
+  mulaiTuang('penunjuk');
+});
+el.bantalan.addEventListener('pointermove', e => {
+  if (keadaan === 'menuang' && sumber === 'penunjuk' && e.pointerId === idPenunjuk) targetDariPenunjuk(e);
+});
+el.bantalan.addEventListener('pointerup', e => {
+  if (keadaan === 'menuang' && sumber === 'penunjuk' && e.pointerId === idPenunjuk) selesaiTuang();
+});
+el.bantalan.addEventListener('pointercancel', e => {
+  if (keadaan === 'menuang' && sumber === 'penunjuk' && e.pointerId === idPenunjuk) {
+    hentikan('Perangkat atau peramban membatalkan sentuhan di tengah permainan.');
+  }
+});
+el.bantalan.addEventListener('contextmenu', e => e.preventDefault());
+
+const tombolTuang = e => e.key === ' ' || e.key === 'Enter';
+el.bantalan.addEventListener('keydown', e => {
+  if (tombolTuang(e)) {
+    e.preventDefault();
+    if (!e.repeat && keadaan === 'siap') {
+      papan.sudut = -Math.PI / 2;
+      papan.r = 1;
+      aturTargetDari(0, -1);
+      mulaiTuang('papan');
+    }
+  } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') { e.preventDefault(); papan.kecil = true; }
+  else if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { e.preventDefault(); papan.besar = true; }
+});
+el.bantalan.addEventListener('keyup', e => {
+  if (tombolTuang(e)) { if (keadaan === 'menuang' && sumber === 'papan') selesaiTuang(); }
+  else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') papan.kecil = false;
+  else if (e.key === 'ArrowUp' || e.key === 'ArrowRight') papan.besar = false;
+});
+el.bantalan.addEventListener('blur', () => {
+  papan.kecil = papan.besar = false;
+  if (keadaan === 'menuang' && sumber === 'papan') selesaiTuang();
+});
+
+function langkahPapan(dt) {
+  papan.r = Math.min(1.6, Math.max(0.05, papan.r + ((papan.besar ? 1 : 0) - (papan.kecil ? 1 : 0)) * 0.3 * dt));
+  const rCm = papan.r * KONFIG.jariLintasan;
+  papan.sudut += Math.min(KONFIG.laju / Math.max(rCm, 0.1), Math.PI * 3) * dt;
+  aturTargetDari(Math.cos(papan.sudut) * papan.r, Math.sin(papan.sudut) * papan.r);
+}
+
+function mulaiTuang(asal) {
+  sumber = asal;
+  keadaan = 'menuang';
+  kunciRasa(true);
+  el.bantalan.classList.add('aktif', 'sudah-main');
+  el.jejak.setAttribute('visibility', 'visible');
+  jedaCek = 0;
+  mulaiRekam();
+}
+
+function lepasKendali() {
+  el.bantalan.classList.remove('aktif');
+  el.jejak.setAttribute('visibility', 'hidden');
+  if (idPenunjuk !== null) {
+    try { el.bantalan.releasePointerCapture(idPenunjuk); } catch {}
+    idPenunjuk = null;
+  }
+  aliran.visible = false;
+}
+
+function selesaiTuang() {
+  if (keadaan !== 'menuang') return;
+  lepasKendali();
+  mesin.akhiri();
+  sinkronTali();
+  let gagal = null;
+  if (mesin.tumpah > KONFIG.batasTumpah) gagal = { jenis: 'tumpah' };
+  else gagal = cekStabil(mesin.massa);
+  if (gagal) return mulaiGagal(gagal);
+  const tinggi = mesin.cincin.length ? mesin.puncak : 0;
+  keadaan = 'akhir';
+  animasi = { jenis: 'jadi', t: 0, lama: 0.7 };
+  hasilAkhir = { jenis: tinggi > 0.2 ? 'jadi' : 'kosong', tinggi };
+}
+
+function mulaiGagal(g) {
+  lepasKendali();
+  keadaan = 'akhir';
+  hasilAkhir = { jenis: g.jenis, tinggi: mesin.puncak };
+  if (g.jenis === 'tumpah') { animasi = { jenis: 'tumpah', t: 0, lama: 0.9 }; return; }
+  // Bagian di atas pita yang gagal dipisah dengan bidang potong, lalu dijatuhkan atau dipelorotkan.
+  const y = Math.max(0.2, g.y);
+  bidangBawah.constant = y;
+  bidangAtasDasar.normal.set(0, 1, 0);
+  bidangAtasDasar.constant = -y;
+  let ax = g.ax, az = g.az;
+  const l = Math.hypot(ax, az);
+  if (l < 1e-3) { const s = Math.random() * Math.PI * 2; ax = Math.cos(s); az = Math.sin(s); } else { ax /= l; az /= l; }
+  const px = g.jenis === 'roboh' ? g.cx + ax * g.R * 0.8 : g.cx, pz = g.jenis === 'roboh' ? g.cz + az * g.R * 0.8 : g.cz;
+  engsel.position.set(px, y, pz);
+  engsel.rotation.set(0, 0, 0);
+  engsel.scale.set(1, 1, 1);
+  taliAtas.position.set(-px, -y, -pz);
+  engsel.visible = true;
+  animasi = { jenis: g.jenis, t: 0, lama: g.jenis === 'roboh' ? 1.3 : 0.9, sumbu: new THREE.Vector3(az, 0, -ax), turun: 0 };
+}
+
+function hentikan(alasan) {
+  if (keadaan !== 'menuang') return;
+  lepasKendali();
+  hentikanRekam(false);
+  hasilAkhir = { jenis: 'henti', tinggi: mesin.puncak, alasan };
+  tampilkanHasil();
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) hentikan('Halaman tersembunyi di tengah permainan, jadi babak ini dihentikan.');
+});
+
+// ---------- Hasil ----------
+const TEKS_GAGAL = {
+  tumpah: ['Krimnya tumpah', 'Banyak krim jatuh di luar cone. Jaga putaran tetap di dalam lingkaran.'],
+  roboh: ['Krimnya roboh', 'Tumpukan atas bergeser terlalu jauh dari tengah. Kecilkan putaran pelan-pelan dan tetap berpusat.'],
+  melorot: ['Krimnya melorot', 'Dasarnya terlalu sempit untuk menahan krim di atasnya. Buat beberapa putaran lebar dulu.'],
+};
+
+function gambarNilai(n) {
+  el.nilai.innerHTML = '';
+  for (let i = 0; i < 5; i++) {
+    const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    s.setAttribute('viewBox', '-13 -13 26 26');
+    const p = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    p.setAttribute('points', titikBintang(0, 0, 12, 8.5));
+    p.setAttribute('class', i < n ? 'isi' : 'kosong');
+    s.appendChild(p);
+    el.nilai.appendChild(s);
+  }
+  el.nilai.setAttribute('aria-label', `Nilai ${n} dari 5`);
+}
+
+function tampilkanHasil() {
+  keadaan = 'hasil';
+  const h = hasilAkhir;
+  h.rasa = rasaAktif;
+  const tinggi = Math.round(h.tinggi * 10) / 10;
+  let judul, ket = '', nilai = 0, catatanRekor;
+  const rekor = bacaRekor();
+  if (h.jenis === 'jadi') {
+    judul = 'Es krimmu jadi';
+    nilai = nilaiDari(tinggi);
+    el.labelTinggi.textContent = 'Tinggi krim';
+    if (!rekor || tinggi > rekor.tinggi) {
+      const ok = tulisRekor({ tinggi, rasa: rasaAktif, tanggal: new Date().toISOString() });
+      penyimpananGagal = !ok;
+      catatanRekor = ok ? (rekor ? `Rekor baru. Sebelumnya ${cm(rekor.tinggi)}.` : 'Rekor pertamamu tercatat.') : 'Rekor tidak bisa disimpan di peramban ini.';
+    } else {
+      catatanRekor = `Rekor terbaikmu <b>${cm(rekor.tinggi)}</b>.`;
+    }
+  } else if (h.jenis === 'kosong') {
+    judul = 'Belum ada krim di atas cone';
+    ket = 'Tahan lebih lama dan putar mengikuti lingkaran supaya krim menumpuk di atas bibir cone.';
+    el.labelTinggi.textContent = 'Tinggi krim';
+    catatanRekor = rekor ? `Rekor terbaikmu <b>${cm(rekor.tinggi)}</b>.` : 'Belum ada rekor.';
+  } else if (h.jenis === 'henti') {
+    judul = 'Babak dihentikan';
+    ket = h.alasan;
+    el.labelTinggi.textContent = 'Sempat setinggi (tidak dicatat)';
+    catatanRekor = rekor ? `Rekor terbaikmu <b>${cm(rekor.tinggi)}</b>.` : 'Belum ada rekor.';
+  } else {
+    [judul, ket] = TEKS_GAGAL[h.jenis];
+    el.labelTinggi.textContent = 'Sempat setinggi (tidak dicatat)';
+    catatanRekor = rekor ? `Rekor terbaikmu <b>${cm(rekor.tinggi)}</b>.` : 'Belum ada rekor.';
+  }
+  h.nilai = nilai;
+  h.judul = judul;
+  el.judulHasil.textContent = judul;
+  el.keterangan.textContent = ket;
+  el.keterangan.hidden = !ket;
+  el.tinggiHasil.textContent = cm(tinggi);
+  gambarNilai(nilai);
+  el.nilai.hidden = h.jenis !== 'jadi';
+  el.rekorHasil.innerHTML = catatanRekor;
+  el.tombolGambar.hidden = !bisaSimpan();
+  el.tombolGambar.disabled = false;
+  el.tombolVideo.hidden = true;
+  el.statusSimpan.textContent = videoDilewati && bisaSimpan() ? 'Video babak ini tidak direkam supaya permainan tetap lancar.' : '';
+  segarkanHudRekor();
+  kunciRasa(false);
+  el.app.classList.add('ada-hasil');
+  el.hasil.hidden = false;
+  el.tombolLagi.focus({ preventScroll: true });
+  if (h.jenis === 'jadi' && !reduksiGerak.matches) putaranJalan = true;
+  if (perekam && perekam.state === 'recording') {
+    setTimeout(() => hentikanRekam(true), h.jenis === 'jadi' ? 2600 : 800);
+  }
+}
+
+el.tombolLagi.addEventListener('click', () => {
+  hentikanRekam(false);
+  siapkanBabak();
+  el.bantalan.focus({ preventScroll: true });
+});
+
+// ---------- Simpan gambar dan video ----------
+let unduhan = null;
+const diLuarPenampil = !window.claude;
+if (window.claude?.use) {
+  window.claude.use('downloads').then(d => { unduhan = d; if (keadaan === 'hasil') el.tombolGambar.hidden = !bisaSimpan(); }).catch(() => {});
+}
+function bisaSimpan() { return !!unduhan || diLuarPenampil; }
+
+async function simpanBerkas(nama, blob) {
+  if (unduhan) {
+    try {
+      await unduhan.save({ filename: nama, data: blob });
+      return 'tersimpan';
+    } catch (e) {
+      if (e?.code === 'declined') return 'batal';
+      if (e?.code === 'rate_limited') return 'sibuk';
+      return 'gagal';
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nama;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  return 'tersimpan';
+}
+const PESAN_SIMPAN = {
+  tersimpan: n => `${n} tersimpan.`,
+  batal: () => 'Penyimpanan dibatalkan.',
+  sibuk: () => 'Masih ada permintaan simpan yang terbuka. Coba lagi sebentar.',
+  gagal: n => `${n} gagal disimpan. Coba sekali lagi.`,
+};
+
+function warnaToken(nama) { return getComputedStyle(document.documentElement).getPropertyValue(nama).trim() || '#FCF3E2'; }
+
+function aturKamera(lebar, tinggi, puncak, putar) {
+  kamera.aspect = lebar / tinggi;
+  const atas = puncak + 5.4, bawah = -KONFIG.dalamCone - 0.6;
+  const tengah = (atas + bawah) / 2, perluTinggi = atas - bawah, perluLebar = 11;
+  const tan = Math.tan(THREE.MathUtils.degToRad(kamera.fov / 2));
+  const jarak = Math.max(perluTinggi / 2 / tan, perluLebar / 2 / (tan * kamera.aspect)) * 1.06;
+  const naik = THREE.MathUtils.degToRad(11);
+  kamera.position.set(Math.sin(putar) * jarak * Math.cos(naik), tengah + jarak * Math.sin(naik), Math.cos(putar) * jarak * Math.cos(naik));
+  kamera.lookAt(0, tengah, 0);
+  kamera.updateProjectionMatrix();
+}
+
+async function buatKartu() {
+  const W = 720, H = 960, ATAS = 150, BAWAH = 230;
+  const k = document.createElement('canvas');
+  k.width = W; k.height = H;
+  const g = k.getContext('2d');
+  try { await document.fonts.load('600 60px Fredoka'); await document.fonts.load('500 24px "Plus Jakarta Sans"'); } catch {}
+  g.fillStyle = warnaToken('--latar');
+  g.fillRect(0, 0, W, H);
+  // Render khusus berukuran kartu, lalu kembalikan ukuran panggung.
+  const rasio = renderer.getPixelRatio(), ukuran = renderer.getSize(new THREE.Vector2());
+  renderer.setPixelRatio(1);
+  renderer.setSize(W, H - ATAS - BAWAH + 60, false);
+  aturKamera(W, H - ATAS - BAWAH + 60, tampil.kamPuncak, 0.35);
+  renderer.render(adegan, kamera);
+  g.drawImage(renderer.domElement, 0, ATAS - 30);
+  renderer.setPixelRatio(rasio);
+  renderer.setSize(ukuran.x, ukuran.y, false);
+  const tinta = warnaToken('--tinta'), tinta2 = warnaToken('--tinta-2'), aksen = warnaToken('--aksen');
+  g.fillStyle = tinta;
+  g.font = '600 52px Fredoka, sans-serif';
+  g.fillText('Es Krim Putar', 48, 92);
+  g.fillStyle = tinta2;
+  g.font = '500 24px "Plus Jakarta Sans", sans-serif';
+  const h = hasilAkhir;
+  g.fillText(`Rasa ${RASA[h.rasa].nama.toLowerCase()}`, 48, 128);
+  g.fillStyle = tinta2;
+  g.font = '600 24px "Plus Jakarta Sans", sans-serif';
+  g.fillText(h.jenis === 'jadi' ? 'Tinggi krim' : h.judul, 48, H - 160);
+  g.fillStyle = tinta;
+  g.font = '600 96px Fredoka, sans-serif';
+  g.fillText(cm(Math.round(h.tinggi * 10) / 10), 44, H - 70);
+  for (let i = 0; i < (h.jenis === 'jadi' ? 5 : 0); i++) {
+    const cx = W - 48 - (4 - i) * 46 - 18, cy = H - 100;
+    g.beginPath();
+    bintang(18, 12.5).forEach(([x, y], j) => (j ? g.lineTo(cx + x, cy + y) : g.moveTo(cx + x, cy + y)));
+    g.closePath();
+    if (i < h.nilai) { g.fillStyle = aksen; g.fill(); } else { g.strokeStyle = tinta2; g.lineWidth = 2; g.stroke(); }
+  }
+  g.fillStyle = tinta2;
+  g.font = '500 20px "Plus Jakarta Sans", sans-serif';
+  g.fillText(new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()), 48, H - 30);
+  return new Promise(res => k.toBlob(res, 'image/png'));
+}
+
+el.tombolGambar.addEventListener('click', async () => {
+  el.tombolGambar.disabled = true;
+  el.statusSimpan.textContent = 'Membuat gambar…';
+  let hasil = 'gagal';
+  try {
+    const blob = await buatKartu();
+    if (blob) hasil = await simpanBerkas(`es-krim-putar-${formatAngka.format(hasilAkhir.tinggi).replace(',', '-')}cm.png`, blob);
+  } catch {}
+  el.statusSimpan.textContent = PESAN_SIMPAN[hasil]('Gambar');
+  el.tombolGambar.disabled = false;
+});
+
+// Rekam panggung selama babak berlangsung, digabung dengan judul dan angka tinggi.
+const kanvasVideo = document.createElement('canvas');
+kanvasVideo.width = 540; kanvasVideo.height = 720;
+const gVideo = kanvasVideo.getContext('2d');
+let perekam = null, potongan = [], videoBlob = null, tipeVideo = '', mulaiRekamPada = 0;
+let hitungVideo = 0, bebanVideo = 0, videoDilewati = false;
+function mulaiRekam() {
+  videoBlob = null;
+  hitungVideo = 0;
+  bebanVideo = 0;
+  videoDilewati = false;
+  if (!bisaSimpan() || typeof MediaRecorder === 'undefined' || !kanvasVideo.captureStream) return;
+  tipeVideo = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
+    .find(t => { try { return MediaRecorder.isTypeSupported(t); } catch { return false; } }) || '';
+  if (!tipeVideo) return;
+  try {
+    gambarBingkaiVideo();
+    perekam = new MediaRecorder(kanvasVideo.captureStream(30), { mimeType: tipeVideo, videoBitsPerSecond: 2500000 });
+    potongan = [];
+    perekam.ondataavailable = e => { if (e.data && e.data.size) potongan.push(e.data); };
+    perekam.start(500);
+    mulaiRekamPada = performance.now();
+  } catch { perekam = null; }
+}
+function hentikanRekam(simpan) {
+  const p = perekam;
+  if (!p) return;
+  perekam = null;
+  if (p.state === 'inactive') return;
+  if (simpan) {
+    p.onstop = () => {
+      videoBlob = new Blob(potongan, { type: tipeVideo.split(';')[0] });
+      potongan = [];
+      if (keadaan === 'hasil' && videoBlob.size > 0) { el.tombolVideo.hidden = false; el.tombolVideo.disabled = false; }
+    };
+  } else {
+    p.onstop = () => { potongan = []; };
+  }
+  try { p.stop(); } catch {}
+}
+function gambarBingkaiVideo() {
+  const W = kanvasVideo.width, H = kanvasVideo.height;
+  gVideo.fillStyle = warnaToken('--latar');
+  gVideo.fillRect(0, 0, W, H);
+  const src = renderer.domElement;
+  if (src.width && src.height) {
+    const ruangAtas = 90, ruangBawah = 120, ah = H - ruangAtas - ruangBawah;
+    const s = Math.min(W / src.width, ah / src.height);
+    gVideo.drawImage(src, (W - src.width * s) / 2, ruangAtas + (ah - src.height * s) / 2, src.width * s, src.height * s);
+  }
+  gVideo.fillStyle = warnaToken('--tinta');
+  gVideo.font = '600 38px Fredoka, sans-serif';
+  gVideo.fillText('Es Krim Putar', 32, 62);
+  gVideo.font = '600 64px Fredoka, sans-serif';
+  gVideo.fillText(cm(Math.round(tampil.puncak * 10) / 10), 32, H - 44);
+}
+el.tombolVideo.addEventListener('click', async () => {
+  if (!videoBlob) return;
+  el.tombolVideo.disabled = true;
+  const ext = tipeVideo.includes('mp4') ? 'mp4' : 'webm';
+  const hasil = await simpanBerkas(`es-krim-putar.${ext}`, videoBlob);
+  el.statusSimpan.textContent = PESAN_SIMPAN[hasil]('Video');
+  el.tombolVideo.disabled = false;
+});
+
+// ---------- Dialog ----------
+el.tombolCara.addEventListener('click', () => el.dialog.showModal());
+el.dialog.addEventListener('click', e => { if (e.target === el.dialog) el.dialog.close(); });
+
+// ---------- Ukuran panggung ----------
+const panggung = el.kanvas.parentElement;
+function ukurPanggung() {
+  const r = panggung.getBoundingClientRect();
+  renderer.setSize(Math.max(1, r.width), Math.max(1, r.height), false);
+}
+new ResizeObserver(ukurPanggung).observe(panggung);
+ukurPanggung();
+
+el.kanvas.addEventListener('webglcontextlost', e => {
+  e.preventDefault();
+  hentikan('Tampilan 3D terputus di tengah permainan.');
+  tampilStatus('Memulihkan tampilan 3D', 'Peramban sempat menghentikan tampilan 3D. Tunggu sebentar.', false);
+});
+el.kanvas.addEventListener('webglcontextrestored', () => { el.layarStatus.hidden = true; });
+
+// ---------- Putaran utama ----------
+const vSementara = new THREE.Vector3();
+let waktuLalu = performance.now();
+
+function perbaruiTetes(dt) {
+  while (mesin.tetes.length) {
+    const d = mesin.tetes.shift();
+    const t = kolamTetes[tetesBerikut++ % kolamTetes.length];
+    t.position.set(d.x, d.y, d.z);
+    t.scale.setScalar(Math.max(0.2, d.r * 0.9));
+    const l = Math.hypot(d.x, d.z) || 1;
+    t.userData.vx = d.x / l * 1.5; t.userData.vz = d.z / l * 1.5; t.userData.vy = 0.5;
+    t.visible = true;
+  }
+  for (const t of kolamTetes) {
+    if (!t.visible) continue;
+    t.userData.vy -= 32 * dt;
+    t.position.x += t.userData.vx * dt;
+    t.position.y += t.userData.vy * dt;
+    t.position.z += t.userData.vz * dt;
+    if (t.position.y < -30) t.visible = false;
+  }
+}
+
+function putaran(sekarang) {
+  requestAnimationFrame(putaran);
+  const dt = Math.min(0.05, Math.max(0, (sekarang - waktuLalu) / 1000));
+  waktuLalu = sekarang;
+  bingkai(dt, sekarang);
+}
+
+function bingkai(dt, sekarang) {
+  if (keadaan === 'menuang') {
+    if (sumber === 'papan') langkahPapan(dt);
+    mesin.tuang(dt, target.x, target.z);
+    jedaCek += dt;
+    if (jedaCek >= 0.1) {
+      jedaCek = 0;
+      if (mesin.tumpah > KONFIG.batasTumpah) mulaiGagal({ jenis: 'tumpah' });
+      else {
+        const s = cekStabil(mesin.massa);
+        if (s) mulaiGagal(s);
+        else if (mesin.penuh) selesaiTuang();
+      }
+    }
+    if (perekam && sekarang - mulaiRekamPada > 90000) hentikanRekam(true);
+  }
+  sinkronTali();
+  perbaruiTetes(dt);
+
+  // Krim pengisi cone
+  if (mesin.isi > 0) {
+    const L = mesin.levelCap, r = KONFIG.jariCone * (KONFIG.dalamCone + L) / KONFIG.dalamCone - 0.04;
+    cap.visible = true;
+    cap.position.set(0, L, 0);
+    cap.scale.set(r, KONFIG.kubahCap, r);
+  } else cap.visible = false;
+
+  // Animasi akhir babak
+  if (animasi) {
+    animasi.t += dt;
+    const a = animasi, s = Math.min(1, a.t / a.lama);
+    if (a.jenis === 'roboh') {
+      const sudut = 0.5 * 5.5 * a.t * a.t;
+      engsel.quaternion.setFromAxisAngle(a.sumbu, Math.min(sudut, 2.2));
+      if (sudut > 0.9) { a.turun += dt * 14 * (a.t - 0.55); engsel.position.y -= a.turun * dt * 6; }
+    } else if (a.jenis === 'melorot') {
+      const e = 1 - (1 - s) ** 3;
+      engsel.scale.set(1 + 0.35 * e, 1 - 0.55 * e, 1 + 0.35 * e);
+    }
+    if (engsel.visible) {
+      engsel.updateMatrixWorld(true);
+      bidangAtas.copy(bidangAtasDasar).applyMatrix4(taliAtas.matrixWorld);
+    }
+    if (s >= 1) {
+      animasi = null;
+      if (keadaan === 'akhir') tampilkanHasil();
+    }
+  }
+
+  // Nosel naik mengikuti puncak krim
+  tampil.puncak += (mesin.puncak - tampil.puncak) * (1 - Math.exp(-dt * 6));
+  const dasar = Math.max(tampil.puncak, mesin.levelCap + KONFIG.kubahCap);
+  const tinggiNosel = dasar + (keadaan === 'menuang' ? 2.2 : 3.2);
+  tampil.kepalaY += (tinggiNosel - tampil.kepalaY) * (1 - Math.exp(-dt * 5));
+  const n = mesin.nosel;
+  const nxTarget = keadaan === 'menuang' && n ? n.x : 0, nzTarget = keadaan === 'menuang' && n ? n.z : 0;
+  kepalaMesin.position.x += (nxTarget - kepalaMesin.position.x) * (1 - Math.exp(-dt * (keadaan === 'menuang' ? 40 : 4)));
+  kepalaMesin.position.z += (nzTarget - kepalaMesin.position.z) * (1 - Math.exp(-dt * (keadaan === 'menuang' ? 40 : 4)));
+  kepalaMesin.position.y = tampil.kepalaY;
+
+  // Aliran dari nosel ke titik jatuh
+  const tj = mesin.titikJatuh;
+  if (keadaan === 'menuang' && tj && !mesin.putus) {
+    const atas = tampil.kepalaY, bawah = Math.min(tj.y, atas - 0.05);
+    const tebal = KONFIG.jariTali * Math.min(1.1, mesin.kHalus) * 0.85;
+    aliran.visible = true;
+    aliran.position.set(kepalaMesin.position.x, (atas + bawah) / 2, kepalaMesin.position.z);
+    aliran.scale.set(tebal, atas - bawah, tebal);
+  } else aliran.visible = false;
+
+  // Kamera
+  tampil.kamPuncak += (Math.max(1, tampil.puncak) - tampil.kamPuncak) * (1 - Math.exp(-dt * 4));
+  if (putaranJalan) {
+    putaranKamera += dt * 0.8;
+    if (putaranKamera >= Math.PI * 2) { putaranKamera = 0; putaranJalan = false; }
+  } else if (putaranKamera !== 0) {
+    putaranKamera = 0;
+  }
+  const ukuran = renderer.getSize(vSementara);
+  aturKamera(ukuran.x || 1, ukuran.y || 1, tampil.kamPuncak, putaranKamera);
+  renderer.render(adegan, kamera);
+  if (perekam && ++hitungVideo % 2 === 0) {
+    const mulai = performance.now();
+    gambarBingkaiVideo();
+    bebanVideo = bebanVideo * 0.8 + (performance.now() - mulai) * 0.2;
+    if (hitungVideo > 12 && bebanVideo > 12) { hentikanRekam(false); videoDilewati = true; }
+  }
+
+  if (keadaan === 'menuang' || keadaan === 'akhir') {
+    el.angka.innerHTML = `${formatAngka.format(Math.round(tampil.puncak * 10) / 10)}<small> cm</small>`;
+  }
+}
+
+siapkanBabak();
+el.layarStatus.hidden = true;
+requestAnimationFrame(t => { waktuLalu = t; putaran(t); });
+
+// Kait untuk pengujian: simulasi tanpa gambar dan penggerak bingkai manual.
+window.__esKrim = { Mesin, cekStabil, simulasi, KONFIG, nilaiDari, bingkai: dt => bingkai(dt, performance.now()), mesin: () => mesin, keadaan: () => keadaan };
+</script>
+</body>
+</html>

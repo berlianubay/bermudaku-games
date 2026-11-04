@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bermudaku Games</title>
+<meta name="description" content="Game kecil buatan Bermuda Lentera yang langsung jalan di peramban. Tanpa unduh, tanpa akun.">
+<meta name="theme-color" content="#FBF8F1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C1B2F" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Onest:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem('bg-tema');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<a class="skip" href="#main" data-t="skip">Langsung ke isi</a>
+
+<header class="site-head">
+  <button class="menu-btn" id="menu-btn" type="button" aria-expanded="false" aria-controls="side" data-t-label="menu" aria-label="Buka menu">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="head-mid" id="head-mid">
+    <a class="head-logo" href="#/"><img src="assets/logo.svg" alt="" width="34" height="34">Bermudaku Games</a>
+  </div>
+  <div class="pick lang">
+    <select id="lang" data-t-label="bahasa" aria-label="Bahasa">
+      <option value="id">Indonesia</option>
+      <option value="en">English</option>
+    </select>
+  </div>
+</header>
+
+<div class="side-backdrop" id="side-backdrop" hidden></div>
+<nav class="side" id="side" data-t-label="menuNav" aria-label="Menu">
+  <div class="side-top">
+    <p class="side-brand">Bermudaku Games</p>
+    <button class="side-close" id="side-close" type="button" data-t-label="tutup" aria-label="Tutup menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <ul class="side-nav">
+    <li><a href="#/" data-nav="beranda">
+      <svg class="side-ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>
+      <span data-t="navGame">Game</span></a></li>
+    <li><a href="#/tentang" data-nav="tentang">
+      <svg class="side-ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r=".6" fill="currentColor"/></svg>
+      <span data-t="navTentang">Tentang</span></a></li>
+  </ul>
+  <div>
+    <p class="side-head" data-t="tautan">Tautan</p>
+    <ul class="side-nav">
+      <li><a href="https://bermudaku.com" rel="noopener">bermudaku.com</a></li>
+      <li><a href="https://ubaayb.com" rel="noopener">ubaayb.com</a></li>
+      <li><a href="https://github.com/berlianubay/bermudaku-games" rel="noopener"><span data-t="kodeGithub">Kode di GitHub</span></a></li>
+    </ul>
+  </div>
+  <fieldset class="theme">
+    <legend class="side-head" data-t="tampilan">Tampilan</legend>
+    <div class="seg">
+      <label><input type="radio" name="tema" value="auto"><span data-t="otomatis">Otomatis</span></label>
+      <label><input type="radio" name="tema" value="light"><span data-t="terang">Terang</span></label>
+      <label><input type="radio" name="tema" value="dark"><span data-t="gelap">Gelap</span></label>
+    </div>
+  </fieldset>
+  <p class="side-copy">© 2026 Bermuda Lentera</p>
+</nav>
+
+<main id="main" tabindex="-1">
+  <noscript><div class="page"><p>Daftar game butuh JavaScript. Aktifkan JavaScript di peramban lalu muat ulang halaman ini.</p></div></noscript>
+</main>
+
+<script src="assets/games.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,2251 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Batas Rimba</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Simulasi 24 bulan di desa tepi hutan rawa gambut. Main sebagai petani sawit swadaya atau kelompok penjaga hutan desa.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Pixelify+Sans:wght@500..700&display=swap">
+<style>
+:root{
+  /* Tata letak: ladang piksel dalam bingkai kayu di kiri, jendela dialog berbingkai kayu di kanan.
+     Di ponsel menumpuk (HUD, ladang, jendela, keterangan) dan bilah kalender menempel di bawah layar.
+     Satu tema terang yang disengaja: dunia ladang di siang hari, seperti game bertani piksel. */
+  --rumput-1:#8FCB62;
+  --rumput-2:#86C25A;
+  --krem:#FFF6DC;
+  --krem-2:#FFFBEE;
+  --kayu-tua:#4A2C14;
+  --kayu:#8A5428;
+  --kayu-muda:#C98A4B;
+  --tinta:#3A2412;
+  --tinta-2:#6A4424;
+  --daun:#2E7A31;
+  --di-daun:#FFF6DC;
+  --api:#B0300F;
+  --sorot:#FFE48A;
+  --fokus:#0B3A9E;
+  --langit:#BDE6FA;
+  --font-judul:"Pixelify Sans","Trebuchet MS",Verdana,sans-serif;
+  --font-isi:"DotGothic16","Trebuchet MS",Verdana,sans-serif;
+  --rad:8px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--rumput-1)}
+body{background-color:var(--rumput-1);background-image:conic-gradient(var(--rumput-2) 25%,transparent 0 50%,var(--rumput-2) 0 75%,transparent 0);background-size:32px 32px;color:var(--tinta);font-family:var(--font-isi);font-synthesis:none;font-size:17px;line-height:1.55;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit}
+h1,h2,h3,.tombol,.tombol-utama,.aksi-nama,.aksi-alasan,.chip,.papan-nama,summary,.bilah-bulan,.peran-tag,.neraca dd,.umpan b{font-family:var(--font-judul)}
+h1,h2,h3{font-weight:700;text-wrap:balance;margin:0;line-height:1.1}
+p{margin:0}
+b,strong{font-family:var(--font-judul);font-weight:700}
+.px{image-rendering:crisp-edges;image-rendering:pixelated}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+:focus-visible{outline:3px solid var(--fokus);outline-offset:2px}
+
+.app{max-width:1220px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:16px 32px}
+
+/* ---------- jendela berbingkai kayu ---------- */
+.jendela{position:relative;background:var(--krem);border:3px solid var(--kayu-tua);border-radius:var(--rad);
+  box-shadow:inset 0 0 0 3px var(--kayu-muda),inset 0 0 0 5px var(--kayu),0 5px 0 rgba(74,44,20,.5);padding:18px 18px 16px}
+
+/* ---------- kepala ---------- */
+.kepala{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 20px;margin-bottom:16px}
+.judul{font-size:clamp(2.3rem, 1.5rem + 3.4vw, 3.8rem);color:var(--krem);letter-spacing:.03em;line-height:1;
+  text-shadow:3px 0 0 var(--kayu-tua),-3px 0 0 var(--kayu-tua),0 3px 0 var(--kayu-tua),0 -3px 0 var(--kayu-tua),3px 3px 0 var(--kayu-tua),-3px 3px 0 var(--kayu-tua),3px -3px 0 var(--kayu-tua),-3px -3px 0 var(--kayu-tua),0 8px 0 var(--kayu-tua)}
+.papan{display:inline-block;margin-top:12px;padding:4px 12px;background:var(--krem);border:3px solid var(--kayu-tua);border-radius:6px;font-size:.95rem;box-shadow:0 3px 0 rgba(74,44,20,.5)}
+.kepala-kanan{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.peran-tag{padding:6px 12px;background:var(--krem);border:3px solid var(--kayu-tua);border-radius:6px;font-weight:700}
+.konfirm{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 10px;background:var(--krem);border:3px solid var(--kayu-tua);border-radius:6px}
+.konfirm p{font-size:.92rem}
+
+/* ---------- tombol ---------- */
+.tombol,.tombol-utama{min-height:44px;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:700;line-height:1.2;border:3px solid var(--kayu-tua);box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 3px 0 var(--kayu-tua)}
+.tombol{background:var(--kayu-muda);color:var(--tinta)}
+.tombol:hover{background:#D99A5A}
+.tombol-utama{background:var(--daun);color:var(--di-daun)}
+.tombol-utama:hover{background:#25672A}
+.tombol:active,.tombol-utama:active{transform:translateY(2px);box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 1px 0 var(--kayu-tua)}
+
+/* ---------- HUD ---------- */
+.dasbor{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));padding:12px 12px 10px}
+.ukur{display:grid;grid-template-columns:30px minmax(0,1fr);column-gap:8px;align-content:start;padding:2px 10px;min-width:0}
+.ukur + .ukur{border-left:2px dashed var(--kayu-muda)}
+.ukur img{grid-row:1 / span 4;width:30px;height:auto;margin-top:3px}
+.ukur-label{font-size:.82rem;color:var(--tinta-2)}
+.ukur-nilai{font-size:1.15rem;line-height:1.2;overflow-wrap:anywhere}
+.ukur-sub{font-size:.78rem;color:var(--tinta-2);line-height:1.3}
+.ukur-nilai.waspada{color:var(--api)}
+.meter{display:flex;gap:3px;margin:4px 0 2px}
+.meter i{display:block;width:14px;height:8px;border:2px solid var(--kayu-tua);background:var(--krem-2)}
+.meter i.isi{background:#9C968E}
+.meter.waspada i.isi{background:var(--api)}
+
+/* ---------- meja ---------- */
+.meja{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(330px,.92fr);grid-template-areas:"peta buku" "legenda buku";grid-template-rows:auto 1fr;gap:22px 28px;margin-top:20px;align-items:start}
+.kol-peta{grid-area:peta;min-width:0}
+.buku{grid-area:buku;min-width:0;position:sticky;top:calc(10px + env(safe-area-inset-top, 0px));max-height:calc(100dvh - 20px);overflow:auto;overscroll-behavior:contain;padding:0 4px 10px 0}
+.legenda{grid-area:legenda;min-width:0}
+
+/* ---------- ladang ---------- */
+.peta-bingkai{display:grid;grid-template-columns:18px minmax(0,1fr);grid-template-rows:20px auto;padding:8px 14px 14px 8px;background:var(--kayu);border:3px solid var(--kayu-tua);border-radius:var(--rad);
+  box-shadow:inset 0 0 0 3px var(--kayu-muda),0 5px 0 rgba(74,44,20,.5);width:min(100%, 660px, calc((100dvh - 150px) * .875 + 40px))}
+.sumbu-x{grid-column:2;display:grid;grid-template-columns:repeat(7,1fr);align-items:end}
+.sumbu-y{grid-row:2;display:grid;grid-template-rows:repeat(8,1fr);align-items:center}
+.sumbu-x span,.sumbu-y span{font-size:.85rem;color:var(--krem);text-align:center;line-height:1;padding-bottom:4px}
+.sumbu-y span{padding:0 5px 0 0}
+.peta-area{grid-column:2;grid-row:2;position:relative;border:3px solid var(--kayu-tua);background:#3B8234;aspect-ratio:7/8}
+.kanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.peta{position:absolute;inset:0;display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(8,1fr)}
+.petak{appearance:none;border:0;padding:0;margin:0;background:transparent;display:block;width:100%;height:100%;position:relative;cursor:pointer;min-width:0;min-height:0}
+.petak::before,.petak::after{content:"";position:absolute;pointer-events:none}
+.petak[aria-pressed="true"]{z-index:2;box-shadow:inset 0 0 0 2px var(--kayu-tua),inset 0 0 0 5px var(--sorot),inset 0 0 0 7px var(--kayu-tua)}
+.petak:focus{outline:none}
+.petak:focus-visible{z-index:3;outline:3px solid #FFFFFF;outline-offset:0}
+.petak:focus-visible::before{inset:-6px;border:3px solid var(--fokus)}
+.petak.berubah::after{inset:0;animation:kilas 1.2s ease-out 1}
+@keyframes kilas{0%{box-shadow:inset 0 0 0 4px #FFFFFF}100%{box-shadow:inset 0 0 0 4px rgba(255,255,255,0)}}
+
+/* ---------- keterangan ---------- */
+.legenda summary{cursor:pointer;font-weight:700;font-size:1.15rem;min-height:44px;display:flex;align-items:center;gap:8px}
+.legenda ul{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:8px 16px}
+.legenda li{display:flex;align-items:center;gap:10px;font-size:.9rem;min-width:0}
+.legenda li img{flex:0 0 36px;width:36px;height:auto;border:2px solid var(--kayu-tua)}
+.catatan-skala{margin-top:12px;font-size:.85rem;color:var(--tinta-2)}
+
+/* ---------- buku ---------- */
+.buku > * + *{margin-top:20px}
+.buku > .dialog{margin-top:34px}
+.bilah{position:sticky;top:0;z-index:4;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:6px 14px;padding:12px 14px}
+.bilah .potret{width:56px;height:56px;border:3px solid var(--kayu-tua);border-radius:6px;background:var(--langit)}
+.bilah-waktu{min-width:0}
+.bilah-bulan{font-size:1.45rem;font-weight:700;line-height:1.05}
+.bilah-musim{display:flex;align-items:center;gap:6px;font-size:.88rem;margin-top:3px}
+.bilah-musim img{width:22px;height:auto}
+.bilah-musim .risiko-tinggi{color:var(--api)}
+.tenaga{display:flex;align-items:center;gap:2px;margin-top:4px}
+.tenaga img{width:20px;height:auto}
+.tenaga .teks{margin-left:6px;font-size:.85rem;color:var(--tinta-2)}
+.bilah-kecil{grid-column:1 / -1;font-size:.82rem;color:var(--tinta-2)}
+
+.blok h2{font-size:1.4rem}
+.blok-kepala{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px}
+.blok-kepala .kecil{font-size:.85rem;color:var(--tinta-2)}
+
+.dialog:focus{outline:none}
+.dialog:focus-visible{outline:3px solid var(--fokus);outline-offset:3px}
+.papan-nama{position:absolute;top:-24px;left:16px;padding:3px 12px;background:var(--kayu);color:var(--krem);border:3px solid var(--kayu-tua);border-radius:6px;font-weight:700;font-size:.95rem;box-shadow:inset 0 2px 0 rgba(255,255,255,.25)}
+.dialog-isi{display:grid;grid-template-columns:72px minmax(0,1fr);gap:14px;align-items:start;margin-top:6px}
+.dialog-isi > img{width:72px;height:72px;border:3px solid var(--kayu-tua);border-radius:6px;background:var(--langit)}
+.kicker{font-size:.85rem;color:var(--tinta-2);margin-bottom:2px}
+.dialog h2{font-size:1.4rem;margin-bottom:6px}
+.dialog-isi p{max-width:62ch}
+.pilihan{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+
+.aksi-daftar{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.aksi{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;text-align:left;width:100%;min-height:48px;padding:9px 12px 9px 28px;background:var(--krem-2);border:2px solid var(--kayu);border-radius:6px;cursor:pointer}
+.aksi::before{content:"";position:absolute;left:9px;top:15px;border-left:9px solid var(--kayu-tua);border-top:6px solid transparent;border-bottom:6px solid transparent;opacity:0}
+.aksi:hover:not(:disabled),.aksi:focus-visible{background:var(--sorot);border-color:var(--kayu-tua)}
+.aksi:hover:not(:disabled)::before,.aksi:focus-visible::before{opacity:1}
+.aksi:focus-visible{outline:3px solid var(--fokus);outline-offset:2px}
+.aksi:active:not(:disabled){transform:translateY(1px)}
+.aksi-nama{font-weight:700}
+.aksi-biaya{display:flex;align-items:center;gap:4px;font-size:.88rem;color:var(--tinta-2);white-space:nowrap}
+.aksi-biaya img{width:16px;height:auto}
+.aksi-biaya img + span{margin-right:4px}
+.aksi-ket{grid-column:1 / -1;font-size:.9rem;color:var(--tinta-2)}
+.aksi-alasan{grid-column:1 / -1;font-size:.86rem;font-weight:700;color:var(--tinta)}
+.aksi:disabled{cursor:not-allowed;background:transparent;border-style:dashed}
+.aksi-bahaya{border-color:var(--api)}
+.aksi-bahaya .aksi-nama::after{content:"Melanggar hukum";display:inline-block;margin-left:8px;padding:0 6px;font-size:.75rem;font-weight:700;color:var(--krem);background:var(--api);border-radius:3px;vertical-align:2px}
+.pilihan .aksi{grid-template-columns:minmax(0,1fr)}
+
+.petak-kepala{display:grid;grid-template-columns:60px minmax(0,1fr);gap:12px;align-items:center}
+.petak-kepala img{width:60px;height:auto;border:3px solid var(--kayu-tua);border-radius:4px}
+.petak-info h2{font-size:1.45rem}
+.petak-info h2:focus{outline:none}
+.petak-info h2:focus-visible{outline:3px solid var(--fokus);outline-offset:3px}
+.petak-pemilik{color:var(--tinta-2);margin-top:2px;font-size:.95rem}
+.rincian{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:.95rem}
+.rincian li{padding-left:16px;position:relative}
+.rincian li::before{content:"";position:absolute;left:2px;top:.6em;width:6px;height:6px;background:var(--kayu)}
+.rincian li.waspada{color:var(--api)}
+.rincian li.waspada::before{background:var(--api)}
+.umpan{margin-top:12px;padding:8px 10px;border-radius:6px;background:var(--sorot);border:2px solid var(--kayu-tua);font-size:.95rem}
+.kosong{color:var(--tinta-2)}
+
+.perhatian{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.chip{min-height:44px;padding:6px 12px;border-radius:6px;border:2px solid var(--api);background:var(--krem-2);cursor:pointer;font-weight:700;color:var(--api)}
+.chip span{color:var(--tinta);font-family:var(--font-isi)}
+.chip:hover{background:var(--sorot)}
+
+.kabar-daftar{display:flex;flex-direction:column;gap:14px}
+.kabar-grup h3{font-size:1.05rem;color:var(--tinta-2);margin-bottom:6px}
+.kabar-grup ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.kabar-grup li{font-size:.95rem;padding-left:16px;position:relative;max-width:65ch}
+.kabar-grup li::before{content:"";position:absolute;left:0;top:.5em;width:8px;height:8px;background:var(--kayu-muda);border:2px solid var(--kayu-tua)}
+.kabar-grup li.baik::before{background:#5BAA3E}
+.kabar-grup li.buruk::before{background:var(--api)}
+.kabar-grup li.catatan{margin-top:8px;padding:14px 12px 10px;background:#FFFDF4;border:2px solid var(--kayu-muda);border-radius:4px;box-shadow:2px 3px 0 rgba(74,44,20,.25)}
+.kabar-grup li.catatan::before{left:50%;top:-6px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#D0281A}
+.kabar-grup li.catatan b{display:block;font-size:.92rem;margin-bottom:2px}
+
+.cara summary{cursor:pointer;font-weight:700;font-size:1.15rem;min-height:44px;display:flex;align-items:center}
+.cara ul{margin:6px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:.95rem;max-width:62ch}
+
+/* pilih peran */
+.pilih-peran h2{font-size:1.9rem}
+.pilih-peran > p{margin-top:8px;max-width:60ch}
+.peran-daftar{display:grid;gap:14px;margin-top:16px}
+.peran{display:grid;grid-template-columns:64px minmax(0,1fr);gap:4px 14px;padding:14px;border:2px solid var(--kayu);border-radius:6px;background:var(--krem-2)}
+.peran > img{grid-row:1 / span 3;width:64px;height:auto;border:3px solid var(--kayu-tua);border-radius:4px}
+.peran h3{font-size:1.3rem;align-self:center}
+.peran p{font-size:.95rem}
+.peran ul{margin:6px 0 0;padding-left:18px;font-size:.92rem;color:var(--tinta-2)}
+.peran .tombol-utama{grid-column:1 / -1;margin-top:10px;width:100%}
+.pratinjau{margin-top:14px;padding:10px 12px;border-radius:6px;background:var(--krem-2);border:2px dashed var(--kayu);font-size:.95rem}
+.catatan-kaki{margin-top:14px;font-size:.86rem;color:var(--tinta-2);max-width:60ch}
+
+/* akhir */
+.akhir h2{font-size:2rem;margin-bottom:10px}
+.akhir h2:focus{outline:none}
+.akhir > p{max-width:62ch}
+.neraca{margin:16px 0 0;display:grid;grid-template-columns:minmax(0,1fr);border-top:2px dashed var(--kayu-muda)}
+.neraca div{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:2px dashed var(--kayu-muda)}
+.neraca dt{color:var(--tinta-2)}
+.neraca dd{margin:0;font-weight:700;text-align:right}
+.tombol-akhir{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+
+/* ---------- ponsel ---------- */
+@media (max-width: 880px){
+  html{scroll-padding-bottom:calc(130px + env(safe-area-inset-bottom, 0px))}
+  .meja{grid-template-columns:minmax(0,1fr);grid-template-areas:"peta" "buku" "legenda";gap:22px}
+  .buku{position:static;max-height:none;overflow:visible;padding:0}
+  .peta-bingkai{width:100%;padding:6px 10px 10px 6px}
+  .dasbor{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:10px}
+  .ukur{padding:2px 8px}
+  .ukur:nth-child(3n+1){border-left:0;padding-left:2px}
+  .ukur img{width:24px}
+  .ukur{grid-template-columns:24px minmax(0,1fr);column-gap:6px}
+  .bilah{position:fixed;left:0;right:0;bottom:0;top:auto;margin:0;border-radius:0;border-width:3px 0 0;box-shadow:inset 0 3px 0 var(--kayu-muda);
+    padding:10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));gap:4px 10px}
+  .buku > .bilah + *{margin-top:0}
+  .buku > .bilah + .dialog{margin-top:14px}
+  .bilah .potret{width:44px;height:44px}
+  .bilah-bulan{font-size:1.15rem}
+  .bilah-kecil{display:none}
+  .tenaga .teks{display:none}
+  .app.ada-bilah{padding-bottom:calc(112px + env(safe-area-inset-bottom, 0px))}
+}
+@media (max-width: 440px){
+  .judul{font-size:2.4rem}
+  .papan{font-size:.85rem;margin-top:10px}
+  .peran-tag{display:none}
+  .peta-bingkai{grid-template-columns:13px minmax(0,1fr);grid-template-rows:16px auto;padding:3px 4px 6px 2px}
+  .peta-area{border-width:2px}
+  .sumbu-x span,.sumbu-y span{font-size:.72rem}
+  .dasbor{grid-template-columns:repeat(2,minmax(0,1fr));padding:10px 8px}
+  .ukur,.ukur:nth-child(3n+1){border-left:0;padding-left:4px}
+  .ukur:nth-child(2n){border-left:2px dashed var(--kayu-muda);padding-left:10px}
+  .ukur:nth-child(n+3){border-top:2px dashed var(--kayu-muda);padding-top:6px}
+  .ukur-label{font-size:.78rem}
+  .ukur-nilai{font-size:1.02rem}
+  .ukur-sub{display:none}
+  .bilah{grid-template-columns:minmax(0,1fr) auto}
+  .bilah .potret{display:none}
+  .bilah .tombol-utama{padding:8px 12px}
+  .bilah-musim{font-size:.8rem}
+  .dialog-isi{grid-template-columns:52px minmax(0,1fr)}
+  .dialog-isi > img{width:52px;height:52px}
+}
+@media (prefers-reduced-motion: reduce){
+  .petak.berubah::after{animation:none}
+  .tombol:active,.tombol-utama:active,.aksi:active:not(:disabled){transform:none}
+}
+</style>
+
+<div class="app" id="app">
+  <header class="kepala">
+    <div>
+      <h1 class="judul">Batas Rimba</h1>
+      <p class="papan">Desa Tepian Rasau, di tepi hutan rawa gambut. 24 bulan, satu giliran satu bulan.</p>
+    </div>
+    <div class="kepala-kanan" id="kepala-kanan"></div>
+  </header>
+  <section class="dasbor jendela" id="dasbor" aria-label="Ringkasan keadaan" hidden></section>
+
+  <main class="meja">
+    <section class="kol-peta" aria-labelledby="judul-peta">
+      <h2 id="judul-peta" class="sr-only">Ladang desa, 7 kolom kali 8 baris</h2>
+      <div class="peta-bingkai">
+        <div class="sumbu-x" aria-hidden="true"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span></div>
+        <div class="sumbu-y" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
+        <div class="peta-area">
+          <canvas class="kanvas px" id="kanvas" width="112" height="128" aria-hidden="true"></canvas>
+          <div class="peta" id="peta" role="group" aria-label="Petak ladang. Pakai tombol panah untuk berpindah petak."></div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="buku" id="buku" aria-label="Buku lapangan"></aside>
+
+    <details class="legenda jendela" id="legenda">
+      <summary>Keterangan ladang</summary>
+      <ul id="legenda-daftar"></ul>
+      <p class="catatan-skala">1 petak = 1 hektare (100 × 100 meter). Desa, tokoh, dan angka di permainan ini rekaan dan disederhanakan.</p>
+    </details>
+  </main>
+  <div id="pengumuman" class="sr-only" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ================= data dasar ================= */
+const KOLOM = 7, BARIS = 8, LAMA = 24, KUNCI = 'batas-rimba-v1';
+const HURUF = 'ABCDEFG';
+const NAMA_BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const BIAYA_HIDUP = 4e6;   // kebutuhan rumah tangga petani per bulan
+const ONGKOS = 350;        // ongkos panen dan angkut, Rp per kg TBS
+
+/* H/h hutan lebat/sedang, g/G hutan rawa gambut lebat/sedang, R sungai, D permukiman,
+   K sawit berbuah, m sawit muda, s semak (lahan pemain bila petani, tanah desa bila penjaga),
+   S semak tetangga, k semak gambut berkanal milik tetangga, T sawit tetangga, P/p sawit perusahaan */
+const PETA = [
+  'HHHRHHH',
+  'HHhRHHH',
+  'hShRhgH',
+  'SKKRSgg',
+  'DKsRGgg',
+  'DsmRkGg',
+  'TTSRkpp',
+  'PPTRPpp',
+];
+
+const NAMA_ANCAMAN = {pembalak:'Pembalak liar', pemburu:'Pemburu satwa', perambah:'Perambah hutan'};
+const KET_ANCAMAN = {
+  pembalak:'Kalau dibiarkan, hutan di petak ini menipis tiap akhir bulan sampai habis.',
+  pemburu:'Memasang jerat. Satwa liar berkurang selama pemburu masih di sini.',
+  perambah:'Kalau dibiarkan sampai akhir bulan, hutan di petak ini dibuka jadi kebun.',
+};
+
+const CATATAN = {
+  sawit:'Di dunia nyata sawit mulai berbuah sekitar 2,5 sampai 3 tahun setelah tanam. Di permainan ini waktunya dipadatkan jadi 12 bulan.',
+  bakar:'Membuka lahan dengan membakar dilarang undang-undang. Pengecualian kearifan lokal sangat sempit: paling luas 2 hektare per kepala keluarga, untuk tanaman varietas lokal, dan dikelilingi sekat bakar.',
+  gambut:'Gambut yang dikeringkan lewat kanal mudah terbakar. Apinya bisa merambat di bawah permukaan dan asapnya jauh lebih pekat daripada api di tanah mineral.',
+  sekatKanal:'Sekat kanal menahan air agar gambut tetap basah. Cara ini dipakai luas dalam restorasi gambut di Indonesia.',
+  kawasan:'Kebun di dalam kawasan hutan tanpa izin bisa ditertibkan dan disita negara, berapa pun umur pohonnya.',
+  tengkulak:'Petani swadaya yang menjual lewat tengkulak biasanya menerima harga di bawah harga pabrik. Koperasi membantu petani menjual langsung.',
+  bibit:'Bibit tanpa sertifikat sering berbuah jauh lebih sedikit, dan kerugiannya terbawa sepanjang umur kebun yang bisa lebih dari 20 tahun.',
+  hhbk:'Madu hutan, rotan, dan jernang termasuk hasil hutan bukan kayu. Semuanya bisa dipanen tanpa menebang pohon.',
+  perhutsos:'Lewat program Perhutanan Sosial, pemerintah dapat memberi desa hak mengelola hutan sebagai Hutan Desa: dijaga, dimanfaatkan hasilnya, tidak ditebang habis.',
+  mpa:'Masyarakat Peduli Api adalah kelompok warga yang dilatih mencegah dan memadamkan kebakaran hutan dan lahan di sekitar desanya.',
+  orangutan:'Orangutan adalah satwa dilindungi. Melukai atau membunuhnya adalah tindak pidana. Konflik satwa di kebun bisa dilaporkan ke BKSDA.',
+  sialang:'Di Riau, lebah hutan bersarang di pohon tinggi yang disebut sialang. Pohon ini dijaga secara adat karena madunya.',
+  pltb:'Membuka lahan tanpa bakar butuh lebih banyak tenaga atau alat, tapi tidak menyalakan api yang bisa lepas kendali.',
+  asap:'Asap kebakaran gambut membawa partikel halus yang mengganggu pernapasan, terutama anak-anak dan orang lanjut usia.',
+};
+
+/* ================= keadaan ================= */
+let S = null;               // permainan berjalan
+let PRATINJAU = null;       // peta contoh sebelum peran dipilih
+let pilihPratinjau = null;
+let konfirmUlang = false;
+let umpan = '';
+let berubah = new Set();
+let waktuKilas = 0;
+const gerakBoleh = () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = s => document.querySelector(s);
+
+/* ================= acak bertanam benih ================= */
+function acak(){
+  S.benih = (S.benih + 0x6D2B79F5) >>> 0;
+  let t = S.benih;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+const acakDari = a => a[Math.floor(acak() * a.length)];
+function acakUrut(a){ const b = a.slice(); for (let i = b.length - 1; i > 0; i--){ const j = Math.floor(acak() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
+
+/* ================= bantuan ================= */
+const clamp = (v, a = 0, b = 100) => Math.max(a, Math.min(b, v));
+const fmtAngka = n => Math.round(n).toLocaleString('id-ID');
+function fmtRp(n){
+  const neg = n < 0; n = Math.abs(Math.round(n));
+  let s;
+  if (n >= 1e6) s = (Math.round(n / 1e5) / 10).toLocaleString('id-ID', {maximumFractionDigits:1}) + ' juta';
+  else if (n >= 1e3) s = Math.round(n / 1e3).toLocaleString('id-ID') + ' ribu';
+  else s = String(n);
+  return (neg ? '−' : '') + 'Rp ' + s;
+}
+const fmtTon = t => (Math.round(t * 10) / 10).toLocaleString('id-ID', {maximumFractionDigits:1}) + ' ton';
+const kode = t => HURUF[t.c] + (t.r + 1);
+const kodeI = i => kode(S.petak[i]);
+const idx = t => t.r * KOLOM + t.c;
+const petakAktif = () => S ? S.petak : PRATINJAU;
+function tetangga(t, daftar){
+  daftar = daftar || petakAktif();
+  const out = [];
+  for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]]){
+    const r = t.r + dr, c = t.c + dc;
+    if (r >= 0 && r < BARIS && c >= 0 && c < KOLOM) out.push(daftar[r * KOLOM + c]);
+  }
+  return out;
+}
+const jumlahHutan = () => S.petak.filter(t => t.jenis === 'hutan').length;
+const jumlahHutanLebat = () => S.petak.filter(t => t.jenis === 'hutan' && t.rapat === 3).length;
+const totalUtang = () => S.utangTengkulak + S.utangBank;
+const namaBulan = b => NAMA_BULAN[b % 12];
+const tahunKe = b => Math.floor(b / 12) + 1;
+function musim(b){
+  const m = (b === undefined ? S.bulan : b) % 12;
+  if (m === 7 || m === 8) return 'puncak';
+  if (m === 5 || m === 6) return 'kemarau';
+  if (m === 4 || m === 9) return 'pancaroba';
+  return 'hujan';
+}
+const NAMA_MUSIM = {hujan:'Musim hujan', pancaroba:'Pancaroba', kemarau:'Kemarau', puncak:'Puncak kemarau'};
+const RISIKO_MUSIM = {hujan:'rendah', pancaroba:'sedang', kemarau:'tinggi', puncak:'sangat tinggi'};
+const faktorMusim = () => ({hujan:0.08, pancaroba:0.35, kemarau:0.9, puncak:1.2})[musim()];
+function jarakDesa(t){
+  let d = 99;
+  for (const x of S.petak) if (x.jenis === 'desa') d = Math.min(d, Math.abs(x.r - t.r) + Math.abs(x.c - t.c));
+  return d;
+}
+function kabar(teks, nada){ S.kabar.push({teks, nada: nada || 'info', grup: S.fase}); }
+function catat(id){
+  if (!S.catatan[id] && CATATAN[id]){ S.catatan[id] = true; S.kabar.push({teks: CATATAN[id], nada:'catatan', grup: S.fase}); }
+}
+function kurangiTenaga(n){
+  const ambil = Math.min(S.tenaga, n);
+  S.tenaga -= ambil;
+  S.tenagaKurang += n - ambil;
+}
+function tambahDenda(n){
+  if (S.uang >= n) S.uang -= n;
+  else { S.utangTengkulak += n - S.uang; S.uang = 0; }
+}
+
+/* ================= petak ================= */
+function buatPetak(ch, r, c, peran){
+  const t = {r, c, jenis:'semak', rapat:0, gambut:false, kanal:false, sekat:false, milik:'desa', umur:0, bibit:'unggul',
+    rawat:2, sejakPupuk:0, api:0, apiPemain:false, ancaman:null, ancamanUmur:0, sekatBakar:false, hhbk:0, dijual:0,
+    dijaga:0, kawasan:false, pulih:0};
+  const pemain = peran === 'petani';
+  switch (ch){
+    case 'H': Object.assign(t, {jenis:'hutan', rapat:3, milik:'negara', kawasan:true, hhbk:2}); break;
+    case 'h': Object.assign(t, {jenis:'hutan', rapat:2, milik:'negara', kawasan:true, hhbk:1}); break;
+    case 'g': Object.assign(t, {jenis:'hutan', rapat:3, gambut:true, milik:'negara', kawasan:true, hhbk:2}); break;
+    case 'G': Object.assign(t, {jenis:'hutan', rapat:2, gambut:true, milik:'negara', kawasan:true, hhbk:1}); break;
+    case 'R': Object.assign(t, {jenis:'sungai', milik:'negara'}); break;
+    case 'D': Object.assign(t, {jenis:'desa', milik:'desa'}); break;
+    case 'K': Object.assign(t, {jenis:'sawit', umur:40, milik: pemain ? 'pemain' : 'tetangga'}); break;
+    case 'm': Object.assign(t, {jenis:'sawit', umur:4, milik: pemain ? 'pemain' : 'tetangga'}); break;
+    case 's': Object.assign(t, {jenis:'semak', milik: pemain ? 'pemain' : 'desa'}); break;
+    case 'S': Object.assign(t, {jenis:'semak', milik:'tetangga'}); break;
+    case 'k': Object.assign(t, {jenis:'semak', gambut:true, kanal:true, milik:'tetangga'}); break;
+    case 'T': Object.assign(t, {jenis:'sawit', umur:60, rawat:1, milik:'tetangga'}); break;
+    case 'P': Object.assign(t, {jenis:'sawit', umur:80, rawat:3, milik:'perusahaan'}); break;
+    case 'p': Object.assign(t, {jenis:'sawit', umur:80, rawat:3, gambut:true, kanal:true, milik:'perusahaan'}); break;
+  }
+  return t;
+}
+const buatSemuaPetak = peran => PETA.flatMap((baris, r) => [...baris].map((ch, c) => buatPetak(ch, r, c, peran)));
+
+function namaPetak(t){
+  switch (t.jenis){
+    case 'hutan': return (t.gambut ? 'Hutan rawa gambut ' : 'Hutan ') + ['', 'tipis', 'sedang', 'lebat'][t.rapat];
+    case 'sawit': return t.umur < 12 ? 'Sawit muda' : 'Kebun sawit';
+    case 'semak': return t.gambut ? 'Semak di lahan gambut' : 'Semak belukar';
+    case 'terbuka': return 'Lahan terbuka';
+    case 'terbakar': return 'Bekas terbakar';
+    case 'rehab': return 'Tanaman pemulihan';
+    case 'desa': return 'Permukiman';
+    case 'sungai': return 'Sungai Rasau';
+  }
+  return 'Petak';
+}
+function pemilikTeks(t){
+  if (t.jenis === 'sungai') return 'Perairan';
+  if (t.jenis === 'desa') return 'Rumah warga Tepian Rasau';
+  const petani = S && S.peran === 'petani';
+  const m = {pemain: petani ? 'Milikmu' : 'Milik pemain', tetangga:'Milik tetangga', perusahaan:'Milik perusahaan',
+    desa:'Tanah desa', negara: t.kawasan ? 'Kawasan hutan negara' : 'Tanah negara'}[t.milik];
+  return m + (t.kawasan && t.milik !== 'negara' ? ', di dalam kawasan hutan' : '');
+}
+function labelPetak(t){
+  let s = `${kode(t)}, ${namaPetak(t)}. ${pemilikTeks(t)}.`;
+  if (t.gambut) s += ' Tanah gambut' + (t.kanal ? ' berkanal.' : '.');
+  if (t.api > 0) s += ' Sedang terbakar.';
+  if (t.ancaman) s += ' Ada ' + NAMA_ANCAMAN[t.ancaman].toLowerCase() + '.';
+  if (S && S.peran === 'petani' && t.dijual) s += ' Dijual.';
+  return s;
+}
+
+/* ================= permainan baru ================= */
+function permainanBaru(peran, benih){
+  S = {
+    versi:1, peran, bulan:0, benih: benih >>> 0, petak: buatSemuaPetak(peran),
+    uang: peran === 'petani' ? 8e6 : 4e6, uangAwal: peran === 'petani' ? 8e6 : 4e6,
+    utangTengkulak:0, utangBank:0, kurDiambil:false,
+    tenaga:0, tenagaMaks:0, tenagaKurang:0, nama:60, dukungan:55, harga:2450,
+    koperasi:false, ijon:0, pelatihan:false, pupukMahal:false,
+    izin:0, alat:false, pltb:0, proposal:0, laporPolhut:0, wisataBulanIni:false, sialang:false, rapatTerakhir:-9,
+    asap:0, asapPuncak:{nilai:0, bulan:0}, satwaMinus:0, satwaAwal:0,
+    apiPemainBulanIni:false, sebarPemain:0,
+    peristiwa:null, peristiwaTerakhir:{}, sekali:{}, catatan:{},
+    kabar:[], fase:'awal', pilih:null, selesai:null, riwayat:[],
+    stat:{hutanDibuka:0, bakar:0, petakTerbakarApimu:0, ketahuan:0, ditertibkan:0, apiDipadam:0, ancamanDicegah:0,
+      pohon:0, sekatKanal:0, panenTon:0, hhbk:0, terbakar:0, hutanTerbakar:0, dirambah:0, dibukaPerusahaan:0},
+    hutanAwal:0, lebatAwal:0, kebunAwal:3,
+  };
+  if (peran === 'petani'){
+    petakRC(3, 0).dijual = 18e6;
+    petakRC(3, 4).dijual = 15e6;
+    petakRC(5, 4).dijual = 7e6;
+  }
+  S.hutanAwal = jumlahHutan();
+  S.lebatAwal = jumlahHutanLebat();
+  S.lahanAwal = peran === 'petani' ? nilaiLahan() : 0;
+  S.satwaAwal = S.petak.reduce((a, t) => a + (t.jenis === 'hutan' ? [0, .3, .7, 1][t.rapat] : 0), 0);
+  S.fase = 'awal';
+  if (peran === 'petani'){
+    kabar('Kamu mewarisi 3 hektare sawit yang sudah berbuah, 1 hektare sawit muda, dan 2 hektare semak. Lahanmu dikelilingi pagar kayu di ladang.');
+    kabar('Kebun dipanen otomatis tiap akhir bulan. Pupuk menjaga hasil tetap tinggi. Utang di atas Rp 35 juta membuat kebun disita.');
+  } else {
+    kabar('Kelompokmu punya 4 tenaga tiap bulan dan kas Rp 4 juta. Hutan di dalam garis patok merah-putih adalah kawasan hutan yang kalian jaga.');
+    kabar('Dukungan warga menentukan jumlah anggota yang datang. Kalau dukungan habis, kelompok bubar.');
+  }
+  mulaiBulan();
+  S.fase = 'kini';
+}
+const petakRC = (r, c) => S.petak[r * KOLOM + c];
+
+/* ================= awal bulan ================= */
+function mulaiBulan(){
+  const awal = S.bulan === 0;
+  let t = S.peran === 'petani' ? 3 : 4;
+  if (S.peran === 'penjaga'){
+    if (S.dukungan >= 70){ t++; kabar('Dukungan warga tinggi. Ada anggota tambahan bulan ini.', 'baik'); }
+    else if (S.dukungan < 30){ t--; kabar('Dukungan warga rendah. Satu anggota tidak datang bulan ini.', 'buruk'); }
+  }
+  if (S.asap >= 40){ t--; kabar(`Asap tebal membuat ${S.peran === 'petani' ? 'keluarga' : 'beberapa anggota'} sakit. Tenaga bulan ini berkurang 1.`, 'buruk'); }
+  if (S.tenagaKurang > 0){ t -= S.tenagaKurang; S.tenagaKurang = 0; }
+  S.tenaga = Math.max(1, t);
+  S.tenagaMaks = S.tenaga;
+  S.wisataBulanIni = false; S.pupukMahal = false; S.sialang = false; S.hhbkBulanIni = false;
+
+  if (awal && S.peran === 'penjaga'){
+    taruh('pembalak', S.petak.filter(x => x.jenis === 'hutan' && jarakDesa(x) <= 2 && tepiHutan(x)));
+  } else if (!awal){
+    munculAncaman();
+    apiWarga();
+  }
+  for (const p of S.petak) p.dijaga = 0;
+  if (!awal){
+    const p = pilihPeristiwa();
+    if (p) siapkanPeristiwa(p);
+  }
+}
+
+const tepiHutan = t => tetangga(t).some(n => n.jenis !== 'hutan' && n.jenis !== 'sungai');
+function taruh(jenis, calon){
+  if (!calon.length) return;
+  const t = acakDari(calon);
+  t.ancaman = jenis; t.ancamanUmur = 0;
+  kabar(`${NAMA_ANCAMAN[jenis]} terlihat di petak ${kode(t)}.`, 'buruk');
+}
+function munculAncaman(){
+  const kali = S.izin === 5 ? 0.5 : 1;
+  const bebas = t => t.jenis === 'hutan' && !t.ancaman && !t.dijaga && t.api === 0;
+  const petani = S.peran === 'petani';
+  const pPembalak = (petani ? 0.3 : 0.6) * kali * (S.laporPolhut > 0 ? 0.5 : 1);
+  if (acak() < pPembalak) taruh('pembalak', S.petak.filter(t => bebas(t) && tepiHutan(t)));
+  if (!petani && S.bulan >= 6 && acak() < 0.3 * kali * (S.laporPolhut > 0 ? 0.5 : 1)) taruh('pembalak', S.petak.filter(t => bebas(t) && tepiHutan(t)));
+  if (acak() < (petani ? 0.2 : 0.3) * kali) taruh('pemburu', S.petak.filter(t => bebas(t) && t.rapat >= 2));
+  const kering = musim() === 'kemarau' || musim() === 'puncak';
+  if (acak() < (petani ? 0.15 : 0.25) * kali * (kering ? 1.6 : 1)){
+    taruh('perambah', S.petak.filter(t => bebas(t) && tetangga(t).some(n => (n.milik === 'tetangga' || n.milik === 'perusahaan') && n.jenis !== 'hutan')));
+  }
+}
+function apiWarga(){
+  const f = faktorMusim();
+  if (f < 0.1) return;
+  const kurang = S.peran === 'penjaga' ? (1 - 0.2 * S.pltb) : 1;
+  for (const t of S.petak){
+    if (t.api > 0) continue;
+    let p = 0, siapa = '';
+    if (t.milik === 'tetangga' && (t.jenis === 'semak' || t.jenis === 'terbuka')){ p = 0.1 * f * kurang; siapa = ' Tetangga membakar lahan.'; }
+    else if (t.milik === 'perusahaan' && t.kanal){ p = 0.02 * f; siapa = ' Gambut berkanal di kebun perusahaan.'; }
+    else if (t.gambut && t.kanal){ p = 0.04 * f; siapa = ' Gambut berkanal yang kering.'; }
+    if (p && acak() < p){
+      nyalakan(t, false);
+      kabar(`Titik api muncul di ${kode(t)}.${siapa}`, 'buruk');
+      if (t.gambut) catat('gambut');
+    }
+  }
+}
+function nyalakan(t, olehPemain){ t.api = t.gambut ? 2 : 1; t.apiPemain = olehPemain; }
+
+/* ================= peristiwa ================= */
+function calonRambah(){ return S.petak.filter(t => t.jenis === 'hutan' && t.api === 0 && tetangga(t).some(n => n.milik === 'pemain')); }
+function calonEkspansi(){
+  if (S.izin === 5) return [];
+  return S.petak.filter(t => t.jenis === 'hutan' && t.api === 0 && tetangga(t).some(n => n.milik === 'perusahaan' && n.jenis !== 'hutan'));
+}
+function calonOrangutanTetangga(){ return S.petak.filter(t => t.milik === 'tetangga' && t.jenis === 'sawit' && tetangga(t).some(n => n.jenis === 'hutan')); }
+function calonOrangutanPemain(){ return S.petak.filter(t => t.milik === 'pemain' && t.jenis === 'sawit' && tetangga(t).some(n => n.jenis === 'hutan')); }
+function ekspansi(t){
+  if (t.jenis !== 'hutan') return;
+  Object.assign(t, {jenis:'sawit', umur:0, rawat:3, rapat:0, milik:'perusahaan', ancaman:null, hhbk:0, kanal: t.gambut});
+  S.stat.dibukaPerusahaan++;
+}
+function ambilHutan(t, denganApi){
+  t.milik = 'pemain';
+  t.ancaman = null;
+  S.stat.hutanDibuka++;
+  if (denganApi) nyalakan(t, true);
+  else Object.assign(t, {jenis:'terbuka', rapat:0, hhbk:0, umur:0, kanal: t.gambut});
+  keluarKoperasi('kebunmu kini ada di dalam kawasan hutan');
+  catat('kawasan');
+}
+function keluarKoperasi(alasan){
+  if (S.koperasi){ S.koperasi = false; kabar(`Koperasi mencoretmu dari daftar anggota karena ${alasan}.`, 'buruk'); }
+}
+function bisaKoperasi(){
+  if (S.petak.some(t => t.milik === 'pemain' && t.kawasan)) return 'Koperasi menolak kebun di dalam kawasan hutan';
+  if (S.stat.bakar > 0) return 'Koperasi menolak anggota yang pernah membakar lahan';
+  if (S.nama < 40) return 'Nama baikmu belum cukup';
+  return null;
+}
+
+const PERISTIWA = [
+  /* ---------- petani ---------- */
+  {id:'harga_turun', peran:'petani', bobot:2, jeda:5,
+    judul:'Harga TBS turun',
+    teks:() => 'Pabrik menurunkan harga beli tandan buah segar. Kabarnya permintaan minyak sawit sedang lesu.',
+    pilihan:[{label:'Catat', efek(){ S.harga = Math.max(1500, S.harga - 380); return [`Harga pabrik turun menjadi Rp ${fmtAngka(S.harga)} per kg.`, 'buruk']; }}]},
+  {id:'harga_naik', peran:'petani', bobot:2, jeda:5,
+    judul:'Harga TBS naik',
+    teks:() => 'Harga di pabrik naik. Sopir truk pengangkut buah bilang stok minyak di pelabuhan menipis.',
+    pilihan:[{label:'Catat', efek(){ S.harga = Math.min(3400, S.harga + 320); return [`Harga pabrik naik menjadi Rp ${fmtAngka(S.harga)} per kg.`, 'baik']; }}]},
+  {id:'ijon', peran:'petani', bobot:3, jeda:8, syarat:() => S.ijon === 0 && S.uang < 6e6 && !S.koperasi,
+    judul:'Pinjaman dari tengkulak',
+    teks:() => 'Tengkulak langganan menawarkan pinjaman Rp 5 juta tanpa jaminan. Syaratnya, enam bulan ke depan semua buahmu dijual kepadanya dengan harga yang lebih rendah.',
+    pilihan:[
+      {label:'Terima pinjaman', ket:'Uang +Rp 5 juta, utang +Rp 5 juta, buah dihargai 78% harga pabrik selama 6 bulan',
+        efek(){ S.uang += 5e6; S.utangTengkulak += 5e6; S.ijon = 6; catat('tengkulak'); return ['Kamu menerima pinjaman Rp 5 juta dari tengkulak.', 'info']; }},
+      {label:'Tolak', efek(){ return ['Kamu menolak tawaran tengkulak.', 'info']; }}]},
+  {id:'orangutan', peran:'petani', bobot:2, jeda:7, syarat:() => calonOrangutanPemain().length > 0,
+    siapkan:() => ({i: idx(acakDari(calonOrangutanPemain()))}),
+    judul:'Orangutan di kebun',
+    teks:d => `Seekor orangutan memakan pucuk sawit di petak ${kodeI(d.i)}. Hutan tempatnya mencari makan makin sempit.`,
+    pilihan:[
+      {label:'Usir dengan bunyi-bunyian', ket:'1 tenaga',
+        efek(){ kurangiTenaga(1); return ['Kamu dan anak-anak memukul kaleng sampai orangutan itu kembali ke hutan.', 'info']; }},
+      {label:'Lapor BKSDA', ket:'Gratis, tapi petugas baru datang beberapa hari kemudian',
+        efek(d){ const t = S.petak[d.i]; if (t.jenis === 'sawit') t.rawat = Math.max(0, t.rawat - 1); S.nama = clamp(S.nama + 4); catat('orangutan');
+          return [`Petugas BKSDA memindahkan orangutan itu. Beberapa pohon di ${kode(t)} sempat rusak.`, 'baik']; }},
+      {label:'Pasang jerat', bahaya:true,
+        efek(){ S.satwaMinus += 8; S.nama = clamp(S.nama - 12); catat('orangutan');
+          if (acak() < 0.3){ tambahDenda(5e6); S.stat.ketahuan++; return ['Jerat melukai orangutan. Polisi kehutanan datang dan kamu didenda Rp 5 juta.', 'buruk']; }
+          return ['Jerat melukai orangutan itu. Kabarnya cepat menyebar di kampung.', 'buruk']; }}]},
+  {id:'sekolah', peran:'petani', sekali:true, bobot:4, syarat:() => S.bulan % 12 === 5 || S.bulan % 12 === 6,
+    judul:'Tahun ajaran baru',
+    teks:() => 'Anak sulungmu masuk SMP. Seragam, buku, dan sumbangan sekolah perlu Rp 2,5 juta.',
+    pilihan:[{label:'Bayar biaya sekolah', ket:'Uang −Rp 2,5 juta', efek(){ S.uang -= 2.5e6; return ['Biaya sekolah Rp 2,5 juta lunas.', 'info']; }}]},
+  {id:'ajak_rambah', peran:'petani', bobot:2, jeda:8, syarat:() => S.bulan >= 2 && calonRambah().length > 0,
+    siapkan:() => ({i: idx(acakDari(calonRambah()))}),
+    judul:'Ajakan tetangga',
+    teks:d => `Tetangga mengajak membuka hutan di petak ${kodeI(d.i)} bersama-sama. "Semua orang juga begitu," katanya. Kamu cukup menyumbang Rp 1 juta untuk sewa gergaji mesin.`,
+    pilihan:[
+      {label:'Ikut membuka', ket:'Uang −Rp 1 juta, petak itu jadi lahanmu', bahaya:true, bisa:() => S.uang >= 1e6, alasan:'Uangmu kurang dari Rp 1 juta',
+        efek(d){ const t = S.petak[d.i];
+          if (t.jenis !== 'hutan' || t.api > 0) return ['Petak itu sudah berubah sebelum kalian sempat masuk.', 'info'];
+          S.uang -= 1e6; ambilHutan(t, false); return [`Hutan di ${kode(t)} ditebang dan kini jadi lahanmu.`, 'buruk']; }},
+      {label:'Menolak', efek(){ S.nama = clamp(S.nama + 3); return ['Kamu menolak ajakan itu.', 'baik']; }}]},
+  {id:'asap_petani', peran:'petani', bobot:5, jeda:2, syarat:() => S.asap >= 40,
+    judul:'Asap masuk rumah',
+    teks:() => 'Si bungsu batuk-batuk sejak asap menebal. Bidan desa menyarankan berobat ke puskesmas dan memakai masker.',
+    pilihan:[{label:'Bawa berobat', ket:'Uang −Rp 600 ribu', efek(){ S.uang -= 6e5; catat('asap'); return ['Biaya berobat Rp 600 ribu.', 'buruk']; }}]},
+  {id:'penyuluh', peran:'petani', sekali:true, bobot:2, syarat:() => S.bulan >= 2,
+    judul:'Pelatihan dari penyuluh',
+    teks:() => 'Penyuluh pertanian mengajak petani belajar pemupukan berimbang dan membuka lahan tanpa bakar. Pelatihannya tiga hari.',
+    pilihan:[
+      {label:'Ikut pelatihan', ket:'1 tenaga. Pupuk bertahan 4 bulan, biaya tebas turun 30%',
+        efek(){ kurangiTenaga(1); S.pelatihan = true; catat('pltb'); return ['Kamu ikut pelatihan. Pupuk kini bertahan lebih lama dan menebas lebih hemat.', 'baik']; }},
+      {label:'Tidak sempat', efek(){ return ['Kamu melewatkan pelatihan.', 'info']; }}]},
+  {id:'pupuk_langka', peran:'petani', bobot:2, jeda:6,
+    judul:'Pupuk langka',
+    teks:() => 'Stok pupuk di kios menipis. Harganya naik 30 persen bulan ini.',
+    pilihan:[{label:'Catat', efek(){ S.pupukMahal = true; return ['Harga pupuk naik 30 persen bulan ini.', 'buruk']; }}]},
+  {id:'banjir_petani', peran:'petani', bobot:2, jeda:8,
+    syarat:() => musim() === 'hujan' && S.petak.some(t => t.milik === 'pemain' && t.jenis === 'sawit' && tetangga(t).some(n => n.jenis === 'sungai')),
+    judul:'Sungai meluap',
+    teks:() => 'Air Sungai Rasau naik dan merendam kebun di tepian selama dua minggu.' + (jumlahHutan() <= S.hutanAwal - 4 ? ' Orang tua di kampung bilang banjir makin sering sejak hutan di hulu menipis.' : ''),
+    pilihan:[{label:'Catat', efek(){ let n = 0;
+      for (const t of S.petak) if (t.milik === 'pemain' && t.jenis === 'sawit' && tetangga(t).some(x => x.jenis === 'sungai')){ t.rawat = Math.max(0, t.rawat - 1); n++; }
+      return [`${n} petak kebun di tepi sungai terendam. Perawatannya turun.`, 'buruk']; }}]},
+  {id:'ekspansi_petani', peran:'petani', bobot:2, jeda:8, syarat:() => S.bulan >= 4 && calonEkspansi().length > 0,
+    siapkan:() => ({i: idx(acakDari(calonEkspansi()))}),
+    judul:'Perusahaan membuka hutan',
+    teks:d => `Perusahaan sawit di hilir mulai membuka hutan di petak ${kodeI(d.i)}. Mandornya mencari pekerja harian untuk menebang.`,
+    pilihan:[
+      {label:'Ambil kerja menebang', ket:'1 tenaga, uang +Rp 2 juta',
+        efek(d){ kurangiTenaga(1); S.uang += 2e6; S.nama = clamp(S.nama - 3); ekspansi(S.petak[d.i]); return [`Kamu ikut menebang di ${kodeI(d.i)} dan dibayar Rp 2 juta.`, 'info']; }},
+      {label:'Menolak', efek(d){ S.nama = clamp(S.nama + 2); ekspansi(S.petak[d.i]); return [`Kamu menolak. Perusahaan tetap membuka ${kodeI(d.i)} dengan pekerja dari luar.`, 'info']; }}]},
+  {id:'koperasi_buka', peran:'petani', sekali:true, bobot:3, syarat:() => !S.koperasi && S.bulan >= 1 && bisaKoperasi() === null,
+    judul:'Koperasi membuka pendaftaran',
+    teks:() => 'Koperasi petani swadaya di kecamatan menerima anggota baru. Anggota menjual langsung ke pabrik dan mendapat pupuk lebih murah. Syaratnya, kebun di luar kawasan hutan dan tidak pernah membakar lahan.',
+    pilihan:[
+      {label:'Daftar sekarang', ket:'Uang −Rp 500 ribu', bisa:() => S.uang >= 5e5, alasan:'Uangmu kurang dari Rp 500 ribu',
+        efek(){ S.uang -= 5e5; S.koperasi = true; catat('tengkulak'); return ['Kamu resmi jadi anggota koperasi.', 'baik']; }},
+      {label:'Nanti saja', ket:'Kamu tetap bisa mendaftar lewat Pekerjaan lain', efek(){ return ['Kamu menunda mendaftar koperasi.', 'info']; }}]},
+
+  /* ---------- penjaga ---------- */
+  {id:'kompensasi', peran:'penjaga', bobot:3, jeda:9, syarat:() => S.bulan >= 3 && calonEkspansi().length >= 2,
+    siapkan:() => ({a: acakUrut(calonEkspansi()).slice(0, 2).map(idx)}),
+    judul:'Tawaran perusahaan',
+    teks:d => `Utusan perusahaan menawarkan dana kemitraan Rp 15 juta untuk kas kelompok. Syaratnya, kelompok tidak mempersoalkan pembukaan hutan di petak ${d.a.map(kodeI).join(' dan ')}.`,
+    pilihan:[
+      {label:'Terima dananya', ket:'Kas +Rp 15 juta, dua petak hutan dibuka', bahaya:true,
+        efek(d){ S.uang += 15e6; d.a.forEach(i => ekspansi(S.petak[i])); S.dukungan = clamp(S.dukungan - 12);
+          return ['Dana masuk kas. Alat berat perusahaan mulai bekerja di dua petak itu. Sebagian warga kecewa.', 'buruk']; }},
+      {label:'Tolak dan laporkan', ket:'1 tenaga',
+        efek(d){ kurangiTenaga(1); S.dukungan = clamp(S.dukungan + 4);
+          if (acak() < 0.6) return ['Laporan kelompok ditindaklanjuti. Perusahaan menunda pembukaan hutan.', 'baik'];
+          ekspansi(S.petak[d.a[0]]); return [`Laporan kelompok belum digubris. Perusahaan tetap membuka ${kodeI(d.a[0])}.`, 'buruk']; }},
+      {label:'Tolak', efek(d){ ekspansi(S.petak[d.a[0]]); return [`Kelompok menolak. Perusahaan tetap membuka ${kodeI(d.a[0])}.`, 'buruk']; }}]},
+  {id:'dana_desa', peran:'penjaga', bobot:2, jeda:10, syarat:() => S.dukungan >= 50 && S.bulan >= 2,
+    judul:'Dana desa',
+    teks:() => 'Musyawarah desa menyisihkan Rp 3 juta dari dana desa untuk kelompok penjaga hutan.',
+    pilihan:[{label:'Terima', ket:'Kas +Rp 3 juta', efek(){ S.uang += 3e6; return ['Kas kelompok bertambah Rp 3 juta dari dana desa.', 'baik']; }}]},
+  {id:'peneliti', peran:'penjaga', sekali:true, bobot:2, syarat:() => S.bulan >= 2,
+    judul:'Peneliti rangkong',
+    teks:() => 'Tim peneliti burung rangkong butuh pemandu selama seminggu di hutan. Mereka membayar Rp 1,5 juta.',
+    pilihan:[
+      {label:'Pandu mereka', ket:'1 tenaga, kas +Rp 1,5 juta',
+        efek(){ kurangiTenaga(1); S.uang += 1.5e6; S.dukungan = clamp(S.dukungan + 1); return ['Dua anggota memandu peneliti. Kas bertambah Rp 1,5 juta.', 'baik']; }},
+      {label:'Tolak', efek(){ return ['Kelompok menolak permintaan peneliti.', 'info']; }}]},
+  {id:'protes', peran:'penjaga', bobot:3, jeda:5, syarat:() => S.dukungan < 60 && S.bulan >= 2,
+    judul:'Keluhan di warung kopi',
+    teks:() => 'Sebagian warga mengeluh: hutan dijaga, tapi mereka sendiri belum merasakan hasilnya.',
+    pilihan:[
+      {label:'Biayai kerja bakti warga', ket:'Kas −Rp 1 juta', bisa:() => S.uang >= 1e6, alasan:'Kas kurang dari Rp 1 juta',
+        efek(){ S.uang -= 1e6; S.dukungan = clamp(S.dukungan + 3); return ['Kelompok membiayai kerja bakti dan makan bersama. Warga lebih tenang.', 'baik']; }},
+      {label:'Biarkan saja', efek(){ S.dukungan = clamp(S.dukungan - 6); return ['Keluhan makin ramai dibicarakan.', 'buruk']; }}]},
+  {id:'asap_penjaga', peran:'penjaga', bobot:5, jeda:2, syarat:() => S.asap >= 40,
+    judul:'Sekolah diliburkan',
+    teks:() => 'Sekolah diliburkan karena asap. Warga bertanya kenapa api tidak bisa dihentikan.',
+    pilihan:[{label:'Catat', ket:'Dukungan warga −3', efek(){ S.dukungan = clamp(S.dukungan - 3); catat('asap'); return ['Dukungan warga turun karena asap.', 'buruk']; }}]},
+  {id:'ancaman_pemodal', peran:'penjaga', bobot:2, jeda:8, syarat:() => S.bulan >= 4,
+    judul:'Ancaman pemodal kayu',
+    teks:() => 'Seorang anggota didatangi suruhan pemodal kayu. Ia diminta berhenti ikut patroli.',
+    pilihan:[
+      {label:'Lapor ke polisi hutan', ket:'Belum tentu ditanggapi',
+        efek(){ if (acak() < 0.65){ S.laporPolhut = 3; return ['Polisi hutan menambah patroli. Pembalak lebih jarang datang tiga bulan ke depan.', 'baik']; }
+          S.tenagaKurang += 1; return ['Laporan belum ditanggapi. Anggota itu memilih mundur sementara. Tenaga bulan depan berkurang 1.', 'buruk']; }},
+      {label:'Diam saja', ket:'Tenaga bulan depan −1',
+        efek(){ S.tenagaKurang += 1; S.dukungan = clamp(S.dukungan - 2); return ['Anggota itu mundur. Tenaga bulan depan berkurang 1.', 'buruk']; }}]},
+  {id:'orangutan_penjaga', peran:'penjaga', bobot:2, jeda:6, syarat:() => calonOrangutanTetangga().length > 0,
+    siapkan:() => ({i: idx(acakDari(calonOrangutanTetangga()))}),
+    judul:'Orangutan di kebun tetangga',
+    teks:d => `Seekor orangutan masuk kebun sawit tetangga di petak ${kodeI(d.i)}. Pemiliknya mengancam memasang jerat kalau kelompok tidak bertindak.`,
+    pilihan:[
+      {label:'Hubungi BKSDA dan bantu menghalau', ket:'1 tenaga',
+        efek(){ kurangiTenaga(1); S.dukungan = clamp(S.dukungan + 3); catat('orangutan'); return ['Bersama petugas BKSDA, kelompok menggiring orangutan kembali ke hutan.', 'baik']; }},
+      {label:'Biarkan', efek(){ S.satwaMinus += 6; S.dukungan = clamp(S.dukungan - 2); catat('orangutan'); return ['Pemilik kebun memasang jerat. Orangutan itu terluka.', 'buruk']; }}]},
+  {id:'sialang', peran:'penjaga', bobot:2, jeda:10, syarat:() => S.petak.some(t => t.jenis === 'hutan' && t.rapat >= 2),
+    judul:'Lebah bersarang di sialang',
+    teks:() => 'Lebah hutan sedang ramai bersarang di pohon sialang. Panen hasil hutan bulan ini bisa membawa lebih banyak madu.',
+    pilihan:[{label:'Siapkan panen madu', ket:'Nilai panen hasil hutan +60% bulan ini', efek(){ S.sialang = true; catat('sialang'); return ['Panen hasil hutan bulan ini bernilai 60 persen lebih tinggi.', 'baik']; }}]},
+  {id:'relawan', peran:'penjaga', sekali:true, bobot:2, syarat:() => S.bulan >= 3,
+    judul:'Mahasiswa KKN',
+    teks:() => 'Empat mahasiswa KKN menawarkan diri membantu kelompok selama sebulan.',
+    pilihan:[{label:'Terima bantuan', ket:'Tenaga +2 bulan ini', efek(){ S.tenaga += 2; S.tenagaMaks += 2; return ['Mahasiswa KKN ikut bekerja. Tenaga bulan ini bertambah 2.', 'baik']; }}]},
+  {id:'banjir_penjaga', peran:'penjaga', bobot:2, jeda:8, syarat:() => musim() === 'hujan' && S.bulan >= 1,
+    judul:'Sungai meluap',
+    teks:() => 'Sungai Rasau meluap dan merendam sebagian kampung. Anggota kelompok sibuk membersihkan rumah.' + (jumlahHutan() <= S.hutanAwal - 4 ? ' Orang tua di kampung bilang banjir makin sering sejak hutan di hulu menipis.' : ''),
+    pilihan:[{label:'Catat', ket:'Tenaga −1 bulan ini', efek(){ kurangiTenaga(1); return ['Tenaga bulan ini berkurang 1 karena banjir.', 'buruk']; }}]},
+  {id:'petani_pltb', peran:'penjaga', bobot:2, jeda:6, syarat:() => S.pltb < 3 && S.bulan >= 2,
+    judul:'Petani ingin mencoba',
+    teks:() => 'Dua petani tetangga bertanya cara membuka lahan tanpa membakar. Mereka butuh contoh dan sedikit modal alat.',
+    pilihan:[
+      {label:'Dampingi mereka', ket:'1 tenaga, kas −Rp 500 ribu', bisa:() => S.uang >= 5e5, alasan:'Kas kurang dari Rp 500 ribu',
+        efek(){ kurangiTenaga(1); S.uang -= 5e5; S.pltb++; S.dukungan = clamp(S.dukungan + 2); catat('pltb');
+          return ['Kelompok mendampingi petani menebas tanpa api. Pembakaran di sekitar desa berkurang.', 'baik']; }},
+      {label:'Belum bisa', efek(){ return ['Kelompok belum sempat mendampingi.', 'info']; }}]},
+];
+const PERISTIWA_ID = Object.fromEntries(PERISTIWA.map(p => [p.id, p]));
+
+function pilihPeristiwa(){
+  if (acak() > 0.6) return null;
+  const calon = PERISTIWA.filter(p => p.peran === S.peran
+    && !(p.sekali && S.sekali[p.id])
+    && (S.bulan - (S.peristiwaTerakhir[p.id] ?? -99)) >= (p.jeda || 4)
+    && (!p.syarat || p.syarat()));
+  if (!calon.length) return null;
+  const total = calon.reduce((a, p) => a + (p.bobot || 1), 0);
+  let x = acak() * total;
+  for (const p of calon){ x -= (p.bobot || 1); if (x <= 0) return p; }
+  return calon[calon.length - 1];
+}
+function siapkanPeristiwa(p){
+  const d = p.siapkan ? p.siapkan() : {};
+  S.peristiwa = {id: p.id, d, judul: p.judul, teks: p.teks(d)};
+  S.peristiwaTerakhir[p.id] = S.bulan;
+  if (p.sekali) S.sekali[p.id] = true;
+}
+function putuskan(i){
+  if (!S || !S.peristiwa) return;
+  const def = PERISTIWA_ID[S.peristiwa.id];
+  const pil = def && def.pilihan[i];
+  if (!pil || (pil.bisa && !pil.bisa())) return;
+  const judul = S.peristiwa.judul;
+  const [teks, nada] = pil.efek(S.peristiwa.d);
+  S.peristiwa = null;
+  kabar(`${judul}: ${teks}`, nada);
+  umpan = teks;
+  umumkan(teks);
+  render({fokus:'#judul-buku'});
+}
+
+/* ================= ekonomi petani ================= */
+function hasilTon(t){
+  if (t.jenis !== 'sawit' || t.api > 0 || t.umur < 12) return 0;
+  let y = t.bibit === 'unggul' ? 1 : 0.5;
+  if (t.umur < 18) y *= 0.6;
+  y *= [0.35, 0.6, 0.85, 1][t.rawat];
+  if (t.gambut) y *= 0.85;
+  return y;
+}
+const hargaTerima = () => Math.round(S.harga * (S.ijon > 0 ? 0.78 : S.koperasi ? 0.97 : 0.85));
+const saluranJual = () => S.ijon > 0 ? 'tengkulak pemberi pinjaman' : S.koperasi ? 'pabrik lewat koperasi' : 'tengkulak';
+const hargaPupuk = () => Math.round((S.koperasi ? 1.25e6 : 1.5e6) * (S.pupukMahal ? 1.3 : 1));
+const biayaTebas = () => S.pelatihan ? 700e3 : 1e6;
+
+/* ================= api ================= */
+function mudahTerbakar(t){
+  let f;
+  switch (t.jenis){
+    case 'hutan': f = [0, 0.3, 0.15, 0.07][t.rapat]; break;
+    case 'semak': f = 0.42; break;
+    case 'terbuka': f = 0.25; break;
+    case 'sawit': f = t.umur < 12 ? 0.3 : 0.2; break;
+    case 'rehab': f = 0.28; break;
+    case 'terbakar': f = 0.03; break;
+    default: return 0;
+  }
+  if (t.gambut) f *= t.kanal ? 2.3 : (t.sekat ? 0.5 : 0.8);
+  if (t.sekatBakar) f *= 0.3;
+  return Math.min(f, 0.95);
+}
+function risikoTeks(t){
+  const p = mudahTerbakar(t) * faktorMusim();
+  if (p <= 0) return null;
+  if (p < 0.05) return 'rendah';
+  if (p < 0.2) return 'sedang';
+  if (p < 0.45) return 'tinggi';
+  return 'sangat tinggi';
+}
+function setelahPadam(t){
+  if (t.jenis === 'hutan') t.rapat = Math.max(1, t.rapat - 1);
+  if (t.jenis === 'sawit') t.rawat = Math.max(0, t.rawat - 1);
+  t.apiPemain = false;
+}
+function hangus(t){
+  if (t.jenis === 'hutan') S.stat.hutanTerbakar++;
+  if (t.milik === 'pemain' && t.jenis === 'sawit') kabar(`Kebun sawitmu di ${kode(t)} habis terbakar.`, 'buruk');
+  else if (t.milik === 'tetangga' && t.jenis === 'sawit' && S.peran === 'penjaga'){
+    S.dukungan = clamp(S.dukungan - 2); kabar(`Kebun tetangga di ${kode(t)} terbakar. Warga makin cemas.`, 'buruk');
+  } else kabar(`Petak ${kode(t)} (${namaPetak(t).toLowerCase()}) hangus terbakar.`, 'buruk');
+  if (t.apiPemain && t.milik !== 'pemain') S.stat.petakTerbakarApimu++;
+  S.stat.terbakar++;
+  Object.assign(t, {jenis:'terbakar', rapat:0, umur:0, ancaman:null, hhbk:0, api:0, apiPemain:false, sekatBakar:false});
+}
+function prosesApi(){
+  const menyala = S.petak.filter(t => t.api > 0);
+  if (!menyala.length) return;
+  const f = faktorMusim();
+  const pBantu = S.peran === 'petani' ? 0.35 : 0.12;
+  const siapa = S.peran === 'petani' ? 'Regu Masyarakat Peduli Api desa' : 'Regu pemadam dari kecamatan';
+  for (const t of menyala){
+    if (acak() < pBantu * (t.gambut ? 0.6 : 1)){
+      t.api = 0; setelahPadam(t);
+      kabar(`${siapa} memadamkan api di ${kode(t)}.`, 'baik');
+      if (S.peran === 'petani') catat('mpa');
+    }
+  }
+  const masih = menyala.filter(t => t.api > 0);
+  const baru = [];
+  for (const t of masih){
+    for (const n of tetangga(t)){
+      if (n.api > 0 || baru.includes(n)) continue;
+      if (acak() < mudahTerbakar(n) * f * (t.gambut ? 1.3 : 1)){ baru.push(n); n.apiPemainBaru = t.apiPemain; }
+    }
+  }
+  for (const t of masih){
+    t.api--;
+    if (t.api <= 0) hangus(t);
+    else kabar(`Api di gambut ${kode(t)} masih membara di bawah permukaan.`, 'buruk');
+  }
+  for (const n of baru){
+    nyalakan(n, !!n.apiPemainBaru);
+    delete n.apiPemainBaru;
+    if (n.apiPemain && n.milik !== 'pemain'){ S.sebarPemain++; S.nama = clamp(S.nama - 5); }
+  }
+  if (baru.length){
+    kabar(`Api menjalar ke ${baru.map(kode).join(', ')}.`, 'buruk');
+    if (baru.some(n => n.gambut)) catat('gambut');
+  }
+}
+
+/* ================= akhir bulan ================= */
+function sidik(t){ return [t.jenis, t.rapat, t.api, t.ancaman, t.milik, t.jenis === 'sawit' && t.umur < 12, t.kanal, t.sekat, t.sekatBakar].join('|'); }
+
+function akhiriBulan(){
+  if (!S || S.selesai || S.peristiwa) return;
+  const sebelum = S.petak.map(sidik);
+  S.kabar = [];
+  S.fase = 'akhir';
+
+  if (S.peran === 'petani'){
+    let ton = 0;
+    for (const t of S.petak) if (t.milik === 'pemain') ton += hasilTon(t);
+    if (ton > 0){
+      const h = hargaTerima();
+      const bersih = ton * 1000 * (h - ONGKOS);
+      S.uang += bersih; S.stat.panenTon += ton;
+      kabar(`Panen ${fmtTon(ton)} TBS, dijual ke ${saluranJual()} seharga Rp ${fmtAngka(h)} per kg. Setelah ongkos panen dan angkut, masuk ${fmtRp(bersih)}.`, 'baik');
+    } else kabar('Belum ada kebun yang bisa dipanen bulan ini.');
+    S.uang -= BIAYA_HIDUP;
+    kabar(`Kebutuhan rumah tangga ${fmtRp(BIAYA_HIDUP)}.`);
+    if (S.utangTengkulak > 0){ const b = Math.round(S.utangTengkulak * 0.025); S.utangTengkulak += b; kabar(`Bunga utang tengkulak ${fmtRp(b)}.`, 'buruk'); }
+    if (S.utangBank > 0){ const b = Math.round(S.utangBank * 0.005); S.utangBank += b; kabar(`Bunga KUR ${fmtRp(b)}.`); }
+    if (S.ijon > 0){ S.ijon--; if (S.ijon === 0) kabar('Ikatan jual ke tengkulak pemberi pinjaman sudah selesai.'); }
+  }
+
+  // ancaman yang tidak dihadang. Di mode petani, warga dan petugas lain kadang mengusirnya.
+  for (const t of S.petak){
+    if (!t.ancaman) continue;
+    if (S.peran === 'petani' && acak() < 0.45){
+      kabar(`${NAMA_ANCAMAN[t.ancaman]} di ${kode(t)} pergi setelah didatangi petugas dan warga.`);
+      t.ancaman = null;
+      continue;
+    }
+    t.ancamanUmur++;
+    if (t.ancaman === 'pembalak'){
+      t.rapat--; t.pulih = 0;
+      if (t.rapat <= 0){ Object.assign(t, {jenis:'semak', rapat:0, ancaman:null, hhbk:0}); kabar(`Hutan di ${kode(t)} habis ditebang pembalak, tinggal semak.`, 'buruk'); }
+      else { t.hhbk = Math.min(t.hhbk, t.rapat); kabar(`Pembalak menebang kayu di ${kode(t)}. Hutannya makin tipis.`, 'buruk'); }
+    } else if (t.ancaman === 'pemburu'){
+      S.satwaMinus += 4;
+      kabar(`Pemburu memasang jerat di ${kode(t)}. Satwa liar berkurang.`, 'buruk');
+      if (t.ancamanUmur >= 2){ t.ancaman = null; kabar(`Pemburu di ${kode(t)} sudah pergi.`); }
+    } else if (t.ancaman === 'perambah'){
+      Object.assign(t, {jenis:'terbuka', rapat:0, milik:'tetangga', ancaman:null, umur:0, hhbk:0, kanal: t.gambut});
+      S.stat.dirambah++;
+      kabar(`Perambah membuka hutan di ${kode(t)} untuk kebun.`, 'buruk');
+    }
+  }
+
+  let tambahAsap = 0;
+  for (const t of S.petak) if (t.api > 0) tambahAsap += t.gambut ? 14 : 6;
+  prosesApi();
+
+  if (S.peran === 'petani' && S.apiPemainBulanIni){
+    if (acak() < 0.15 + 0.1 * S.sebarPemain){
+      tambahDenda(10e6); S.nama = clamp(S.nama - 20); S.stat.ketahuan++;
+      kabar('Polisi menelusuri titik api dan sampai ke lahanmu. Kamu didenda Rp 10 juta.', 'buruk');
+    }
+    S.apiPemainBulanIni = false; S.sebarPemain = 0;
+  }
+
+  // tumbuh
+  for (const t of S.petak){
+    if (t.jenis === 'sawit'){
+      t.umur++;
+      if (t.milik === 'pemain'){
+        t.sejakPupuk++;
+        if (t.sejakPupuk >= (S.pelatihan ? 4 : 3)){ t.rawat = Math.max(0, t.rawat - 1); t.sejakPupuk = 0; }
+        if (t.umur === 12){ kabar(`Sawit di ${kode(t)} mulai berbuah.`, 'baik'); catat('sawit'); }
+      }
+    } else if (t.jenis === 'rehab'){
+      t.umur++;
+      if (t.umur >= 10){ Object.assign(t, {jenis:'hutan', rapat:1, hhbk:0, pulih:0}); kabar(`Tanaman di ${kode(t)} sudah jadi hutan muda.`, 'baik'); }
+    } else if (t.jenis === 'terbakar'){
+      t.umur++;
+      if (t.umur >= 4){ t.jenis = 'semak'; t.umur = 0; }
+    } else if (t.jenis === 'terbuka'){
+      t.umur++;
+      if (t.milik === 'tetangga' && t.umur >= 2 && t.api === 0) Object.assign(t, {jenis:'sawit', umur:0, rawat:1});
+      else if (t.milik === 'perusahaan' && t.umur >= 1) Object.assign(t, {jenis:'sawit', umur:0, rawat:3});
+    } else if (t.jenis === 'hutan'){
+      if (t.hhbk < t.rapat && acak() < 0.4) t.hhbk++;
+      if (!t.ancaman && t.rapat < 3){ t.pulih++; if (t.pulih >= 12){ t.rapat++; t.pulih = 0; } }
+    }
+  }
+
+  // penertiban kebun di kawasan hutan
+  if (S.peran === 'petani'){
+    for (const t of S.petak){
+      if (t.milik === 'pemain' && t.kawasan && t.api === 0 && acak() < 0.04){
+        Object.assign(t, {milik:'negara', jenis:'rehab', umur:0, rawat:0, sekatBakar:false});
+        tambahDenda(7.5e6); S.nama = clamp(S.nama - 15); S.stat.ditertibkan++;
+        kabar(`Tim penertiban kawasan hutan menyita lahanmu di ${kode(t)} dan menjatuhkan denda Rp 7,5 juta. Petak itu ditanami kembali pohon hutan.`, 'buruk');
+        catat('kawasan');
+      }
+    }
+  }
+
+  if (S.peran === 'penjaga'){
+    if (S.proposal > 0){
+      S.proposal--;
+      if (S.proposal === 0){
+        const p = 0.2 + S.dukungan / 400 + (S.izin === 5 ? 0.15 : 0) + (jumlahHutan() >= S.hutanAwal ? 0.1 : 0);
+        if (acak() < p){ S.uang += 4e6; kabar('Proposal kelompok disetujui. Kas bertambah Rp 4 juta.', 'baik'); }
+        else kabar('Proposal kelompok belum lolos kali ini.');
+      }
+    }
+    if (S.izin >= 1 && S.izin < 5){
+      S.izin++;
+      if (S.izin === 5){ S.dukungan = clamp(S.dukungan + 5); kabar('Izin Hutan Desa terbit. Kelompok kini punya hak kelola atas kawasan hutan di peta ini.', 'baik'); catat('perhutsos'); }
+    }
+    if (S.laporPolhut > 0) S.laporPolhut--;
+    S.dukungan = clamp(S.dukungan - 2);
+    if (S.uang >= 4e5){ S.uang -= 4e5; kabar('Biaya posko bulan ini (bensin, konsumsi, pulsa) Rp 400 ribu.'); }
+    else { S.uang = 0; S.dukungan = clamp(S.dukungan - 3); kabar('Kas tidak cukup untuk biaya posko. Anggota patungan, dan sebagian mulai mengeluh.', 'buruk'); }
+  }
+
+  S.asap = clamp(Math.round(S.asap * 0.45 + tambahAsap));
+  if (S.asap > S.asapPuncak.nilai) S.asapPuncak = {nilai: S.asap, bulan: S.bulan};
+  S.satwaMinus = Math.max(0, S.satwaMinus - 1);
+
+  if (S.peran === 'petani'){
+    if (S.uang < 0){ S.utangTengkulak += -S.uang; kabar(`Uang tidak cukup. Kekurangan ${fmtRp(-S.uang)} ditutup pinjaman tengkulak.`, 'buruk'); S.uang = 0; catat('tengkulak'); }
+    const lama = S.harga;
+    S.harga = Math.round(clamp(S.harga + (acak() - 0.5) * 220 + 0.12 * (2450 - S.harga), 1500, 3400) / 5) * 5;
+    if (Math.abs(S.harga - lama) >= 60) kabar(`Harga TBS di pabrik bulan depan Rp ${fmtAngka(S.harga)} per kg.`);
+  }
+
+  S.riwayat.push({hutan: jumlahHutan(), bersih: S.uang - totalUtang(), dukungan: S.dukungan, asap: S.asap});
+  S.bulan++;
+
+  if (S.peran === 'petani' && totalUtang() > 35e6) S.selesai = {jenis:'sita'};
+  else if (S.peran === 'penjaga' && S.dukungan <= 0) S.selesai = {jenis:'bubar'};
+  else if (S.bulan >= LAMA) S.selesai = {jenis:'waktu'};
+
+  if (!S.selesai){ S.fase = 'awal'; mulaiBulan(); }
+  S.fase = 'kini';
+
+  berubah = new Set();
+  S.petak.forEach((t, i) => { if (sidik(t) !== sebelum[i]) berubah.add(i); });
+  umpan = '';
+  umumkan(S.selesai ? 'Permainan selesai.' : `Bulan ${namaBulan(S.bulan)} dimulai.`);
+  render({fokus: S.selesai ? '#judul-akhir' : (S.peristiwa ? '#kartu-kabar' : '#judul-buku'), gulirKe: true});
+  clearTimeout(waktuKilas);
+  waktuKilas = setTimeout(() => { berubah = new Set(); renderPeta(); }, 1400);
+}
+
+/* ================= aksi ================= */
+function aksi(o){
+  let alasan = o.alasan || null;
+  if (!alasan && (o.tenaga || 0) > S.tenaga) alasan = S.tenaga === 0 ? 'Tenaga bulan ini sudah habis' : `Butuh ${o.tenaga} tenaga`;
+  if (!alasan && (o.uang || 0) > S.uang) alasan = `Butuh ${fmtRp(o.uang)}`;
+  return Object.assign({}, o, {bisa: !alasan, alasan});
+}
+
+function aksiPetak(t){
+  if (!t) return [];
+  return S.peran === 'petani' ? aksiPetani(t) : aksiPenjaga(t);
+}
+
+function aksiPetani(t){
+  const L = [];
+  const milik = t.milik === 'pemain';
+  const dekat = tetangga(t).some(n => n.milik === 'pemain');
+  if (t.api > 0){
+    if (milik || dekat) L.push(aksi({id:'padam', label:'Padamkan api', tenaga:1, ket:`Peluang berhasil sekitar ${t.gambut ? 25 : 40}%. Api gambut paling sulit.`,
+      jalan(t){ if (acak() < (t.gambut ? 0.25 : 0.4)){ t.api = 0; setelahPadam(t); S.stat.apiDipadam++; return [`Api di ${kode(t)} berhasil dipadamkan.`, 'baik']; }
+        return [`Api di ${kode(t)} terlalu besar. Belum berhasil dipadamkan.`, 'buruk']; }}));
+    return L;
+  }
+  if (milik){
+    if (t.jenis === 'sawit'){
+      if (t.rawat < 3) L.push(aksi({id:'pupuk', label:'Pupuk dan rawat', tenaga:1, uang: hargaPupuk(),
+        ket: t.umur < 12 ? 'Sawit muda tumbuh lebih sehat dan siap berbuah dengan perawatan penuh.' : `Perawatan kembali penuh. Panen naik ke sekitar ${fmtTon(hasilTon(Object.assign({}, t, {rawat:3})))} per bulan.`,
+        jalan(t){ t.rawat = 3; t.sejakPupuk = 0; return [`Kebun di ${kode(t)} dipupuk. Perawatannya penuh lagi.`, 'baik']; }}));
+      if (!t.sekatBakar) L.push(aksi({id:'sekatbakar', label:'Buat sekat bakar', tenaga:1, uang:250e3,
+        ket:'Jalur tanah bersih di keliling kebun. Api dari petak sebelah jauh lebih sulit masuk.',
+        jalan(t){ t.sekatBakar = true; return [`Sekat bakar mengelilingi ${kode(t)}.`, 'baik']; }}));
+    }
+    if (t.jenis === 'semak'){
+      L.push(aksi({id:'tebas', label:'Tebas semak', tenaga:2, uang: biayaTebas(), ket:'Lahan siap tanam bulan ini juga, tanpa api.',
+        jalan(t){ Object.assign(t, {jenis:'terbuka', umur:0}); return [`Semak di ${kode(t)} ditebas. Lahannya siap ditanami.`, 'baik']; }}));
+      L.push(aksi({id:'bakar', label:'Bakar semak', tenaga:1, bahaya:true,
+        ket:`Murah dan cepat, lahan siap bulan depan. Api bisa menjalar ke petak sekitar. Risiko menjalar bulan ini: ${RISIKO_MUSIM[musim()]}.`,
+        jalan(t){ nyalakan(t, true); S.stat.bakar++; S.apiPemainBulanIni = true; S.nama = clamp(S.nama - 8);
+          keluarKoperasi('kamu membuka lahan dengan membakar'); catat('bakar');
+          return [`Kamu menyalakan api di ${kode(t)}. Asapnya terlihat dari kampung.`, 'buruk']; }}));
+    }
+    if (t.jenis === 'terbuka' || t.jenis === 'terbakar'){
+      L.push(aksi({id:'tanam-unggul', label:'Tanam bibit bersertifikat', tenaga:1, uang:4e6, ket:'Berbuah 12 bulan lagi. Hasil penuh setelah 18 bulan.',
+        jalan(t){ Object.assign(t, {jenis:'sawit', umur:0, bibit:'unggul', rawat:3, sejakPupuk:0}); return [`Bibit bersertifikat ditanam di ${kode(t)}.`, 'baik']; }}));
+      L.push(aksi({id:'tanam-asalan', label:'Tanam bibit asalan', tenaga:1, uang:1.2e6, ket:'Murah, tapi buahnya kelak sekitar separuh bibit bersertifikat.',
+        jalan(t){ Object.assign(t, {jenis:'sawit', umur:0, bibit:'asalan', rawat:3, sejakPupuk:0}); catat('bibit'); return [`Bibit asalan ditanam di ${kode(t)}.`, 'info']; }}));
+    }
+    return L;
+  }
+  if (t.dijual > 0) L.push(aksi({id:'beli', label:'Beli petak ini', uang: t.dijual,
+    ket: t.gambut ? 'Lahan gambut berkanal. Murah, tapi rawan terbakar dan hasil sawitnya lebih rendah.' : 'Lahan bersurat di luar kawasan hutan.',
+    jalan(t){ t.milik = 'pemain'; const h = t.dijual; t.dijual = 0; if (t.gambut) catat('gambut'); return [`Kamu membeli ${kode(t)} seharga ${fmtRp(h)}.`, 'baik']; }}));
+  if (t.jenis === 'hutan' && dekat){
+    L.push(aksi({id:'tebang', label:'Tebang hutan untuk kebun', tenaga:2, uang:1.5e6, bahaya:true,
+      ket:'Petak ini kawasan hutan negara. Kebun di sini bisa disita dan didenda.',
+      jalan(t){ ambilHutan(t, false); return [`Hutan di ${kode(t)} kamu tebang. Lahannya siap ditanami.`, 'buruk']; }}));
+    L.push(aksi({id:'bakarhutan', label:'Bakar hutan untuk kebun', tenaga:1, bahaya:true,
+      ket:'Dua pelanggaran sekaligus: merambah kawasan hutan dan membakar.',
+      jalan(t){ ambilHutan(t, true); S.stat.bakar++; S.apiPemainBulanIni = true; S.nama = clamp(S.nama - 10);
+        keluarKoperasi('kamu membuka lahan dengan membakar'); catat('bakar');
+        return [`Kamu membakar hutan di ${kode(t)}.`, 'buruk']; }}));
+  }
+  if (t.ancaman) L.push(aksi({id:'laporpetani', label:'Laporkan ke polisi hutan', tenaga:1, ket:'Peluang sekitar 50% pelakunya pergi.',
+    jalan(t){ if (acak() < 0.5){ const a = NAMA_ANCAMAN[t.ancaman]; t.ancaman = null; S.nama = clamp(S.nama + 3); S.stat.ancamanDicegah++; return [`${a} di ${kode(t)} pergi setelah petugas datang.`, 'baik']; }
+      return ['Petugas belum datang bulan ini.', 'info']; }}));
+  return L;
+}
+
+function peluangPadam(t){ return Math.round((0.5 + (S.alat ? 0.35 : 0)) * (t.gambut ? 0.75 : 1) * 100); }
+
+function aksiPenjaga(t){
+  const L = [];
+  if (t.api > 0){
+    L.push(aksi({id:'padam', label:'Padamkan api', tenaga: t.gambut ? 2 : 1, uang:150e3, ket:`Peluang berhasil sekitar ${peluangPadam(t)}%.${S.alat ? '' : ' Pompa pemadam menaikkan peluang.'}`,
+      jalan(t){
+        if (acak() * 100 < peluangPadam(t)){
+          t.api = 0; setelahPadam(t); S.stat.apiDipadam++;
+          S.dukungan = clamp(S.dukungan + (jarakDesa(t) <= 2 || tetangga(t).some(n => n.milik === 'tetangga' && n.jenis === 'sawit') ? 3 : 2));
+          catat('mpa');
+          return [`Api di ${kode(t)} berhasil dipadamkan.`, 'baik'];
+        }
+        return [`Api di ${kode(t)} belum padam. Anggota kembali kelelahan.`, 'buruk'];
+      }}));
+    return L;
+  }
+  if (t.jenis === 'hutan'){
+    const jauh = jarakDesa(t) > 3;
+    L.push(aksi({id:'patroli', label: t.ancaman ? 'Patroli dan hadang' : 'Patroli', tenaga: jauh ? 2 : 1, uang:100e3,
+      ket: (t.ancaman ? `Peluang ${NAMA_ANCAMAN[t.ancaman].toLowerCase()} pergi sekitar ${t.ancaman === 'pemburu' ? 90 : t.ancaman === 'pembalak' ? 85 : 80}%. ` : '')
+        + 'Petak ini dan sekitarnya aman dari ancaman baru bulan depan.' + (jauh ? ' Jauh dari desa, butuh 2 tenaga.' : ''),
+      jalan(t){
+        for (const x of [t, ...tetangga(t)]) if (x.jenis === 'hutan') x.dijaga = 1;
+        if (t.ancaman){
+          const p = {pembalak:0.85, pemburu:0.9, perambah:0.8}[t.ancaman];
+          const a = NAMA_ANCAMAN[t.ancaman];
+          if (acak() < p){ t.ancaman = null; S.stat.ancamanDicegah++; S.dukungan = clamp(S.dukungan + 1); return [`${a} di ${kode(t)} pergi setelah dihadang patroli.`, 'baik']; }
+          return [`${a} di ${kode(t)} menghindar dari patroli. Mereka masih di sana.`, 'buruk'];
+        }
+        return [`Patroli di ${kode(t)} aman. Petak ini dan sekitarnya terjaga bulan depan.`, 'info'];
+      }}));
+    if (t.rapat >= 2) L.push(aksi({id:'hhbk', label:'Panen madu dan rotan', tenaga:1,
+      alasan: t.ancaman ? 'Usir dulu ancaman di petak ini' : (t.hhbk === 0 ? 'Belum ada yang bisa dipanen, tunggu satu sampai dua bulan' : null),
+      ket:`Perkiraan hasil ${fmtRp(t.hhbk * 250e3 * (S.sialang ? 1.6 : 1))}.${S.hhbkBulanIni ? '' : ' Warga ikut panen, dukungan naik.'}`,
+      jalan(t){ const n = t.hhbk * 250e3 * (S.sialang ? 1.6 : 1); S.uang += n; S.stat.hhbk += n; t.hhbk = 0; if (!S.hhbkBulanIni){ S.dukungan = clamp(S.dukungan + 2); S.hhbkBulanIni = true; } catat('hhbk');
+        return [`Panen hasil hutan di ${kode(t)} menambah kas ${fmtRp(n)}.`, 'baik']; }}));
+  }
+  if ((t.jenis === 'semak' || t.jenis === 'terbuka' || t.jenis === 'terbakar') && (t.milik === 'desa' || t.milik === 'negara')){
+    L.push(aksi({id:'tanampohon', label:'Tanam pohon hutan', tenaga:1, uang:600e3,
+      ket:`Bibit ${t.gambut ? 'jelutung rawa dan belangeran' : 'meranti dan durian hutan'}. Jadi hutan muda dalam 10 bulan.`,
+      jalan(t){ Object.assign(t, {jenis:'rehab', umur:0}); S.stat.pohon++; return [`Kelompok menanam bibit pohon di ${kode(t)}.`, 'baik']; }}));
+  }
+  if (t.kawasan && t.milik === 'tetangga'){
+    L.push(aksi({id:'laporrambah', label:'Laporkan perambahan', tenaga:1,
+      ket:`Petak ini kawasan hutan yang dibuka tanpa izin. Peluang dikembalikan sekitar ${S.izin === 5 ? 70 : 50}%. Pemiliknya bisa tersinggung.`,
+      jalan(t){
+        if (acak() < (S.izin === 5 ? 0.7 : 0.5)){ Object.assign(t, {milik:'negara', jenis:'terbuka', umur:0, rawat:0}); S.dukungan = clamp(S.dukungan - 1); S.stat.ancamanDicegah++;
+          return [`Kebun liar di ${kode(t)} dibongkar petugas. Petaknya bisa ditanami pohon lagi.`, 'baik']; }
+        return ['Laporan kelompok belum ditindaklanjuti.', 'info'];
+      }}));
+  }
+  if (t.gambut && t.kanal){
+    if (t.milik === 'perusahaan') L.push({id:'kanal-perusahaan', label:'Bangun sekat kanal', bisa:false, alasan:'Kanal ini di lahan perusahaan. Kelompok tidak berwenang menyekatnya.', ket:'', tenaga:0});
+    else L.push(aksi({id:'sekatkanal', label:'Bangun sekat kanal', tenaga:2, uang:1.2e6, ket:'Air tertahan, gambut kembali basah, api jauh lebih sulit menyala.',
+      jalan(t){ t.kanal = false; t.sekat = true; S.stat.sekatKanal++; catat('sekatKanal'); return [`Sekat kanal berdiri di ${kode(t)}.`, 'baik']; }}));
+  }
+  return L;
+}
+
+function aksiUmum(){
+  const L = [];
+  if (S.peran === 'petani'){
+    L.push(aksi({id:'upah', label:'Kerja harian di kebun perusahaan', tenaga:1, ket:'Upah beberapa hari sebagai buruh harian lepas, sekitar Rp 500 ribu.',
+      jalan(){ S.uang += 500e3; return ['Kamu bekerja beberapa hari di kebun perusahaan dan membawa pulang Rp 500 ribu.', 'info']; }}));
+    if (!S.koperasi) L.push(aksi({id:'koperasi', label:'Gabung koperasi', tenaga:1, uang:5e5, alasan: bisaKoperasi(),
+      ket:'Jual ke pabrik lewat koperasi (97% harga pabrik, bukan 85% lewat tengkulak) dan pupuk lebih murah. Bisa mengajukan KUR.',
+      jalan(){ S.koperasi = true; catat('tengkulak'); return ['Kamu resmi jadi anggota koperasi.', 'baik']; }}));
+    if (S.koperasi && !S.kurDiambil) L.push(aksi({id:'kur', label:'Ajukan KUR Rp 15 juta', alasan: S.nama < 50 ? 'Nama baikmu belum cukup' : null,
+      ket:'Kredit usaha rakyat lewat koperasi. Bunga 0,5% per bulan.',
+      jalan(){ S.uang += 15e6; S.utangBank += 15e6; S.kurDiambil = true; return ['KUR Rp 15 juta cair.', 'info']; }}));
+    if (totalUtang() > 0){
+      const bayar = Math.min(5e6, totalUtang());
+      L.push(aksi({id:'bayar', label:`Bayar utang ${fmtRp(bayar)}`, uang: bayar, ket:'Utang tengkulak dibayar lebih dulu karena bunganya lebih tinggi.',
+        jalan(){ let sisa = bayar; const a = Math.min(sisa, S.utangTengkulak); S.utangTengkulak -= a; sisa -= a; S.utangBank -= Math.min(sisa, S.utangBank);
+          return [`Utang berkurang ${fmtRp(bayar)}.`, 'baik']; }}));
+    }
+  } else {
+    L.push(aksi({id:'rapat', label:'Rapat warga', tenaga:1, uang:300e3, alasan: S.rapatTerakhir === S.bulan ? 'Rapat sudah diadakan bulan ini' : null,
+      ket: S.rapatTerakhir === S.bulan - 1 ? 'Dukungan warga naik sedikit. Rapat berturut-turut kurang menarik.' : 'Dukungan warga naik.',
+      jalan(){ const n = S.rapatTerakhir === S.bulan - 1 ? 3 : 7; S.rapatTerakhir = S.bulan; S.dukungan = clamp(S.dukungan + n); return [`Rapat warga menaikkan dukungan sebesar ${n}.`, 'baik']; }}));
+    if (S.izin === 0) L.push(aksi({id:'izin', label:'Ajukan izin Hutan Desa', tenaga:2, uang:1.5e6, alasan: S.dukungan < 55 ? 'Butuh dukungan warga minimal 55' : null,
+      ket:'Diproses sekitar 4 bulan. Setelah terbit, ancaman berkurang separuh, perusahaan tidak bisa membuka kawasan, dan wisata bisa dibuka.',
+      jalan(){ S.izin = 1; return ['Berkas izin Hutan Desa dikirim. Prosesnya sekitar 4 bulan.', 'info']; }}));
+    if (S.izin === 5) L.push(aksi({id:'wisata', label:'Terima rombongan wisata', tenaga:1,
+      alasan: S.wisataBulanIni ? 'Sudah ada rombongan bulan ini' : (S.asap >= 40 ? 'Asap terlalu tebal untuk tamu' : null),
+      ket:`Pemanduan susur hutan. Perkiraan ${fmtRp(3e5 + nilaiSatwa() * 7e3)}, makin tinggi kalau satwa ramai.`,
+      jalan(){ const n = 3e5 + nilaiSatwa() * 7e3; S.uang += n; S.wisataBulanIni = true; S.dukungan = clamp(S.dukungan + 2); return [`Rombongan wisata membayar ${fmtRp(n)}.`, 'baik']; }}));
+    if (!S.alat) L.push(aksi({id:'alat', label:'Beli pompa dan selang pemadam', uang:5e6, ket:'Peluang berhasil memadamkan api naik dari 50% ke 85%.',
+      jalan(){ S.alat = true; catat('mpa'); return ['Pompa dan selang pemadam tiba di posko.', 'baik']; }}));
+    if (S.pltb < 3) L.push(aksi({id:'pltb', label:'Dampingi petani membuka lahan tanpa bakar', tenaga:1, uang:5e5, ket:'Petani di sekitar desa lebih jarang membakar.',
+      jalan(){ S.pltb++; S.dukungan = clamp(S.dukungan + 2); catat('pltb'); return ['Kelompok mendampingi petani menebas tanpa api.', 'baik']; }}));
+    if (S.proposal === 0) L.push(aksi({id:'proposal', label:'Tulis proposal dana', tenaga:1, ket:'Jawaban datang 2 bulan lagi. Peluang lolos naik kalau dukungan warga tinggi dan hutan utuh.',
+      jalan(){ S.proposal = 2; return ['Proposal dana dikirim ke lembaga donor.', 'info']; }}));
+  }
+  return L;
+}
+
+function lakukan(id){
+  if (!S || S.selesai) return;
+  const t = S.pilih != null ? S.petak[S.pilih] : null;
+  const a = [...aksiPetak(t), ...aksiUmum()].find(x => x.id === id);
+  if (!a || !a.bisa || !a.jalan) return;
+  S.tenaga -= a.tenaga || 0;
+  S.uang -= a.uang || 0;
+  const [teks, nada] = a.jalan(t);
+  kabar(teks, nada);
+  umpan = teks;
+  umumkan(teks);
+  render();
+}
+
+/* ================= nilai turunan ================= */
+function nilaiSatwa(){
+  const s = S.petak.reduce((a, t) => a + (t.jenis === 'hutan' ? [0, .3, .7, 1][t.rapat] : 0), 0);
+  return clamp(Math.round(s / S.satwaAwal * 80) - S.satwaMinus);
+}
+const labelSatwa = v => v >= 70 ? 'Ramai' : v >= 45 ? 'Berkurang' : 'Jarang';
+const labelAsap = v => v >= 70 ? 'Berbahaya' : v >= 40 ? 'Tebal' : v >= 15 ? 'Tipis' : 'Bersih';
+const labelNama = v => v >= 70 ? 'Dihormati' : v >= 50 ? 'Baik' : v >= 30 ? 'Dipergunjingkan' : 'Buruk';
+
+/* ================= gambar piksel ================= */
+const UB = 16; // ukuran satu petak dalam piksel asli; kanvas diperbesar dengan CSS tanpa penghalusan
+const W = {
+  garis:'#24180C',
+  lantai:['#2C6328','#367530','#43893A'],
+  lantaiGambut:['#24452A','#2D5633','#3A6B3E'],
+  kanopi:['#17512A','#25723A','#3E9844','#73C456'],
+  kanopiGambut:['#174A3A','#24654A','#3B8758','#68B376'],
+  batang:['#3E2410','#62391A','#8A5428'],
+  daunSawit:['#1D5E2A','#2E8236','#4CA845','#82CF5F'],
+  daunLayu:['#6B6A24','#8E8A30','#B0A840','#D0C860'],
+  buah:['#6E1A0C','#B8300F','#E85A20','#F8A050'],
+  semak:['#2F6E2A','#468C34','#64AA44','#8CCB5E'],
+  tanah:['#4E2F15','#6E4420','#8E5A2C','#B07A42'],
+  tanahGambut:['#2A2418','#3A3222','#4C412C','#5E5238'],
+  air:['#2462A0','#3683C6','#5EA8E2','#B6E2FA'],
+  abu:['#262220','#3E3834','#5C544E','#857B73'],
+  pasir:['#B8995C','#D4BA7E','#E8D49C'],
+  atapMerah:['#7A2810','#B0441E','#DA6A34'],
+  atapSeng:['#4E5A66','#6E7C88','#98A6B0'],
+  dinding:['#8A5E36','#C49464','#E6C08E'],
+  api:['#9E200C','#E04A1A','#FF9A1E','#FFE45E'],
+  asap:['#77716B','#9C968E','#C4BEB6','#E4E0DA'],
+  kayu:['#3E2410','#6E4220','#A86E38','#D9A05B'],
+  kulit:['#7A4A24','#B07446','#D9A06E'],
+  emas:['#9A6A10','#D9A51A','#F2C230','#FFF0A0'],
+  awan:['#8E9AA6','#B8C2CC','#DCE4EA','#FFFFFF'],
+};
+const RUMPUT = {
+  hujan:['#3F8A2E','#5BAA3E','#76C24E','#9ADA68'],
+  pancaroba:['#5E8C2E','#7AA83E','#96C04E','#B6D46A'],
+  kering:['#7D8A2C','#9BA83A','#B7BE4C','#D1D16A'],
+};
+const kelompokMusim = m => (m === 'kemarau' || m === 'puncak') ? 'kering' : m;
+
+class Pix {
+  constructor(w, h){ this.w = w; this.h = h; this.a = new Array(w * h).fill(null); }
+  set(x, y, c){ x = Math.floor(x); y = Math.floor(y); if (x >= 0 && y >= 0 && x < this.w && y < this.h) this.a[y * this.w + x] = c; }
+  get(x, y){ return (x >= 0 && y >= 0 && x < this.w && y < this.h) ? this.a[y * this.w + x] : null; }
+  rect(x, y, w, h, c){ for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) this.set(x + i, y + j, c); }
+  bola(cx, cy, r, ramp){ // lingkaran berbayang, cahaya dari kiri atas
+    for (let y = Math.floor(cy - r); y <= Math.ceil(cy + r); y++){
+      for (let x = Math.floor(cx - r); x <= Math.ceil(cx + r); x++){
+        const dx = x + .5 - cx, dy = y + .5 - cy, d = Math.hypot(dx, dy);
+        if (d > r) continue;
+        const l = (-dx * .6 - dy * .8) / r + (1 - d / r) * .35;
+        this.set(x, y, ramp[l > .55 ? 3 : l > .12 ? 2 : l > -.4 ? 1 : 0]);
+      }
+    }
+  }
+  garis(x0, y0, x1, y1, c){
+    const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
+    for (let k = 0; k <= n; k++){ const t = n ? k / n : 0; this.set(Math.round(x0 + (x1 - x0) * t), Math.round(y0 + (y1 - y0) * t), c); }
+  }
+  peta(baris, pal, ox, oy){
+    baris.forEach((row, j) => { for (let i = 0; i < row.length; i++){ const c = pal[row[i]]; if (c) this.set((ox || 0) + i, (oy || 0) + j, c); } });
+  }
+  garisTepi(c){
+    const tambah = [];
+    for (let y = 0; y < this.h; y++) for (let x = 0; x < this.w; x++){
+      if (this.get(x, y)) continue;
+      if (this.get(x - 1, y) || this.get(x + 1, y) || this.get(x, y - 1) || this.get(x, y + 1)) tambah.push([x, y]);
+    }
+    tambah.forEach(([x, y]) => this.set(x, y, c));
+    return this;
+  }
+  kanvas(){
+    const cv = document.createElement('canvas'); cv.width = this.w; cv.height = this.h;
+    const g = cv.getContext('2d');
+    for (let i = 0; i < this.a.length; i++){ const c = this.a[i]; if (c){ g.fillStyle = c; g.fillRect(i % this.w, Math.floor(i / this.w), 1, 1); } }
+    return cv;
+  }
+}
+function tempel(dst, src, ox, oy){
+  for (let y = 0; y < src.h; y++) for (let x = 0; x < src.w; x++){ const c = src.get(x, y); if (c) dst.set(ox + x, oy + y, c); }
+}
+function rngPetak(r, c, garam){
+  let h = (Math.imul(r + 11, 374761393) ^ Math.imul(c + 7, 668265263) ^ Math.imul(garam + 3, 1274126177)) >>> 0;
+  return () => { h = Math.imul(h ^ (h >>> 15), 2246822519); h = Math.imul(h ^ (h >>> 13), 3266489917); h ^= h >>> 16; return (h >>> 0) / 4294967296; };
+}
+
+const CACHE_PIX = {}, CACHE_KANVAS = {};
+const spritePix = (nama, buat) => CACHE_PIX[nama] || (CACHE_PIX[nama] = buat());
+const sprKanvas = nama => CACHE_KANVAS[nama] || (CACHE_KANVAS[nama] = SPRITE_LEPAS[nama]().kanvas());
+
+/* ---------- sprite benda di atas tanah ---------- */
+function pixPohon(rapat, gambut){
+  return spritePix(`pohon${rapat}${gambut ? 'g' : ''}`, () => {
+    const p = new Pix(UB, UB), k = gambut ? W.kanopiGambut : W.kanopi;
+    if (rapat === 3){
+      p.bola(2.6, 13.4, 2.1, W.semak); p.bola(13.6, 13.6, 1.9, W.semak);
+      p.rect(7, 10, 2, 5, W.batang[1]); p.set(8, 10, W.batang[2]); p.set(6, 14, W.batang[1]); p.set(9, 14, W.batang[1]);
+      p.bola(4.6, 8.2, 3.7, k); p.bola(11.4, 8.2, 3.7, k); p.bola(8, 5.6, 5.1, k);
+    } else if (rapat === 2){
+      p.bola(13, 13.4, 1.9, W.semak);
+      p.rect(7, 10, 2, 5, W.batang[1]); p.set(8, 10, W.batang[2]);
+      p.bola(8, 7, 4.6, k); p.bola(4.8, 9.4, 2.6, k);
+    } else {
+      p.rect(4, 9, 2, 5, W.batang[1]); p.bola(5, 7.5, 3, k);
+      p.rect(10, 11, 4, 3, W.batang[1]); p.rect(10, 11, 4, 1, W.dinding[2]); p.set(11, 11, W.dinding[1]); // tunggul bekas tebangan
+    }
+    return p.garisTepi(W.garis);
+  });
+}
+function pixSawit(muda, layu, berbuah){
+  return spritePix(`sawit${+muda}${+layu}${+berbuah}`, () => {
+    const p = new Pix(UB, UB), d = layu ? W.daunLayu : W.daunSawit;
+    let cx, cy, ujung;
+    if (!muda){
+      for (let y = 8; y < 15; y++){ p.set(7, y, W.batang[y % 2 ? 1 : 2]); p.set(8, y, W.batang[y % 2 ? 2 : 1]); }
+      cx = 8; cy = 6; ujung = [[1, 8], [1, 3], [5, 1], [11, 1], [15, 3], [15, 8], [12, 10], [4, 10]];
+    } else {
+      cx = 8; cy = 11; ujung = [[3, 13], [3, 8], [7, 5], [12, 7], [13, 12], [10, 14], [6, 14]];
+    }
+    for (const [x, y] of ujung){
+      p.garis(cx, cy - 1, x, y - 1, d[2]);
+      p.garis(cx, cy, x, y, d[1]);
+      const n = Math.max(Math.abs(x - cx), Math.abs(y - cy));
+      for (let k = 2; k < n; k += 2){
+        const t = k / n, px = Math.round(cx + (x - cx) * t), py = Math.round(cy + (y - cy) * t);
+        p.set(px, py - 1, d[2]); if (k % 4 === 0) p.set(px, py + 1, d[0]);
+      }
+    }
+    p.set(cx, cy, d[3]); p.set(cx - 1, cy - 1, d[3]);
+    if (berbuah){ p.rect(5, 7, 2, 2, W.buah[1]); p.set(5, 7, W.buah[3]); p.rect(9, 7, 2, 2, W.buah[1]); p.set(9, 7, W.buah[3]); p.set(10, 8, W.buah[0]); }
+    return p.garisTepi(W.garis);
+  });
+}
+function pixSemak(){
+  return spritePix('semak', () => {
+    const p = new Pix(UB, UB);
+    p.bola(4.5, 11, 3.2, W.semak); p.bola(11.5, 6, 2.8, W.semak); p.bola(12, 12.5, 2.4, W.semak); p.bola(4.5, 4.5, 2, W.semak);
+    return p.garisTepi(W.garis);
+  });
+}
+function pixBibit(besar){
+  return spritePix('bibit' + (+besar), () => {
+    const p = new Pix(UB, UB);
+    for (const x of [3, 8, 13]) for (const y of [4, 9, 14]){
+      if (besar){ p.bola(x, y - 1.5, 1.8, W.kanopi); p.set(x, y, W.batang[1]); }
+      else { p.set(x, y, W.daunSawit[1]); p.set(x - 1, y - 1, W.daunSawit[2]); p.set(x + 1, y - 1, W.daunSawit[2]); }
+    }
+    return p.garisTepi(W.garis);
+  });
+}
+function pixRumah(seng){
+  return spritePix('rumah' + (+seng), () => {
+    const p = new Pix(UB, UB), a = seng ? W.atapSeng : W.atapMerah;
+    p.rect(3, 8, 10, 5, W.dinding[1]); p.rect(3, 8, 10, 1, W.dinding[2]); p.rect(12, 8, 1, 5, W.dinding[0]);
+    for (let k = 0; k < 5; k++) p.rect(5 - k, 3 + k, 6 + 2 * k, 1, k === 0 ? a[2] : (k === 4 ? a[0] : a[1]));
+    p.rect(7, 9, 2, 4, W.kayu[1]); p.set(8, 11, W.kayu[3]);
+    p.rect(4, 9, 2, 2, W.air[3]); p.rect(10, 9, 2, 2, W.air[3]);
+    p.rect(4, 13, 1, 2, W.kayu[1]); p.rect(11, 13, 1, 2, W.kayu[1]); p.rect(7, 13, 2, 1, W.kayu[2]);
+    return p.garisTepi(W.garis);
+  });
+}
+
+/* ---------- tanah ---------- */
+function tanahBintik(p, rnd, ramp, n){ p.rect(0, 0, UB, UB, ramp[1]); for (let k = 0; k < n; k++) p.set(rnd() * UB, rnd() * UB, rnd() < .5 ? ramp[0] : ramp[2]); }
+function tanahRumput(p, rnd, ramp){
+  tanahBintik(p, rnd, ramp, 24);
+  for (let k = 0; k < 3; k++){ const x = 1 + Math.floor(rnd() * 12), y = 3 + Math.floor(rnd() * 11); p.set(x, y, ramp[3]); p.set(x + 2, y, ramp[3]); p.set(x + 1, y + 1, ramp[0]); }
+}
+function rumputLiar(p, rnd, ramp){ for (let k = 0; k < 7; k++){ const x = Math.floor(rnd() * 15), y = 3 + Math.floor(rnd() * 12); p.set(x, y, ramp[3]); p.set(x, y - 1, ramp[2]); p.set(x + 1, y - 2, ramp[3]); } }
+function tanahOlah(p, rnd, gambut){
+  const r = gambut ? W.tanahGambut : W.tanah;
+  p.rect(0, 0, UB, UB, r[1]);
+  for (let y = 0; y < UB; y++){ if (y % 4 === 1) p.rect(0, y, UB, 1, r[0]); else if (y % 4 === 2) p.rect(0, y, UB, 1, r[2]); }
+  for (let k = 0; k < 6; k++) p.set(rnd() * UB, rnd() * UB, r[3]);
+}
+function tanahAbu(p, rnd, baru, f){
+  tanahBintik(p, rnd, W.abu, 30);
+  for (const [x, y] of [[3, 5], [11, 3], [8, 11], [13, 12]]){ p.rect(x, y, 2, 3, '#1A1614'); p.set(x, y, W.abu[3]); }
+  if (baru) for (let k = 0; k < 5; k++){ const x = Math.floor(rnd() * UB), y = Math.floor(rnd() * UB); p.set(x, y, (k + f) % 2 ? W.api[2] : W.api[1]); }
+}
+function genangan(p, rnd){ for (let k = 0; k < 2; k++){ const x = 1 + Math.floor(rnd() * 11), y = 2 + Math.floor(rnd() * 11); p.rect(x, y, 3, 1, W.air[1]); p.set(x + 1, y, W.air[3]); p.set(x + 1, y + 1, W.air[0]); } }
+function gambarAir(p, rnd, f){
+  p.rect(0, 0, UB, UB, W.air[1]);
+  for (let k = 0; k < 6; k++){ const x = 3 + ((k * 5 + f * 2) % 8), y = (k * 3 + f) % UB; p.rect(x, y, 3, 1, W.air[2]); p.set(x + 1, y, W.air[3]); }
+  p.rect(0, 0, 2, UB, W.pasir[1]); p.rect(14, 0, 2, UB, W.pasir[1]);
+  p.rect(2, 0, 1, UB, W.air[0]); p.rect(13, 0, 1, UB, W.air[2]);
+  for (let y = 1; y < UB; y += 4){ p.set(0, y, W.pasir[2]); p.set(15, y + 2, W.pasir[0]); }
+}
+function gambarKanal(p, f){
+  p.rect(0, 6, UB, 1, W.tanah[0]); p.rect(0, 7, UB, 2, W.air[1]); p.rect(0, 9, UB, 1, W.tanah[1]);
+  p.rect((f * 5 + 3) % 12, 7, 3, 1, W.air[2]); p.set((f * 5 + 10) % 14, 8, W.air[3]);
+}
+function gambarSekat(p){ for (const x of [4, 10]){ p.rect(x, 5, 2, 6, W.kayu[2]); p.rect(x, 5, 2, 1, W.kayu[3]); p.rect(x + 2, 6, 1, 5, W.kayu[0]); } }
+function jalurSekatBakar(p){ for (let i = 0; i < UB; i++){ const c = i % 3 ? W.tanah[2] : W.tanah[3]; p.set(i, 0, c); p.set(i, UB - 1, c); p.set(0, i, c); p.set(UB - 1, i, c); } }
+
+function pixPetak(t, mk, f){
+  const rnd = rngPetak(t.r, t.c, 1);
+  const p = new Pix(UB, UB);
+  const rumput = RUMPUT[mk] || RUMPUT.hujan;
+  switch (t.jenis){
+    case 'hutan': tanahBintik(p, rnd, t.gambut ? W.lantaiGambut : W.lantai, 30); genanganBila(); break;
+    case 'sungai': gambarAir(p, rnd, f); break;
+    case 'terbuka': case 'rehab': tanahOlah(p, rnd, t.gambut); break;
+    case 'terbakar': tanahAbu(p, rnd, t.umur === 0, f); break;
+    case 'desa': tanahRumput(p, rnd, rumput); p.rect(6, 13, 4, 3, W.pasir[1]); p.set(6, 13, W.pasir[2]); p.set(9, 15, W.pasir[0]); break;
+    case 'sawit': tanahRumput(p, rnd, rumput); genanganBila(); p.rect(5, 13, 6, 2, W.tanah[2]); p.rect(6, 15, 4, 1, W.tanah[2]); if (t.rawat === 0) rumputLiar(p, rnd, rumput); break;
+    default: tanahRumput(p, rnd, rumput); genanganBila();
+  }
+  function genanganBila(){ if (t.gambut) genangan(p, rnd); }
+  if (t.kanal) gambarKanal(p, f);
+  if (t.sekat) gambarSekat(p);
+  if (t.sekatBakar) jalurSekatBakar(p);
+  let o = null;
+  if (t.jenis === 'hutan') o = pixPohon(t.rapat, t.gambut);
+  else if (t.jenis === 'sawit') o = pixSawit(t.umur < 12, t.rawat === 0, t.umur >= 12);
+  else if (t.jenis === 'semak') o = pixSemak();
+  else if (t.jenis === 'rehab') o = pixBibit(t.umur >= 5);
+  else if (t.jenis === 'desa') o = pixRumah((t.r + t.c) % 2 === 1);
+  if (o) tempel(p, o, 0, 0);
+  return p;
+}
+
+/* ---------- sprite lepas: api, orang, satwa, tanda ---------- */
+const API_A = ['.....1......','....121.....','....1221..1.','...12221.121','..1223221221','..1233321221','.12233332221','.12234433221','122344443321','123344443321','122333333221','.1122222211.'];
+const API_B = ['......1.....','.1...121....','121..1221...','1221.12221..','12221223221.','.1223333221.','.12234433221','122344443321','123344443321','123344444321','122333333221','.1122222211.'];
+const RANGKONG = ['...cc...','..bccyy.','.bbbb...','bbbbb...','.wwbb...','..ww....'];
+const PAL_RANGKONG = {c:'#F07A28', y:'#FFD84A', b:'#1E1E1E', w:'#F4F4F0'};
+const ORANGUTAN = ['..oooo..','.offffo.','.fkffkf.','.ffmmff.','oooooooo','o.oooo.o','o.oooo.o','..o..o..'];
+const PAL_ORANGUTAN = {o:'#A8481A', f:'#E0A070', k:'#2A1A10', m:'#8E5A3A'};
+const SERU = ['.www.','wwrww','wwrww','wwrww','wwwww','wwrww','.www.'];
+const PAPAN_JUAL = ['bbbbbbb','bbbyybb','bbyyyyb','bbbyybb','bbbbbbb','...p...','...p...','...p...'];
+const TOKOH = {
+  pembalak:{kepala:'topi', topi:'#C8361B', baju:['#2A3E66','#3E5A8A','#5A7AAE'], celana:'#3A2A20', alat:'kapak'},
+  pemburu:{kepala:'rambut', baju:['#3E4A1E','#5A6B2E','#7A8A44'], celana:'#3A2A20', alat:'jerat'},
+  perambah:{kepala:'caping', baju:['#7A3A1A','#B05A2A','#D07A44'], celana:'#3A2A20', alat:'patok'},
+  petani:{kepala:'caping', baju:['#1E4A7A','#2F6FB0','#5A94D0'], celana:'#3A2A20', alat:'egrek'},
+  penjaga:{kepala:'rimba', topi:'#3E5A22', baju:['#2E4E1E','#4E7A34','#6E9A4E'], celana:'#2E3A22', alat:'teropong'},
+};
+function pixOrang(o){
+  const p = new Pix(13, 14), k = W.kulit, X = 1, Y = 1;
+  p.rect(X + 2, Y + 9, 1, 3, o.celana); p.rect(X + 4, Y + 9, 1, 3, o.celana); p.rect(X + 2, Y + 9, 3, 1, o.celana);
+  p.set(X + 2, Y + 12, W.garis); p.set(X + 4, Y + 12, W.garis);
+  p.rect(X + 1, Y + 5, 5, 4, o.baju[1]); p.rect(X + 1, Y + 5, 5, 1, o.baju[2]); p.rect(X + 5, Y + 6, 1, 3, o.baju[0]);
+  p.set(X, Y + 6, o.baju[1]); p.set(X, Y + 7, o.baju[1]); p.set(X, Y + 8, k[2]);
+  p.set(X + 6, Y + 6, o.baju[1]); p.set(X + 6, Y + 7, k[2]);
+  p.rect(X + 2, Y + 2, 3, 3, k[2]); p.set(X + 4, Y + 3, k[1]); p.set(X + 3, Y + 3, W.garis);
+  switch (o.kepala){
+    case 'caping': p.rect(X, Y + 2, 7, 1, '#C9A65A'); p.rect(X + 1, Y + 1, 5, 1, '#E2C47A'); p.set(X + 3, Y, '#E2C47A'); break;
+    case 'topi': p.rect(X + 2, Y + 1, 3, 1, o.topi); p.rect(X + 2, Y + 2, 4, 1, o.topi); break;
+    case 'rimba': p.rect(X + 1, Y + 2, 5, 1, o.topi); p.rect(X + 2, Y + 1, 3, 1, o.topi); break;
+    default: p.rect(X + 2, Y + 1, 3, 1, '#2A1A10'); p.set(X + 2, Y + 2, '#2A1A10');
+  }
+  switch (o.alat){
+    case 'kapak': p.garis(X + 7, Y + 3, X + 7, Y + 9, W.kayu[2]); p.rect(X + 8, Y + 3, 2, 2, '#B8C0C8'); p.set(X + 9, Y + 5, '#B8C0C8'); break;
+    case 'jerat': [[8, 4], [9, 4], [10, 5], [10, 6], [9, 7], [8, 7], [7, 6], [7, 5]].forEach(([x, y]) => p.set(X + x, Y + y, W.kayu[3])); p.garis(X + 8, Y + 8, X + 8, Y + 10, W.kayu[3]); break;
+    case 'patok': p.garis(X + 8, Y, X + 8, Y + 11, W.kayu[2]); p.rect(X + 9, Y, 2, 3, '#D0281A'); p.set(X + 9, Y, '#F05A3A'); break;
+    case 'egrek': p.garis(X + 8, Y, X + 8, Y + 11, '#9AA0A6'); p.set(X + 9, Y, '#9AA0A6'); p.set(X + 10, Y + 1, '#9AA0A6'); break;
+    case 'teropong': p.rect(X + 6, Y + 6, 2, 1, '#2A2A2A'); break;
+  }
+  return p.garisTepi(W.garis);
+}
+const SPRITE_LEPAS = {
+  apiA: () => { const p = new Pix(14, 14); p.peta(API_A, {1:W.api[0], 2:W.api[1], 3:W.api[2], 4:W.api[3]}, 1, 1); return p.garisTepi(W.garis); },
+  apiB: () => { const p = new Pix(14, 14); p.peta(API_B, {1:W.api[0], 2:W.api[1], 3:W.api[2], 4:W.api[3]}, 1, 1); return p.garisTepi(W.garis); },
+  asapKecil: () => { const p = new Pix(9, 7); p.bola(3.5, 4, 2.6, W.asap); p.bola(6, 3, 2.2, W.asap); return p; },
+  rangkong: () => { const p = new Pix(10, 8); p.peta(RANGKONG, PAL_RANGKONG, 1, 1); return p.garisTepi(W.garis); },
+  orangutan: () => { const p = new Pix(10, 10); p.peta(ORANGUTAN, PAL_ORANGUTAN, 1, 1); return p.garisTepi(W.garis); },
+  seru: () => { const p = new Pix(7, 9); p.peta(SERU, {w:'#FFFFFF', r:'#D0281A'}, 1, 1); return p.garisTepi(W.garis); },
+  jual: () => { const p = new Pix(9, 10); p.peta(PAPAN_JUAL, {b:W.kayu[3], y:W.emas[2], p:W.kayu[1]}, 1, 1); return p.garisTepi(W.garis); },
+  'orang-pembalak': () => pixOrang(TOKOH.pembalak),
+  'orang-pemburu': () => pixOrang(TOKOH.pemburu),
+  'orang-perambah': () => pixOrang(TOKOH.perambah),
+  'orang-petani': () => pixOrang(TOKOH.petani),
+  'orang-penjaga': () => pixOrang(TOKOH.penjaga),
+};
+
+/* ---------- lapisan di atas petak ---------- */
+function kotak(g, x, y, w, h, c){ g.fillStyle = c; g.fillRect(x, y, w, h); }
+function pagarH(g, x, y){ kotak(g, x, y + 1, UB, 1, W.kayu[3]); kotak(g, x, y + 2, UB, 1, W.kayu[0]); for (const dx of [0, 5, 10, 14]){ kotak(g, x + dx, y, 2, 3, W.kayu[2]); kotak(g, x + dx, y, 2, 1, W.kayu[3]); kotak(g, x + dx + 1, y + 1, 1, 2, W.kayu[1]); } }
+function pagarV(g, x, y){ kotak(g, x + 1, y, 1, UB, W.kayu[3]); kotak(g, x + 2, y, 1, UB, W.kayu[0]); for (const dy of [0, 5, 10, 14]){ kotak(g, x, y + dy, 3, 2, W.kayu[2]); kotak(g, x, y + dy, 3, 1, W.kayu[3]); } }
+function gambarPagar(g, daftar, semuaSisi){
+  const milik = t => t && t.milik === 'pemain';
+  for (const t of daftar){
+    if (!milik(t)) continue;
+    const x0 = t.c * UB, y0 = t.r * UB;
+    const nb = (dr, dc) => { if (semuaSisi) return null; const r = t.r + dr, c = t.c + dc; return (r < 0 || r >= BARIS || c < 0 || c >= KOLOM) ? null : daftar[r * KOLOM + c]; };
+    if (!milik(nb(-1, 0))) pagarH(g, x0, y0);
+    if (!milik(nb(1, 0))) pagarH(g, x0, y0 + UB - 3);
+    if (!milik(nb(0, -1))) pagarV(g, x0, y0);
+    if (!milik(nb(0, 1))) pagarV(g, x0 + UB - 3, y0);
+  }
+}
+function garisBatas(g, x, y, mendatar){
+  for (let i = 0; i < UB; i++){
+    const c = Math.floor(i / 2) % 2 ? '#FFFFFF' : '#D0281A';
+    if (mendatar){ kotak(g, x + i, y, 1, 1, c); kotak(g, x + i, y + 1, 1, 1, W.garis); }
+    else { kotak(g, x, y + i, 1, 1, c); kotak(g, x + 1, y + i, 1, 1, W.garis); }
+  }
+}
+function gambarBatas(g, daftar){
+  for (const t of daftar){
+    if (!t.kawasan) continue;
+    const x0 = t.c * UB, y0 = t.r * UB;
+    const luar = (dr, dc) => { const r = t.r + dr, c = t.c + dc; return !(r < 0 || r >= BARIS || c < 0 || c >= KOLOM) && !daftar[r * KOLOM + c].kawasan; };
+    if (luar(-1, 0)) garisBatas(g, x0, y0, true);
+    if (luar(1, 0)) garisBatas(g, x0, y0 + UB - 2, true);
+    if (luar(0, -1)) garisBatas(g, x0, y0, false);
+    if (luar(0, 1)) garisBatas(g, x0 + UB - 2, y0, false);
+  }
+}
+function gambarApi(g, x0, y0, f){
+  g.drawImage(sprKanvas(f % 2 ? 'apiB' : 'apiA'), x0 + 1, y0 + 2);
+  g.drawImage(sprKanvas('asapKecil'), x0 + 6, y0 - 3 - (f % 3));
+}
+function gambarAncaman(g, jenis, x0, y0){
+  g.drawImage(sprKanvas('orang-' + jenis), x0 + 4, y0 + 2);
+  g.drawImage(sprKanvas('seru'), x0 + 1, y0 - 2);
+}
+function gambarSatwa(g, daftar){
+  const v = nilaiSatwa();
+  const lebat = daftar.filter(t => t.jenis === 'hutan' && t.rapat === 3 && !t.ancaman && t.api === 0);
+  if (!lebat.length) return;
+  const n = v >= 70 ? 3 : v >= 45 ? 2 : v >= 20 ? 1 : 0;
+  const dipakai = new Set();
+  for (let k = 0; k < n; k++){
+    let i = (k * 7 + 3) % lebat.length;
+    while (dipakai.has(i) && dipakai.size < lebat.length) i = (i + 1) % lebat.length;
+    dipakai.add(i);
+    const t = lebat[i];
+    g.drawImage(sprKanvas('rangkong'), t.c * UB + 6, t.r * UB + (bingkai % 4 === k ? 0 : 1));
+  }
+  if (v >= 55 && lebat.length > 3){ const t = lebat[Math.floor(lebat.length / 2)]; g.drawImage(sprKanvas('orangutan'), t.c * UB, t.r * UB + 6); }
+}
+function gambarCuaca(g){
+  if (musim() === 'hujan' && gerakBoleh()){
+    g.fillStyle = 'rgba(214,236,255,.7)';
+    for (let k = 0; k < 26; k++){ g.fillRect((k * 37 + bingkai * 2) % (KOLOM * UB), (k * 53 + bingkai * 9) % (BARIS * UB), 1, 3); }
+  }
+  if (S.asap > 0){
+    g.fillStyle = `rgba(150,136,116,${Math.min(.62, S.asap / 100 * .7).toFixed(3)})`;
+    g.fillRect(0, 0, KOLOM * UB, BARIS * UB);
+  }
+}
+
+/* ---------- peta utama ---------- */
+const elKanvas = $('#kanvas');
+const gk = elKanvas.getContext('2d');
+const cachePetak = new Map();
+let bingkai = 0, pewaktu = null;
+
+function kanvasPetak(t, mk, f){
+  const anim = t.jenis === 'sungai' || t.kanal || (t.jenis === 'terbakar' && t.umur === 0);
+  const fr = anim ? f % 2 : 0;
+  const varian = t.jenis === 'sawit' ? (t.umur < 12 ? 'm' : 'b') + (t.rawat === 0 ? 'l' : '')
+    : t.jenis === 'rehab' ? (t.umur >= 5 ? 'b' : 'k') : t.jenis === 'terbakar' ? (t.umur === 0 ? 'n' : 'd') : '';
+  const kunci = [t.r, t.c, t.jenis, t.rapat, +!!t.gambut, +!!t.kanal, +!!t.sekat, +!!t.sekatBakar, varian, mk, fr].join('|');
+  let cv = cachePetak.get(kunci);
+  if (!cv){
+    if (cachePetak.size > 900) cachePetak.clear();
+    cv = pixPetak(t, mk, fr).kanvas();
+    cachePetak.set(kunci, cv);
+  }
+  return cv;
+}
+function gambarPeta(){
+  const daftar = petakAktif();
+  const mk = S ? kelompokMusim(musim()) : 'hujan';
+  const f = gerakBoleh() ? bingkai : 0;
+  gk.clearRect(0, 0, elKanvas.width, elKanvas.height);
+  for (const t of daftar) gk.drawImage(kanvasPetak(t, mk, f), t.c * UB, t.r * UB);
+  if (S && S.peran === 'petani') gambarPagar(gk, daftar, false);
+  gambarBatas(gk, daftar);
+  if (S && S.peran === 'petani') for (const t of daftar) if (t.dijual) gk.drawImage(sprKanvas('jual'), t.c * UB, t.r * UB);
+  if (S) gambarSatwa(gk, daftar);
+  for (const t of daftar) if (t.ancaman) gambarAncaman(gk, t.ancaman, t.c * UB, t.r * UB);
+  for (const t of daftar) if (t.api > 0) gambarApi(gk, t.c * UB, t.r * UB, f);
+  if (S){
+    let i = S.pilih;
+    if (i == null){ const rumah = daftar.findIndex(t => S.peran === 'petani' ? t.milik === 'pemain' : t.jenis === 'desa'); i = rumah < 0 ? 0 : rumah; }
+    const t = daftar[i];
+    gk.drawImage(sprKanvas('orang-' + S.peran), t.c * UB - 2, t.r * UB + 2);
+    gambarCuaca(gk);
+  }
+}
+function aturAnimasi(){
+  if (pewaktu){ clearInterval(pewaktu); pewaktu = null; }
+  if (!gerakBoleh()) return;
+  pewaktu = setInterval(() => { if (document.hidden) return; bingkai = (bingkai + 1) % 1200; gambarPeta(); }, 320);
+}
+
+/* ---------- gambar kecil untuk panel, keterangan, dan HUD ---------- */
+const CACHE_URL = {};
+function urlPetak(t, opsi){
+  opsi = opsi || {};
+  const mk = S ? kelompokMusim(musim()) : 'hujan';
+  const kunci = ['petak', t.r, t.c, t.jenis, t.rapat, +!!t.gambut, +!!t.kanal, +!!t.sekat, +!!t.sekatBakar, t.umur < 12 ? 'm' : 'b', t.umur >= 5 ? 'B' : 'K', t.rawat, t.api, t.ancaman, t.milik, t.dijual ? 1 : 0, t.kawasan ? 1 : 0, mk, JSON.stringify(opsi)].join('|');
+  if (CACHE_URL[kunci]) return CACHE_URL[kunci];
+  const cv = document.createElement('canvas'); cv.width = UB; cv.height = UB;
+  const g = cv.getContext('2d');
+  g.drawImage(kanvasPetak(t, mk, 0), 0, 0);
+  if (opsi.pagar && t.milik === 'pemain') gambarPagar(g, [Object.assign({}, t, {r:0, c:0})], true);
+  if (opsi.batas) garisBatas(g, 0, 7, true);
+  if (opsi.jual && t.dijual) g.drawImage(sprKanvas('jual'), 0, 0);
+  if (t.ancaman) gambarAncaman(g, t.ancaman, 0, 2);
+  if (t.api > 0) gambarApi(g, 0, 0, 0);
+  if (opsi.tokoh) g.drawImage(sprKanvas('orang-' + opsi.tokoh), -1, 2);
+  if (Object.keys(CACHE_URL).length > 400) for (const k in CACHE_URL) delete CACHE_URL[k];
+  return (CACHE_URL[kunci] = cv.toDataURL());
+}
+
+const IKON = {};
+function ikon(nama){
+  if (IKON[nama]) return IKON[nama];
+  let p;
+  const matahari = ['#E08A10', '#F2B82A', '#FFD84A', '#FFF4B0'];
+  switch (nama){
+    case 'koin': p = new Pix(12, 12); p.bola(6, 6, 4.4, W.emas); p.rect(6, 4, 1, 4, W.emas[0]); break;
+    case 'hati': case 'hatiKosong': {
+      p = new Pix(9, 8);
+      const c = nama === 'hati' ? {R:'#E03A22', h:'#FF9A8A'} : {R:'#D9C7A0', h:'#EFE3C4'};
+      p.peta(['.RR.RR.', 'RhRRRRR', 'RRRRRRR', '.RRRRR.', '..RRR..', '...R...'], c, 1, 1); break;
+    }
+    case 'matahari': p = new Pix(15, 15); [[7, 1], [7, 13], [1, 7], [13, 7], [3, 3], [11, 3], [3, 11], [11, 11]].forEach(([x, y]) => p.set(x, y, '#F2B82A')); p.bola(7.5, 7.5, 3.8, matahari); break;
+    case 'hujan': p = new Pix(16, 15); p.bola(5.5, 6.5, 3, W.awan); p.bola(9.5, 5.5, 3.6, W.awan); p.bola(12, 7.5, 2.4, W.awan); p.rect(3, 7, 10, 2, W.awan[1]); [[4, 12], [7, 13], [10, 12], [12, 13]].forEach(([x, y]) => { p.set(x, y, '#3683C6'); p.set(x, y - 1, '#6AB4E8'); }); break;
+    case 'pancaroba': p = new Pix(16, 15); p.bola(10, 6, 3.5, matahari); p.bola(5.5, 9, 2.8, W.awan); p.bola(8.5, 9.5, 3, W.awan); p.rect(3, 10, 8, 2, W.awan[1]); break;
+    case 'asap': p = new Pix(16, 15); p.bola(6, 9.5, 3.5, W.asap); p.bola(10, 6, 3.2, W.asap); p.bola(11.5, 10.5, 2.8, W.asap); break;
+    case 'pohon': p = new Pix(13, 14); p.rect(6, 9, 2, 4, W.batang[1]); p.bola(6.5, 6, 4.6, W.kanopi); break;
+    case 'warga': p = new Pix(15, 13); p.bola(5, 4, 2.3, W.kulit.concat('#E8B888')); p.bola(10, 4, 2.3, W.kulit.concat('#E8B888')); p.rect(3, 1, 4, 1, '#2A1A10'); p.rect(8, 1, 4, 1, '#2A1A10'); p.rect(2, 7, 6, 5, '#2F6FB0'); p.rect(8, 7, 5, 5, '#4E7A34'); break;
+    case 'burung': p = new Pix(10, 8); p.peta(RANGKONG, PAL_RANGKONG, 1, 1); break;
+    case 'surat': p = new Pix(12, 13); p.rect(1, 1, 10, 11, '#FFFDF2'); [3, 5, 7].forEach(y => p.rect(3, y, 6, 1, '#B8A57A')); p.bola(8, 9, 1.9, ['#7A1A0C', '#B0300F', '#E0503A', '#FF8A6A']); break;
+    case 'utang': p = new Pix(12, 13); p.rect(1, 1, 10, 11, '#FFFDF2'); [3, 5].forEach(y => p.rect(3, y, 6, 1, '#B8A57A')); p.rect(3, 8, 6, 2, '#D0281A'); break;
+    case 'sawit': p = new Pix(12, 12); p.bola(6, 6.5, 4.4, W.buah); p.set(4, 5, W.buah[0]); p.set(7, 8, W.buah[0]); p.set(8, 4, W.buah[0]); break;
+    case 'nama': p = new Pix(12, 12); p.bola(6, 6, 4.6, W.emas); p.set(4, 5, W.garis); p.set(7, 5, W.garis); p.set(3, 7, W.garis); p.rect(4, 8, 4, 1, W.garis); p.set(8, 7, W.garis); break;
+    default: p = new Pix(4, 4);
+  }
+  p.garisTepi(W.garis);
+  return (IKON[nama] = p.kanvas().toDataURL());
+}
+
+const POTRET = {
+  petani:{kepala:'caping', baju:['#1E4A7A', '#2F6FB0', '#5A94D0']},
+  penjaga:{kepala:'rimba', topi:'#4A6A2A', topiGelap:'#2E4416', baju:['#2E4E1E', '#4E7A34', '#6E9A4E']},
+  tengkulak:{kepala:'peci', baju:['#5A3418', '#8A5428', '#B07A42'], kumis:true, motif:true},
+  tetangga:{kepala:'rambut', baju:['#2E6B3A', '#3E8A4A', '#62AA6A']},
+  bidan:{kepala:'jilbab', jilbab:['#B8C8D8', '#E8F0F8', '#FFFFFF'], baju:['#2A5A8A', '#3E7AB0', '#6A9ACC']},
+  penyuluh:{kepala:'rimba', topi:'#B08A50', topiGelap:'#7A5A2A', baju:['#8A7040', '#B0905A', '#D0B07A']},
+  kios:{kepala:'peci', baju:['#B8B8B0', '#E0E0D8', '#FFFFFF']},
+  warga:{kepala:'rambut', baju:['#8A2A1E', '#B8402A', '#D86A4A']},
+  mandor:{kepala:'helm', baju:['#B04A0A', '#E8701A', '#FFA040'], rompi:true},
+  koperasi:{kepala:'peci', baju:['#B8B8B0', '#E0E0D8', '#FFFFFF'], kacamata:true},
+  kades:{kepala:'peci', baju:['#6A5A30', '#8E7A44', '#B09A60']},
+  peneliti:{kepala:'rimba', topi:'#D0B880', topiGelap:'#9A8450', baju:['#2A5A8A', '#3E7AB0', '#6A9ACC'], kacamata:true},
+  guru:{kepala:'jilbab', jilbab:['#7A4A2A', '#9A6A44', '#BA8A60'], baju:['#6A3A5A', '#8A4A7A', '#AA6A9A'], motif:true},
+  anggota:{kepala:'topi', topi:'#3E5A22', topiGelap:'#24380E', baju:['#2E4E1E', '#4E7A34', '#6E9A4E']},
+  madu:{kepala:'ikat', baju:['#5A4A2A', '#7A6A3A', '#9A8A5A']},
+  mahasiswa:{kepala:'rambut', baju:['#B8900A', '#E8B81A', '#FFD84A']},
+  anak:{kepala:'rambut', baju:['#C8C8C0', '#F0F0E8', '#FFFFFF']},
+  sopir:{kepala:'topi', topi:'#2F6FB0', topiGelap:'#1E4A7A', baju:['#4A4A50', '#6A6A72', '#8E8E96']},
+  orangutan:{orangutan:true},
+};
+function potret(nama){
+  const kunci = 'potret-' + nama;
+  if (IKON[kunci]) return IKON[kunci];
+  const o = POTRET[nama] || POTRET.warga;
+  const p = new Pix(18, 18), k = W.kulit, rambut = '#2A1A10';
+  if (o.orangutan){
+    p.bola(9, 9.5, 6.8, ['#6A2A0C', '#8E3A14', '#B0501E', '#D07038']);
+    p.rect(2, 15, 14, 3, '#8E3A14');
+    p.rect(6, 7, 6, 6, '#E0A070'); p.rect(7, 6, 4, 1, '#E0A070');
+    p.set(7, 9, W.garis); p.set(10, 9, W.garis); p.rect(8, 11, 2, 1, '#8E5A3A'); p.rect(7, 12, 4, 1, '#8E5A3A');
+  } else {
+    p.rect(3, 14, 12, 4, o.baju[1]); p.rect(4, 13, 10, 1, o.baju[1]); p.rect(3, 14, 12, 1, o.baju[2]); p.rect(13, 14, 2, 4, o.baju[0]);
+    if (o.motif) for (let x = 4; x < 13; x += 3){ p.set(x, 16, o.baju[2]); p.set(x + 1, 15, o.baju[0]); }
+    if (o.rompi){ p.rect(3, 16, 12, 1, '#F0F0E0'); p.rect(8, 13, 2, 5, o.baju[0]); }
+    if (o.kepala === 'jilbab'){ p.rect(4, 3, 10, 12, o.jilbab[1]); p.rect(5, 2, 8, 1, o.jilbab[1]); p.rect(4, 3, 10, 1, o.jilbab[2]); p.rect(3, 6, 1, 8, o.jilbab[0]); p.rect(14, 6, 1, 8, o.jilbab[0]); }
+    p.rect(8, 12, 2, 2, k[1]);
+    if (o.kepala === 'jilbab'){ p.rect(6, 5, 6, 7, k[2]); p.rect(11, 6, 1, 5, k[1]); }
+    else { p.rect(6, 5, 6, 7, k[2]); p.rect(5, 6, 8, 5, k[2]); p.rect(11, 6, 1, 5, k[1]); p.rect(12, 7, 1, 3, k[1]); p.set(4, 8, k[1]); p.set(13, 8, k[1]); }
+    p.set(7, 8, W.garis); p.set(10, 8, W.garis); p.rect(8, 10, 2, 1, k[0]);
+    if (o.kumis) p.rect(7, 10, 4, 1, rambut);
+    if (o.kacamata){ for (const [x, c] of [[6, '#2A2A2A'], [7, '#BDE6FA'], [8, '#2A2A2A'], [9, '#2A2A2A'], [10, '#BDE6FA'], [11, '#2A2A2A']]) p.set(x, 8, c); }
+    switch (o.kepala){
+      case 'rambut': p.rect(5, 3, 8, 3, rambut); p.rect(4, 4, 1, 4, rambut); p.rect(13, 4, 1, 4, rambut); break;
+      case 'peci': p.rect(5, 2, 8, 4, '#1E1E26'); p.rect(5, 2, 8, 1, '#3A3A48'); p.set(5, 6, rambut); p.set(12, 6, rambut); break;
+      case 'caping': [[8, 0, 2], [6, 1, 6], [4, 2, 10], [2, 3, 14], [1, 4, 16]].forEach(([x, y, w], j) => p.rect(x, y, w, 1, ['#E8CC80', '#C9A65A', '#E8CC80', '#C9A65A', '#9A7A3A'][j])); break;
+      case 'helm': p.rect(5, 2, 8, 3, '#F2C230'); p.rect(6, 1, 6, 1, '#F2C230'); p.rect(4, 5, 10, 1, '#D9A51A'); p.set(7, 2, '#FFF0A0'); break;
+      case 'rimba': p.rect(6, 2, 6, 3, o.topi); p.rect(3, 5, 12, 1, o.topiGelap); break;
+      case 'topi': p.rect(5, 3, 8, 3, o.topi); p.rect(11, 5, 4, 1, o.topiGelap); p.set(5, 6, rambut); break;
+      case 'ikat': p.rect(5, 3, 8, 3, rambut); p.rect(4, 4, 1, 4, rambut); p.rect(13, 4, 1, 4, rambut); p.rect(5, 5, 8, 1, '#C8361B'); p.set(13, 6, '#C8361B'); p.set(14, 7, '#C8361B'); break;
+    }
+  }
+  p.garisTepi(W.garis);
+  return (IKON[kunci] = p.kanvas().toDataURL());
+}
+const PEMBICARA = {
+  harga_turun:['Sopir truk TBS', 'sopir'], harga_naik:['Sopir truk TBS', 'sopir'], ijon:['Tengkulak', 'tengkulak'],
+  orangutan:['Di kebunmu', 'orangutan'], sekolah:['Anak sulung', 'anak'], ajak_rambah:['Tetangga', 'tetangga'],
+  asap_petani:['Bidan desa', 'bidan'], penyuluh:['Penyuluh pertanian', 'penyuluh'], pupuk_langka:['Pemilik kios pupuk', 'kios'],
+  banjir_petani:['Warga', 'warga'], ekspansi_petani:['Mandor perusahaan', 'mandor'], koperasi_buka:['Pengurus koperasi', 'koperasi'],
+  kompensasi:['Utusan perusahaan', 'mandor'], dana_desa:['Kepala desa', 'kades'], peneliti:['Peneliti rangkong', 'peneliti'],
+  protes:['Warga', 'warga'], asap_penjaga:['Guru sekolah', 'guru'], ancaman_pemodal:['Anggota kelompok', 'anggota'],
+  orangutan_penjaga:['Di kebun tetangga', 'orangutan'], sialang:['Pencari madu', 'madu'], relawan:['Mahasiswa KKN', 'mahasiswa'],
+  banjir_penjaga:['Warga', 'warga'], petani_pltb:['Petani tetangga', 'tetangga'],
+};
+
+/* ================= tampilan ================= */
+const elPeta = $('#peta');
+function bangunPeta(){
+  elKanvas.width = KOLOM * UB; elKanvas.height = BARIS * UB;
+  for (let i = 0; i < KOLOM * BARIS; i++){
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'petak'; b.dataset.i = String(i); b.tabIndex = -1;
+    elPeta.appendChild(b);
+  }
+}
+function renderPeta(){
+  const daftar = petakAktif();
+  const pilih = S ? S.pilih : pilihPratinjau;
+  const fokusI = pilih == null ? 0 : pilih;
+  daftar.forEach((t, i) => {
+    const b = elPeta.children[i];
+    b.setAttribute('aria-label', labelPetak(t));
+    b.setAttribute('aria-pressed', String(i === pilih));
+    b.tabIndex = i === fokusI ? 0 : -1;
+    b.classList.toggle('berubah', berubah.has(i) && gerakBoleh());
+  });
+  gambarPeta();
+}
+
+function renderKepala(){
+  const el = $('#kepala-kanan');
+  if (!S){ el.innerHTML = ''; return; }
+  if (konfirmUlang){
+    el.innerHTML = `<div class="konfirm"><p>Permainan sekarang akan dihapus.</p>
+      <button class="tombol" data-kunci="ya-ulang" data-ya-ulang>Ya, pilih peran lagi</button>
+      <button class="tombol" data-kunci="batal-ulang" data-batal-ulang>Batal</button></div>`;
+    return;
+  }
+  el.innerHTML = `<span class="peran-tag">${S.peran === 'petani' ? 'Petani sawit swadaya' : 'Kelompok penjaga hutan'}</span>
+    <button class="tombol" data-kunci="ganti" data-ganti>${S.selesai ? 'Pilih peran lagi' : 'Ganti peran'}</button>`;
+}
+
+const img = (src, kelas) => `<img class="px${kelas ? ' ' + kelas : ''}" src="${src}" alt="">`;
+function ukur(ik, label, nilai, sub, waspada, meter){
+  return `<div class="ukur">${img(ikon(ik))}<span class="ukur-label">${label}</span><span class="ukur-nilai${waspada ? ' waspada' : ''}">${nilai}</span>${meter || ''}${sub ? `<span class="ukur-sub">${sub}</span>` : ''}</div>`;
+}
+function meterAsap(){
+  const n = S.asap >= 70 ? 4 : S.asap >= 40 ? 3 : S.asap >= 15 ? 2 : S.asap > 0 ? 1 : 0;
+  return `<span class="meter${S.asap >= 40 ? ' waspada' : ''}" aria-hidden="true">${[0, 1, 2, 3].map(i => `<i class="${i < n ? 'isi' : ''}"></i>`).join('')}</span>`;
+}
+function renderDasbor(){
+  const el = $('#dasbor');
+  if (!S){ el.hidden = true; el.innerHTML = ''; return; }
+  el.hidden = false;
+  const hutan = jumlahHutan();
+  const hutanSub = `awal ${S.hutanAwal} petak`;
+  if (S.peran === 'petani'){
+    const u = totalUtang();
+    el.innerHTML =
+      ukur('koin', 'Uang', fmtRp(S.uang), null) +
+      ukur('utang', 'Utang', u > 0 ? fmtRp(u) : 'Tidak ada', u > 0 ? (S.utangTengkulak > 0 ? 'tengkulak 2,5% per bulan' : 'KUR 0,5% per bulan') : null, u > 25e6) +
+      ukur('sawit', 'Harga TBS pabrik', `Rp ${fmtAngka(S.harga)}/kg`, `kamu terima Rp ${fmtAngka(hargaTerima())}`) +
+      ukur('nama', 'Nama baik', labelNama(S.nama), `${S.nama} dari 100`, S.nama < 30) +
+      ukur('pohon', 'Hutan di peta', `${hutan} petak`, hutanSub, hutan < S.hutanAwal - 4) +
+      ukur('asap', 'Asap', labelAsap(S.asap), null, S.asap >= 40, meterAsap());
+  } else {
+    const satwa = nilaiSatwa();
+    const izin = S.izin === 0 ? 'Belum diajukan' : S.izin === 5 ? 'Sudah terbit' : `Diproses, bulan ${S.izin} dari 4`;
+    el.innerHTML =
+      ukur('koin', 'Kas kelompok', fmtRp(S.uang), null) +
+      ukur('warga', 'Dukungan warga', `${S.dukungan}`, S.dukungan >= 70 ? 'tenaga +1' : S.dukungan < 30 ? 'tenaga −1' : 'dari 100', S.dukungan < 30) +
+      ukur('pohon', 'Hutan di peta', `${hutan} petak`, `${jumlahHutanLebat()} lebat, ${hutanSub}`, hutan < S.hutanAwal - 4) +
+      ukur('burung', 'Satwa liar', labelSatwa(satwa), `${satwa} dari 100`, satwa < 45) +
+      ukur('asap', 'Asap', labelAsap(S.asap), null, S.asap >= 40, meterAsap()) +
+      ukur('surat', 'Hutan Desa', izin, null);
+  }
+}
+
+function htmlBilah(){
+  const m = musim();
+  const ik = S.asap >= 40 ? 'asap' : m === 'hujan' ? 'hujan' : m === 'pancaroba' ? 'pancaroba' : 'matahari';
+  const jumlah = Math.max(S.tenagaMaks, S.tenaga);
+  const hati = Array.from({length: jumlah}, (_, i) => img(ikon(i < S.tenaga ? 'hati' : 'hatiKosong'))).join('');
+  const tombol = S.peristiwa
+    ? `<button class="tombol-utama" data-ke-kabar data-kunci="ke-kabar">Putuskan kabar dulu</button>`
+    : `<button class="tombol-utama" data-bulan data-kunci="bulan">Akhiri ${namaBulan(S.bulan)}</button>`;
+  return `<div class="bilah jendela">
+    ${img(potret(S.peran), 'potret')}
+    <div class="bilah-waktu">
+      <div class="bilah-bulan">${namaBulan(S.bulan)} · Tahun ${tahunKe(S.bulan)}</div>
+      <div class="bilah-musim">${img(ikon(ik))}<span>${NAMA_MUSIM[m]}, risiko api <b class="${m === 'kemarau' || m === 'puncak' ? 'risiko-tinggi' : ''}">${RISIKO_MUSIM[m]}</b>${S.asap >= 40 ? ', asap tebal' : ''}</span></div>
+      <div class="tenaga" role="img" aria-label="Tenaga tersisa ${S.tenaga} dari ${jumlah}">${hati}<span class="teks">${S.tenaga} tenaga</span></div>
+    </div>
+    ${tombol}
+    <p class="bilah-kecil">Bulan ${S.bulan + 1} dari ${LAMA}. ${S.tenaga > 0 ? 'Tenaga yang tersisa tidak terbawa ke bulan depan.' : 'Tenaga habis. Akhiri bulan untuk melihat hasilnya.'}</p>
+  </div>`;
+}
+
+function htmlPeristiwa(){
+  if (!S.peristiwa) return '';
+  const def = PERISTIWA_ID[S.peristiwa.id];
+  const [nama, wajah] = PEMBICARA[S.peristiwa.id] || ['Kabar', 'warga'];
+  const tombol = def.pilihan.map((p, i) => {
+    const bisa = !p.bisa || p.bisa();
+    return `<button class="aksi${p.bahaya ? ' aksi-bahaya' : ''}" data-pilih="${i}" data-kunci="pilih-${i}"${bisa ? '' : ' disabled'}>
+      <span class="aksi-nama">${p.label}</span>${p.ket ? `<span class="aksi-ket">${p.ket}</span>` : ''}${bisa ? '' : `<span class="aksi-alasan">${p.alasan || 'Belum bisa dipilih'}</span>`}</button>`;
+  }).join('');
+  return `<section class="dialog jendela" id="kartu-kabar" tabindex="-1" aria-labelledby="judul-kabar">
+    <span class="papan-nama">${nama}</span>
+    <div class="dialog-isi">${img(potret(wajah))}
+      <div><p class="kicker">Kabar ${namaBulan(S.bulan)}, putuskan sebelum bulan berakhir</p>
+        <h2 id="judul-kabar">${S.peristiwa.judul}</h2>
+        <p>${S.peristiwa.teks}</p></div>
+    </div>
+    <div class="pilihan">${tombol}</div>
+  </section>`;
+}
+
+function htmlTombolAksi(a){
+  const bagian = [];
+  if (a.tenaga) bagian.push(`${img(ikon('hati'))}<span>${a.tenaga}<span class="sr-only"> tenaga</span></span>`);
+  if (a.uang) bagian.push(`${img(ikon('koin'))}<span>${fmtRp(a.uang)}</span>`);
+  const biaya = bagian.join('') || '<span>Gratis</span>';
+  return `<button class="aksi${a.bahaya ? ' aksi-bahaya' : ''}" data-aksi="${a.id}" data-kunci="aksi-${a.id}"${a.bisa ? '' : ' disabled'}>
+    <span class="aksi-nama">${a.label}</span><span class="aksi-biaya">${biaya}</span>
+    ${a.ket ? `<span class="aksi-ket">${a.ket}</span>` : ''}${a.bisa ? '' : `<span class="aksi-alasan">${a.alasan}</span>`}</button>`;
+}
+
+function rincianPetak(t){
+  const L = [];
+  const petani = S && S.peran === 'petani';
+  if (t.api > 0) L.push(['Sedang terbakar.' + (t.gambut ? ' Api gambut bisa bertahan sampai 2 bulan.' : ' Bisa menjalar ke petak sebelah di akhir bulan.'), true]);
+  if (t.ancaman) L.push([`${NAMA_ANCAMAN[t.ancaman]}. ${KET_ANCAMAN[t.ancaman]}`, true]);
+  if (t.jenis === 'sawit'){
+    if (t.umur < 12) L.push([`Mulai berbuah ${12 - t.umur} bulan lagi.`]);
+    else if (t.umur < 18) L.push(['Baru berbuah, hasilnya belum penuh.']);
+    if (t.milik === 'pemain'){
+      L.push([`Bibit ${t.bibit === 'unggul' ? 'bersertifikat' : 'asalan'}. Perawatan ${['terbengkalai', 'kurang', 'cukup', 'penuh'][t.rawat]}.`]);
+      if (t.umur >= 12 && S) L.push([`Perkiraan panen ${fmtTon(hasilTon(t))} TBS per bulan, sekitar ${fmtRp(hasilTon(t) * 1000 * (hargaTerima() - ONGKOS))} bersih.`]);
+    }
+  }
+  if (t.jenis === 'hutan'){
+    if (S && S.peran === 'penjaga' && t.rapat >= 2) L.push([`Hasil hutan siap panen: ${t.hhbk} dari ${t.rapat} bagian.`]);
+    if (t.rapat < 3 && !t.ancaman) L.push(['Kalau aman setahun, hutan ini bertambah rapat.']);
+  }
+  if (t.jenis === 'rehab') L.push([`Jadi hutan muda ${Math.max(1, 10 - t.umur)} bulan lagi.`]);
+  if (t.jenis === 'terbakar') L.push([`Bisa ditanami. Kalau dibiarkan, jadi semak ${Math.max(1, 4 - t.umur)} bulan lagi.`]);
+  if (t.gambut) L.push([t.kanal ? 'Tanah gambut yang dikeringkan kanal. Sangat mudah terbakar.' : t.sekat ? 'Tanah gambut. Kanalnya sudah disekat, gambut kembali basah.' : 'Tanah gambut yang masih basah.']);
+  if (t.sekatBakar) L.push(['Dikelilingi sekat bakar.']);
+  if (t.kawasan && (t.milik === 'pemain' || t.milik === 'tetangga') && t.jenis !== 'hutan') L.push(['Berada di dalam kawasan hutan tanpa izin.', true]);
+  if (petani && t.dijual) L.push([`Dijual ${fmtRp(t.dijual)}.`]);
+  if (S && !t.api){ const r = risikoTeks(t); if (r) L.push([`Risiko terbakar bulan ini: ${r}.`, r === 'sangat tinggi']); }
+  return L;
+}
+
+function htmlPetak(){
+  const t = S.pilih != null ? S.petak[S.pilih] : null;
+  if (!t){
+    return `<section class="blok petak-info jendela" aria-labelledby="judul-buku">
+      <h2 id="judul-buku" tabindex="-1">Pilih petak di ladang</h2>
+      <p class="kosong" style="margin-top:6px">Ketuk satu petak untuk melihat keadaannya dan pekerjaan yang bisa dilakukan di sana. ${S.peran === 'petani' ? 'Lahanmu dikelilingi pagar kayu.' : 'Petak bertanda seru merah sedang diganggu.'}</p>
+      ${umpan ? `<p class="umpan">${umpan}</p>` : ''}
+    </section>`;
+  }
+  const L = aksiPetak(t);
+  const rincian = rincianPetak(t).map(([s, w]) => `<li${w ? ' class="waspada"' : ''}>${s}</li>`).join('');
+  return `<section class="blok petak-info jendela" aria-labelledby="judul-buku">
+    <div class="petak-kepala">${img(urlPetak(t, {pagar: S.peran === 'petani', jual: S.peran === 'petani'}))}
+      <div><h2 id="judul-buku" tabindex="-1">${kode(t)} · ${namaPetak(t)}</h2><p class="petak-pemilik">${pemilikTeks(t)}</p></div>
+    </div>
+    ${rincian ? `<ul class="rincian">${rincian}</ul>` : ''}
+    ${umpan ? `<p class="umpan">${umpan}</p>` : ''}
+    ${L.length ? `<div class="aksi-daftar">${L.map(htmlTombolAksi).join('')}</div>`
+      : `<p class="kosong" style="margin-top:10px">${t.jenis === 'sungai' || t.jenis === 'desa' ? 'Tidak ada pekerjaan di petak ini.' : (S.peran === 'petani' ? 'Petak ini bukan milikmu. Pekerjaan hanya bisa dilakukan di lahanmu dan petak yang bersebelahan.' : 'Tidak ada pekerjaan kelompok di petak ini.')}</p>`}
+  </section>`;
+}
+
+function htmlPerhatian(){
+  const daftar = S.petak.filter(t => t.api > 0 || t.ancaman);
+  if (!daftar.length) return '';
+  const chip = daftar.slice(0, 8).map(t => `<button class="chip" data-lompat="${idx(t)}" data-kunci="lompat-${idx(t)}">${kode(t)} <span>${t.api > 0 ? 'api' : NAMA_ANCAMAN[t.ancaman].toLowerCase()}</span></button>`).join('');
+  return `<section class="blok jendela" aria-labelledby="judul-perhatian">
+    <div class="blok-kepala"><h2 id="judul-perhatian" style="font-size:1.2rem">Perlu perhatian</h2><span class="kecil">${daftar.length} petak</span></div>
+    <div class="perhatian">${chip}</div>
+  </section>`;
+}
+
+function htmlUmum(){
+  const L = aksiUmum();
+  if (!L.length) return '';
+  return `<section class="blok jendela" aria-labelledby="judul-umum">
+    <div class="blok-kepala"><h2 id="judul-umum">Pekerjaan lain</h2>${S.peran === 'petani' && S.koperasi ? '<span class="kecil">Anggota koperasi</span>' : ''}</div>
+    <div class="aksi-daftar">${L.map(htmlTombolAksi).join('')}</div>
+  </section>`;
+}
+
+function htmlKabar(){
+  if (!S.kabar.length) return '';
+  const urut = [['kini', 'Bulan ini'], ['awal', `Awal ${namaBulan(S.bulan)}`], ['akhir', `Akhir ${namaBulan(Math.max(0, S.bulan - 1))}`]];
+  const grup = urut.map(([g, judul]) => {
+    let isi = S.kabar.filter(k => k.grup === g);
+    if (!isi.length) return '';
+    if (g === 'kini') isi = isi.slice().reverse();
+    return `<div class="kabar-grup"><h3>${S.selesai && g === 'akhir' ? `Akhir ${namaBulan(S.bulan - 1)}, tahun ${tahunKe(S.bulan - 1)}` : judul}</h3><ul>${isi.map(k =>
+      k.nada === 'catatan' ? `<li class="catatan"><b>Catatan lapangan</b>${k.teks}</li>` : `<li class="${k.nada}">${k.teks}</li>`).join('')}</ul></div>`;
+  }).join('');
+  return `<section class="blok jendela" aria-labelledby="judul-kabar-daftar">
+    <div class="blok-kepala"><h2 id="judul-kabar-daftar">Kabar</h2></div>
+    <div class="kabar-daftar">${grup}</div>
+  </section>`;
+}
+
+function htmlCara(){
+  const umum = [
+    'Satu giliran sama dengan satu bulan. Permainan selesai setelah 24 bulan.',
+    'Tiap bulan tenaga terbatas, ditandai hati di bilah kalender. Ketuk petak, pilih pekerjaan, lalu akhiri bulan. Tenaga yang tersisa tidak terbawa.',
+    'Juni sampai September adalah kemarau. Api menjalar ke petak sebelah di akhir bulan, paling cepat lewat semak dan gambut yang dikeringkan kanal.',
+    'Garis patok merah-putih di ladang adalah batas kawasan hutan negara. Lahan di dalam garis itu tidak boleh dijadikan kebun tanpa izin.',
+  ];
+  const peran = S.peran === 'petani' ? [
+    'Kebunmu dipanen otomatis tiap akhir bulan. Tanpa pupuk, perawatan turun satu tingkat tiap 3 bulan dan daunnya menguning.',
+    'Kalau uang kurang, tengkulak menutupnya dengan pinjaman berbunga 2,5% per bulan. Utang di atas Rp 35 juta membuat kebun disita.',
+  ] : [
+    'Ancaman muncul di awal bulan dan bertindak di akhir bulan. Pembalak menipiskan hutan tiap bulan. Perambah mengubah hutan jadi kebun.',
+    'Dukungan warga turun 2 tiap bulan. Panen hasil hutan, rapat, dan memadamkan api menaikkannya. Kalau dukungan habis, kelompok bubar.',
+    'Posko butuh biaya Rp 400 ribu tiap bulan. Kalau kas kosong, dukungan warga ikut turun.',
+  ];
+  return `<details class="cara jendela" id="cara"><summary>Cara main</summary><ul>${[...umum, ...peran].map(s => `<li>${s}</li>`).join('')}</ul></details>`;
+}
+
+function htmlPilihPeran(){
+  const t = pilihPratinjau != null ? PRATINJAU[pilihPratinjau] : null;
+  const dasar = {r:3, c:1, rapat:0, umur:0, api:0, rawat:2, milik:'desa', kawasan:false};
+  const gambarPetani = urlPetak(Object.assign({}, dasar, {jenis:'sawit', umur:40}), {tokoh:'petani'});
+  const gambarPenjaga = urlPetak(Object.assign({}, dasar, {r:0, c:0, jenis:'hutan', rapat:3}), {tokoh:'penjaga'});
+  return `<section class="pilih-peran jendela" aria-labelledby="judul-buku">
+    <h2 id="judul-buku" tabindex="-1">Pilih peranmu</h2>
+    <p>Dua tahun di Desa Tepian Rasau. Hutan rawa gambut di belakang desa makin terdesak kebun, dan tiap kemarau api datang.</p>
+    <div class="peran-daftar">
+      <article class="peran">${img(gambarPetani)}
+        <h3>Petani sawit swadaya</h3>
+        <p>Kamu mengurus kebun warisan orang tua di tepi hutan. Buah harus dijual, dapur harus mengepul, dan hutan di sebelah kebun terlihat menggoda.</p>
+        <ul><li>6 hektare: 4 kebun sawit, 2 semak</li><li>Uang Rp 8 juta, 3 tenaga per bulan</li></ul>
+        <button class="tombol-utama" data-peran="petani" data-kunci="peran-petani">Main sebagai petani sawit</button>
+      </article>
+      <article class="peran">${img(gambarPenjaga)}
+        <h3>Kelompok penjaga hutan</h3>
+        <p>Kamu memimpin kelompok warga yang menjaga hutan di belakang desa. Pembalak, perambah, dan api datang lebih cepat daripada tenaga kalian.</p>
+        <ul><li>24 petak hutan untuk dijaga</li><li>Kas Rp 4 juta, 4 tenaga per bulan</li></ul>
+        <button class="tombol-utama" data-peran="penjaga" data-kunci="peran-penjaga">Main sebagai penjaga hutan</button>
+      </article>
+    </div>
+    <p class="pratinjau" role="status">${t ? `<strong>${kode(t)} · ${namaPetak(t)}.</strong> ${pemilikTeks(t)}.` : 'Ketuk petak di ladang untuk mengenal desa sebelum mulai.'}</p>
+    <p class="catatan-kaki">Desa, tokoh, harga, dan peluang di permainan ini rekaan dan disederhanakan untuk bermain. Catatan lapangan yang muncul selama bermain merujuk pada aturan dan praktik nyata di Indonesia.</p>
+  </section>`;
+}
+
+// perkiraan harga lahan sah milik pemain; kebun di kawasan hutan tidak bisa dijual sah
+function nilaiLahan(){
+  let n = 0;
+  for (const t of S.petak){
+    if (t.milik !== 'pemain' || t.kawasan) continue;
+    let v = t.jenis === 'sawit' ? (t.umur >= 12 ? 45e6 : 30e6) : 18e6;
+    if (t.gambut) v *= 0.5;
+    n += v;
+  }
+  return n;
+}
+
+function hasilAkhir(){
+  const hutan = jumlahHutan();
+  const sel = hutan - S.hutanAwal;
+  const asapTeks = S.asapPuncak.nilai > 0 ? `${labelAsap(S.asapPuncak.nilai)}, ${namaBulan(S.asapPuncak.bulan)} tahun ${tahunKe(S.asapPuncak.bulan)}` : 'Tidak pernah berasap';
+  if (S.peran === 'petani'){
+    const bersih = S.uang - totalUtang();
+    const lahan = nilaiLahan();
+    const tumbuh = bersih + lahan >= S.uangAwal + S.lahanAwal;
+    const kebun = S.petak.filter(t => t.milik === 'pemain' && t.jenis === 'sawit' && t.umur >= 12).length;
+    const luas = S.petak.filter(t => t.milik === 'pemain').length;
+    const bersalah = S.stat.hutanDibuka > 0 || S.stat.bakar > 0;
+    let judul, teks;
+    if (S.selesai.jenis === 'sita'){ judul = 'Kebun berpindah tangan'; teks = 'Utangmu menembus Rp 35 juta. Tengkulak dan bank mengambil kebun sebagai pelunasan. Banyak petani swadaya kehilangan kebun lewat jalan yang sama: panen seret, harga turun, lalu bunga utang terus berjalan.'; }
+    else if (S.stat.ketahuan > 0 || S.stat.ditertibkan > 0){ judul = 'Berurusan dengan hukum'; teks = 'Kebunmu sempat tumbuh, tapi jalan pintasnya berujung denda dan penyitaan. Lahan di kawasan hutan dan api di musim kering jarang luput selamanya.'; }
+    else if (!bersalah && tumbuh){ judul = 'Pekebun yang tahu batas'; teks = 'Kamu tidak membuka hutan dan tidak membakar. Kebunmu tumbuh lewat perawatan, lahan yang sah, dan harga yang lebih baik.'; }
+    else if (bersalah && tumbuh){ judul = 'Untung di atas abu'; teks = 'Hartamu lebih banyak dari dua tahun lalu. Sebagian datang dari hutan yang dibuka dan api yang dinyalakan, dan asapnya dihirup seluruh kampung.'; }
+    else { judul = 'Bertahan dari musim ke musim'; teks = 'Kebun masih di tanganmu, tapi hartamu menyusut. Harga, pupuk, dan kebutuhan rumah tangga menghabiskan hampir semua hasil panen.'; }
+    teks += ` Selama permainan, ${Math.max(0, -sel)} petak hutan hilang dari peta${S.stat.hutanDibuka ? `, ${S.stat.hutanDibuka} di antaranya kamu buka sendiri` : ''}.`;
+    return {judul, teks, baris:[
+      ['Uang dikurangi utang', `${fmtRp(S.uangAwal)} → ${fmtRp(bersih)}`],
+      ['Perkiraan nilai lahan sah', `${fmtRp(S.lahanAwal)} → ${fmtRp(lahan)}`],
+      ['Lahan milikmu', `6 ha → ${luas} ha`],
+      ['Kebun yang berbuah', `${S.kebunAwal} ha → ${kebun} ha`],
+      ['Panen selama permainan', fmtTon(S.stat.panenTon)],
+      ['Hutan yang kamu buka', `${S.stat.hutanDibuka} petak`],
+      ['Petak orang lain terbakar dari apimu', `${S.stat.petakTerbakarApimu}`],
+      ['Denda dan penyitaan', `${S.stat.ketahuan + S.stat.ditertibkan} kali`],
+      ['Hutan di peta', `${S.hutanAwal} → ${hutan} petak`],
+      ['Asap terparah', asapTeks],
+    ]};
+  }
+  let judul, teks;
+  if (S.selesai.jenis === 'bubar'){ judul = 'Kelompok bubar'; teks = 'Dukungan warga habis. Tanpa anggota, patroli berhenti dan hutan dibiarkan tanpa penjaga.'; }
+  else if (sel >= -2 && S.dukungan >= 55){ judul = 'Hutan desa yang hidup'; teks = 'Hutan bertahan dan warga ikut merasakan hasilnya. Penjagaan seperti ini bertahan lama karena warga punya alasan untuk ikut menjaga.'; }
+  else if (sel >= -2){ judul = 'Hutan terjaga, warga lelah'; teks = 'Hutannya bertahan, tapi dukungan warga menipis. Tanpa hasil yang dirasakan warga, penjagaan sulit bertahan lebih lama.'; }
+  else if (sel >= -6){ judul = 'Bertahan dengan luka'; teks = 'Sebagian hutan hilang, tapi kelompok masih berdiri dan sebagian besar kawasan masih utuh.'; }
+  else { judul = 'Rimba yang menyusut'; teks = 'Ancaman datang lebih cepat daripada tenaga kelompok. Hutan di belakang desa kini jauh lebih sempit.'; }
+  return {judul, teks, baris:[
+    ['Hutan di peta', `${S.hutanAwal} → ${hutan} petak`],
+    ['Hutan lebat', `${S.lebatAwal} → ${jumlahHutanLebat()} petak`],
+    ['Dukungan warga', `55 → ${S.dukungan}`],
+    ['Kas kelompok', `${fmtRp(S.uangAwal)} → ${fmtRp(S.uang)}`],
+    ['Api yang dipadamkan kelompok', `${S.stat.apiDipadam}`],
+    ['Ancaman yang dihadang', `${S.stat.ancamanDicegah}`],
+    ['Petak yang ditanami pohon', `${S.stat.pohon}`],
+    ['Kanal yang disekat', `${S.stat.sekatKanal}`],
+    ['Izin Hutan Desa', S.izin === 5 ? 'Terbit' : S.izin > 0 ? 'Masih diproses' : 'Tidak diajukan'],
+    ['Asap terparah', asapTeks],
+  ]};
+}
+
+function htmlAkhir(){
+  const a = hasilAkhir();
+  const lain = S.peran === 'petani' ? 'penjaga' : 'petani';
+  const nama = p => p === 'petani' ? 'petani sawit' : 'penjaga hutan';
+  return `<section class="blok akhir jendela" aria-labelledby="judul-akhir">
+    <p class="kicker">${S.selesai.jenis === 'waktu' ? 'Dua tahun berlalu' : `Permainan berakhir di bulan ke-${S.bulan}`}</p>
+    <h2 id="judul-akhir" tabindex="-1">${a.judul}</h2>
+    <p>${a.teks}</p>
+    <dl class="neraca">${a.baris.map(([l, v]) => `<div><dt>${l}</dt><dd>${v}</dd></div>`).join('')}</dl>
+    <div class="tombol-akhir">
+      <button class="tombol-utama" data-peran="${lain}" data-kunci="akhir-lain">Main sebagai ${nama(lain)}</button>
+      <button class="tombol" data-peran="${S.peran}" data-kunci="akhir-sama">Ulangi sebagai ${nama(S.peran)}</button>
+    </div>
+  </section>`;
+}
+
+function renderBuku(){
+  const el = $('#buku');
+  if (!S) el.innerHTML = htmlPilihPeran();
+  else if (S.selesai) el.innerHTML = htmlAkhir() + htmlKabar();
+  else el.innerHTML = htmlBilah() + htmlPeristiwa() + htmlPerhatian() + htmlPetak() + htmlUmum() + htmlKabar() + htmlCara();
+  $('#app').classList.toggle('ada-bilah', !!S && !S.selesai);
+}
+
+function renderLegenda(){
+  const petani = S && S.peran === 'petani';
+  const item = [
+    ['Hutan lebat', {jenis:'hutan', rapat:3}], ['Hutan sedang', {jenis:'hutan', rapat:2}], ['Hutan tipis, ada tunggul tebangan', {jenis:'hutan', rapat:1}],
+    ['Hutan rawa gambut (ada genangan)', {jenis:'hutan', rapat:3, gambut:true}], ['Kanal pengering gambut', {jenis:'semak', gambut:true, kanal:true}],
+    ['Kanal yang disekat', {jenis:'semak', gambut:true, sekat:true}], ['Kebun sawit berbuah', {jenis:'sawit', umur:20}], ['Sawit muda', {jenis:'sawit', umur:2}],
+    ['Sawit tak terawat', {jenis:'sawit', umur:20, rawat:0}], ['Semak belukar', {jenis:'semak'}], ['Lahan terbuka', {jenis:'terbuka'}],
+    ['Bekas terbakar', {jenis:'terbakar', umur:2}], ['Bibit pohon pemulihan', {jenis:'rehab'}], ['Rumah warga', {jenis:'desa', r:4, c:0}], ['Sungai', {jenis:'sungai'}],
+    ['Sekat bakar', {jenis:'sawit', umur:20, sekatBakar:true}], ['Titik api', {jenis:'semak', api:1}],
+    ['Pembalak liar', {jenis:'hutan', rapat:3, ancaman:'pembalak'}], ['Pemburu satwa', {jenis:'hutan', rapat:3, ancaman:'pemburu'}],
+    ['Perambah hutan', {jenis:'hutan', rapat:3, ancaman:'perambah'}],
+  ];
+  if (petani){ item.push(['Lahanmu (berpagar)', {jenis:'sawit', umur:20, milik:'pemain'}]); item.push(['Lahan dijual', {jenis:'semak', dijual:1}]); }
+  const html = item.map(([nama, o], k) => {
+    const t = Object.assign({r: k % BARIS, c: (k * 3) % KOLOM, rapat:0, umur:0, api:0, rawat:2, milik:'desa', kawasan:false}, o);
+    return `<li>${img(urlPetak(t, {pagar:true, jual:true}))}<span>${nama}</span></li>`;
+  }).join('') + `<li>${img(urlPetak({r:2, c:1, jenis:'semak', rapat:0, umur:0, api:0, milik:'desa'}, {batas:true}))}<span>Batas kawasan hutan</span></li>`;
+  $('#legenda-daftar').innerHTML = html;
+}
+
+/* ================= render & fokus ================= */
+let legendaPeran = undefined;
+function render(opsi){
+  opsi = opsi || {};
+  const aktif = document.activeElement;
+  const kunci = aktif && aktif.dataset ? aktif.dataset.kunci : null;
+  const diBuku = aktif && $('#buku').contains(aktif);
+  const diKepala = aktif && $('#kepala-kanan').contains(aktif);
+  const caraTerbuka = $('#cara') ? $('#cara').open : false;
+
+  renderKepala();
+  renderDasbor();
+  renderPeta();
+  renderBuku();
+  if ($('#cara') && caraTerbuka) $('#cara').open = true;
+  const peranSekarang = S ? S.peran : null;
+  if (legendaPeran !== peranSekarang){ renderLegenda(); legendaPeran = peranSekarang; }
+
+  let target = null;
+  if (opsi.fokus) target = $(opsi.fokus);
+  else if (kunci && (diBuku || diKepala)) target = document.querySelector(`[data-kunci="${kunci}"]`) || (diBuku ? $('#judul-buku') : null);
+  else if (diBuku || diKepala) target = $('#judul-buku');
+  if (target){
+    target.focus({preventScroll: true});
+    if (opsi.gulirKe || !diBuku) gulirJikaPerlu(target);
+  }
+  simpan();
+}
+function gulirJikaPerlu(el){
+  const r = el.getBoundingClientRect();
+  const bawah = window.innerHeight - (window.matchMedia('(max-width: 880px)').matches ? 96 : 0);
+  if (r.top < 0 || r.top > bawah - 40) el.scrollIntoView({block:'start', behavior: gerakBoleh() ? 'smooth' : 'auto'});
+}
+function umumkan(teks){ const el = $('#pengumuman'); el.textContent = ''; setTimeout(() => { el.textContent = teks; }, 30); }
+
+function pilihPetak(i, dariTombolLain){
+  if (S){ S.pilih = i; } else pilihPratinjau = i;
+  umpan = '';
+  render();
+  const b = elPeta.children[i];
+  if (dariTombolLain){
+    // dari daftar "Perlu perhatian": tampilkan petak di peta lalu kembalikan fokus ke panel petak
+    $('#judul-buku') && $('#judul-buku').focus({preventScroll:true});
+    gulirJikaPerlu($('#judul-buku'));
+  } else {
+    b.focus({preventScroll:true});
+    if (window.matchMedia('(max-width: 880px)').matches){
+      // di ponsel panel petak ada di bawah ladang; naikkan sampai sekitar 40% layar, di atas bilah kalender
+      const h = $('#judul-buku');
+      if (h){ const r = h.getBoundingClientRect(); if (r.top > window.innerHeight * 0.55) window.scrollBy({top: r.top - window.innerHeight * 0.4, behavior: gerakBoleh() ? 'smooth' : 'auto'}); }
+    }
+  }
+}
+
+/* ================= simpan ================= */
+function simpan(){
+  try { if (S) localStorage.setItem(KUNCI, JSON.stringify(S)); else localStorage.removeItem(KUNCI); } catch (e) { /* penyimpanan peramban tidak tersedia */ }
+}
+function muat(){
+  try {
+    const s = localStorage.getItem(KUNCI);
+    if (!s) return null;
+    const o = JSON.parse(s);
+    if (o && o.versi === 1 && Array.isArray(o.petak) && o.petak.length === KOLOM * BARIS) return o;
+  } catch (e) { /* data rusak atau tidak bisa dibaca */ }
+  return null;
+}
+
+/* ================= kejadian ================= */
+function mulaiPeran(peran){
+  konfirmUlang = false;
+  umpan = '';
+  berubah = new Set();
+  permainanBaru(peran, (Date.now() ^ Math.floor(Math.random() * 4294967296)) >>> 0);
+  render({fokus:'#judul-buku', gulirKe:true});
+  umumkan(`Permainan dimulai sebagai ${peran === 'petani' ? 'petani sawit' : 'penjaga hutan'}. ${namaBulan(0)}, tahun 1.`);
+}
+
+elPeta.addEventListener('click', e => {
+  const b = e.target.closest('.petak');
+  if (!b) return;
+  pilihPetak(+b.dataset.i, false);
+});
+elPeta.addEventListener('keydown', e => {
+  const b = e.target.closest('.petak');
+  if (!b) return;
+  const i = +b.dataset.i, r = Math.floor(i / KOLOM), c = i % KOLOM;
+  let n = null;
+  if (e.key === 'ArrowUp' && r > 0) n = i - KOLOM;
+  else if (e.key === 'ArrowDown' && r < BARIS - 1) n = i + KOLOM;
+  else if (e.key === 'ArrowLeft' && c > 0) n = i - 1;
+  else if (e.key === 'ArrowRight' && c < KOLOM - 1) n = i + 1;
+  else if (e.key === 'Home') n = r * KOLOM;
+  else if (e.key === 'End') n = r * KOLOM + KOLOM - 1;
+  if (n === null) return;
+  e.preventDefault();
+  pilihPetak(n, false);
+});
+$('#buku').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b || b.disabled) return;
+  const d = b.dataset;
+  if (d.aksi) lakukan(d.aksi);
+  else if (d.pilih !== undefined) putuskan(+d.pilih);
+  else if (d.peran) mulaiPeran(d.peran);
+  else if (d.bulan !== undefined) akhiriBulan();
+  else if (d.keKabar !== undefined){ const k = $('#kartu-kabar'); if (k){ k.focus({preventScroll:true}); k.scrollIntoView({block:'start', behavior: gerakBoleh() ? 'smooth' : 'auto'}); } }
+  else if (d.lompat !== undefined) pilihPetak(+d.lompat, true);
+});
+$('#kepala-kanan').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.ganti !== undefined){
+    if (S && S.selesai){ S = null; simpan(); render({fokus:'#judul-buku', gulirKe:true}); return; }
+    konfirmUlang = true; render({fokus:'[data-kunci="batal-ulang"]'});
+  } else if (b.dataset.batalUlang !== undefined){ konfirmUlang = false; render({fokus:'[data-kunci="ganti"]'}); }
+  else if (b.dataset.yaUlang !== undefined){ konfirmUlang = false; S = null; pilihPratinjau = null; simpan(); render({fokus:'#judul-buku', gulirKe:true}); }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && konfirmUlang){ konfirmUlang = false; render({fokus:'[data-kunci="ganti"]'}); }
+});
+
+/* ================= mulai ================= */
+function mulai(data){
+  PRATINJAU = buatSemuaPetak('pratinjau');
+  bangunPeta();
+  aturAnimasi();
+  try { window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', () => { aturAnimasi(); renderPeta(); }); } catch (e) { /* peramban lama */ }
+  S = (data && data.S) || muat();
+  if (window.matchMedia('(min-width: 881px)').matches) $('#legenda').open = true;
+  render();
+}
+window.__batasRimba = {
+  keadaan: () => S,
+  baru: (peran, benih) => { permainanBaru(peran, benih); render(); },
+  akhiri: akhiriBulan, lakukan, putuskan, pilih: i => { S.pilih = i; render(); },
+  aksiPetak: i => aksiPetak(S.petak[i]).map(a => ({id:a.id, bisa:a.bisa})), aksiUmum: () => aksiUmum().map(a => ({id:a.id, bisa:a.bisa})),
+};
+const hot = window.claude && window.claude.hot;
+if (hot && typeof hot.snapshot === 'function') hot.snapshot(() => ({S}));
+if (hot && typeof hot.ready === 'function') hot.ready(mulai);
+else mulai((hot && hot.data) || {});
+})();
+</script>
+</body>
+</html>
