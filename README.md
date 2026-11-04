@@ -8,10 +8,13 @@ Arah desain ada di [DESIGN.md](DESIGN.md).
 
 ## Isi
 
-| Game | Folder |
-|---|---|
-| Es Krim Putar | `public/games/es-krim-putar/` |
-| Batas Rimba | `public/games/batas-rimba/` |
+| Game | Folder | Catatan desain |
+|---|---|---|
+| Potong Martabak | `public/games/potong-martabak/` | `docs/games/potong-martabak.md` |
+| Parkir Angkot | `public/games/parkir-angkot/` | `docs/games/parkir-angkot.md` |
+| Tumpuk Kerupuk | `public/games/tumpuk-kerupuk/` | `docs/games/tumpuk-kerupuk.md` (memakai planck.js, MIT) |
+| Es Krim Putar | `public/games/es-krim-putar/` | |
+| Batas Rimba | `public/games/batas-rimba/` | |
 
 ## Struktur
 
@@ -25,6 +28,7 @@ public/                 yang dilayani Cloudflare
   assets/style.css
   games/<id>/index.html game
   games/<id>/thumb.png  gambar kartu 480x480
+docs/games/              arah desain dan angka kalibrasi tiap game
 scripts/
   layani.mjs            server pratinjau lokal
   bungkus-game.mjs      mengubah game berformat Artifact Claude menjadi halaman utuh

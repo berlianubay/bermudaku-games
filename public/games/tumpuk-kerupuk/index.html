@@ -1,0 +1,1560 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+<title>Tumpuk Kerupuk</title>
+<meta name="description" content="Tumpuk kerupuk di atas piring seng warung setinggi mungkin, jangan sampai ada yang jatuh ke meja.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Satu kanvas memenuhi layar. Panel skor menindih kanvas (atas di HP potret, kiri di layar lebar),
+   dan kamera menjaga tumpukan tetap di sisa area yang terlihat. */
+:root {
+  --dinding: #F5EAD6;
+  --lambris: #EBDCC0;
+  --lambris-garis: #D8C4A0;
+  --tinta: #2E2017;
+  --tinta-2: #65503F;
+  --lembar: #FFFCF6;
+  --biru: #1E4F8F;
+  --aksen-teks: #FFFFFF;
+  --garis: #8A7360;
+  --garis-halus: #DCC9AA;
+  --meja: #B07B47;
+  --meja-depan: #8A5A31;
+  --serat: #774C28;
+  --email: #FBF8F1;
+  --email-bayang: #E2DCD0;
+  --lis: #1E4F8F;
+  --logam: #C9D0D6;
+  --logam-gelap: #6E7781;
+  --garis-kerupuk: #3A281C;
+  --bayang: rgba(46, 32, 23, .22);
+  --tirai: rgba(35, 24, 17, .5);
+  --font-judul: "Lilita One", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --font-teks: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --dinding: #1C1611;
+    --lambris: #241C16;
+    --lambris-garis: #382B21;
+    --tinta: #F4E8D6;
+    --tinta-2: #CDB89F;
+    --lembar: #2A211B;
+    --biru: #93B8EC;
+    --aksen-teks: #0F2036;
+    --garis: #A08A74;
+    --garis-halus: #3A2E25;
+    --meja: #6E4A2B;
+    --meja-depan: #4F331D;
+    --serat: #3E2716;
+    --email: #E8E2D6;
+    --email-bayang: #C7BFB1;
+    --lis: #2C5E9E;
+    --logam: #AEB6BE;
+    --logam-gelap: #59616A;
+    --garis-kerupuk: #1A110B;
+    --bayang: rgba(0, 0, 0, .5);
+    --tirai: rgba(0, 0, 0, .6);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --dinding: #1C1611;
+  --lambris: #241C16;
+  --lambris-garis: #382B21;
+  --tinta: #F4E8D6;
+  --tinta-2: #CDB89F;
+  --lembar: #2A211B;
+  --biru: #93B8EC;
+  --aksen-teks: #0F2036;
+  --garis: #A08A74;
+  --garis-halus: #3A2E25;
+  --meja: #6E4A2B;
+  --meja-depan: #4F331D;
+  --serat: #3E2716;
+  --email: #E8E2D6;
+  --email-bayang: #C7BFB1;
+  --lis: #2C5E9E;
+  --logam: #AEB6BE;
+  --logam-gelap: #59616A;
+  --garis-kerupuk: #1A110B;
+  --bayang: rgba(0, 0, 0, .5);
+  --tirai: rgba(0, 0, 0, .6);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--dinding);
+  color: var(--tinta);
+  font-family: var(--font-teks);
+  font-size: 15px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+h1, h2, h3, p, ol, ul { margin: 0; }
+button { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.app { position: relative; height: 100%; overflow: hidden; --lebar-sisi: 0px; }
+
+/* Panggung: kanvas memenuhi seluruh app. Area ini juga area ketuk. */
+.panggung {
+  position: absolute;
+  inset: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  cursor: pointer;
+}
+.panggung:focus-visible { outline: 3px solid var(--tinta); outline-offset: -5px; }
+#kanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.petunjuk {
+  position: absolute;
+  left: calc(var(--lebar-sisi) + 16px);
+  right: 16px;
+  bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  text-align: center;
+  font-size: .9rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--aksen-teks);
+  pointer-events: none;
+}
+.petunjuk span {
+  display: inline-block;
+  max-width: 34ch;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: var(--biru);
+  text-wrap: balance;
+}
+.layar-status {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 16px;
+  text-align: center;
+  background: var(--dinding);
+}
+.layar-status h2 { font-family: var(--font-judul); font-weight: 400; font-size: 1.5rem; }
+.layar-status p { max-width: 38ch; color: var(--tinta-2); line-height: 1.5; }
+
+/* Panel skor (HP potret: pita atas) */
+.kepala {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "judul cara" "skor berikut";
+  align-items: center;
+  gap: 6px 12px;
+  padding: max(10px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
+  background: var(--dinding);
+  border-bottom: 2px solid var(--garis-halus);
+  cursor: pointer;
+}
+.kepala h1 {
+  grid-area: judul;
+  font-family: var(--font-judul);
+  font-weight: 400;
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.3rem);
+  line-height: 1;
+  letter-spacing: .01em;
+}
+.tombol-kecil {
+  grid-area: cara;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 2px solid var(--garis);
+  background: var(--lembar);
+  font-weight: 700;
+  font-size: .9rem;
+  cursor: pointer;
+}
+.skor { grid-area: skor; display: flex; gap: 18px; align-items: flex-start; min-width: 0; }
+.sel { display: grid; gap: 1px; min-width: 0; }
+.label { font-size: .75rem; font-weight: 700; color: var(--tinta-2); }
+.angka {
+  font-family: var(--font-judul);
+  font-size: 1.8rem;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.angka small { font-size: .55em; }
+.rekor-hud { font-size: .78rem; color: var(--tinta-2); white-space: nowrap; }
+/* Di HP, pratinjau ditumpuk tegak supaya kolom kanan tidak lebih lebar dari tombol Cara main. */
+.tombol-kecil { justify-self: end; }
+.berikut { grid-area: berikut; display: grid; gap: 1px; justify-self: end; align-self: start; min-width: 0; }
+.berikut-isi { display: grid; justify-items: start; gap: 1px; }
+.berikut canvas { width: 64px; height: 32px; display: block; }
+.berikut .nama { font-weight: 700; font-size: .8rem; line-height: 1.15; white-space: nowrap; }
+.papan { grid-area: papan; display: none; font-size: .85rem; line-height: 1.5; color: var(--tinta-2); }
+kbd {
+  font-family: var(--font-teks);
+  font-weight: 700;
+  font-size: .85em;
+  padding: 1px 6px;
+  border-radius: 6px;
+  border: 1.5px solid var(--garis);
+  background: var(--lembar);
+  color: var(--tinta);
+  white-space: nowrap;
+}
+.ada-hasil .kepala { visibility: hidden; }
+
+/* Lembar hasil: email putih berlis biru seperti piring seng. Bayangan menandai ia mengapung di atas meja. */
+.hasil {
+  position: absolute;
+  z-index: 4;
+  left: max(12px, env(safe-area-inset-left, 0px));
+  right: max(12px, env(safe-area-inset-right, 0px));
+  bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  max-height: calc(100% - 24px);
+  overflow: auto;
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 3px solid var(--biru);
+  background: var(--lembar);
+  box-shadow: 0 12px 30px var(--bayang);
+  cursor: default;
+}
+.hasil h2 { font-family: var(--font-judul); font-weight: 400; font-size: 1.45rem; line-height: 1.1; }
+.hasil h2:focus { outline: none; }
+.sebab, .saran { line-height: 1.4; font-size: .93rem; }
+.saran { color: var(--tinta-2); }
+.saran b { color: var(--tinta); }
+.baris-angka { display: flex; flex-wrap: wrap; gap: 4px 22px; }
+.angka-hasil { display: grid; gap: 1px; }
+.angka-hasil span { font-size: .78rem; font-weight: 700; color: var(--tinta-2); }
+.angka-hasil strong { font-family: var(--font-judul); font-weight: 400; font-size: 1.65rem; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.rekor { font-size: .88rem; color: var(--tinta-2); }
+.rekor.baru { color: var(--biru); font-weight: 700; }
+.tombol {
+  min-height: 50px;
+  padding: 0 18px;
+  border-radius: 14px;
+  border: 2px solid var(--garis);
+  background: transparent;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tombol.utama {
+  border-color: var(--biru);
+  background: var(--biru);
+  color: var(--aksen-teks);
+  font-family: var(--font-judul);
+  font-weight: 400;
+  font-size: 1.25rem;
+  letter-spacing: .01em;
+}
+.tombol:active, .tombol-kecil:active { transform: translateY(1px); }
+.tombol:focus-visible, .tombol-kecil:focus-visible, .tautan:focus-visible { outline: 3px solid var(--tinta); outline-offset: 3px; }
+
+/* Dialog cara main */
+dialog {
+  width: min(660px, calc(100vw - 32px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  border: 3px solid var(--biru);
+  border-radius: 20px;
+  padding: 18px 20px 14px;
+  background: var(--lembar);
+  color: var(--tinta);
+  box-shadow: 0 16px 40px var(--bayang);
+}
+dialog::backdrop { background: var(--tirai); }
+.isi-dialog { display: grid; gap: 10px; line-height: 1.45; font-size: .94rem; }
+.isi-dialog h2 { font-family: var(--font-judul); font-weight: 400; font-size: 1.6rem; line-height: 1.1; }
+.isi-dialog h3 { font-size: 1rem; font-weight: 700; }
+.isi-dialog ol, .isi-dialog ul { padding-left: 1.3em; display: grid; gap: 3px; }
+@media (min-width: 600px) {
+  .isi-dialog ul { grid-template-columns: 1fr 1fr; column-gap: 28px; }
+}
+.isi-dialog .kecil { font-size: .86rem; color: var(--tinta-2); }
+.tautan { color: inherit; text-underline-offset: 2px; }
+.isi-dialog form { display: flex; justify-content: flex-end; }
+
+/* Layar lebar: panel skor menjadi kolom kiri, lembar hasil menempati kolom itu. */
+@media (orientation: landscape) and (min-width: 700px) {
+  .app { --lebar-sisi: clamp(250px, 25vw, 320px); }
+  .kepala {
+    right: auto;
+    bottom: 0;
+    width: var(--lebar-sisi);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "judul" "skor" "berikut" "cara" "papan";
+    grid-template-rows: auto auto auto auto 1fr;
+    align-items: start;
+    align-content: start;
+    gap: 18px;
+    padding: max(22px, env(safe-area-inset-top, 0px)) 20px max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
+    border-bottom: 0;
+    border-right: 2px solid var(--garis-halus);
+    overflow: auto;
+  }
+  .kepala h1 { font-size: clamp(1.9rem, 1.2rem + 1.4vw, 2.5rem); }
+  .tombol-kecil { justify-self: start; }
+  .skor { gap: 24px; }
+  .angka { font-size: 2.5rem; }
+  .berikut { justify-self: start; }
+  .berikut-isi { display: flex; align-items: center; gap: 8px; }
+  .berikut canvas { width: 96px; height: 56px; }
+  .berikut .nama { font-size: .95rem; }
+  .papan { display: block; align-self: end; }
+  .hasil {
+    left: max(12px, env(safe-area-inset-left, 0px));
+    right: auto;
+    top: 12px;
+    bottom: auto;
+    width: calc(var(--lebar-sisi) - 24px);
+    gap: 12px;
+    padding: 18px 18px;
+  }
+  .hasil h2 { font-size: 1.7rem; }
+  .sebab, .saran { font-size: 1rem; line-height: 1.5; }
+  .angka-hasil strong { font-size: 2rem; }
+  .ada-hasil .kepala { visibility: hidden; }
+}
+/* HP mendatar: tinggi layar sempit, jadi lembar hasil dibuat lebih lebar dan lebih rapat. */
+@media (orientation: landscape) and (min-width: 700px) and (max-height: 520px) {
+  .kepala { gap: 8px; padding-top: 12px; padding-bottom: 12px; }
+  .kepala h1 { font-size: 1.6rem; }
+  .angka { font-size: 1.8rem; }
+  .berikut canvas { width: 72px; height: 42px; }
+  .papan { display: none; }
+  .hasil { width: min(420px, 50vw); top: 10px; gap: 6px; padding: 12px 16px; max-height: calc(100% - 20px); }
+  .hasil h2 { font-size: 1.3rem; }
+  .sebab, .saran { font-size: .86rem; line-height: 1.35; }
+  .angka-hasil strong { font-size: 1.45rem; }
+  .tombol { min-height: 46px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tombol:active, .tombol-kecil:active { transform: none; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="kepala" id="kepala">
+    <h1>Tumpuk Kerupuk</h1>
+    <button class="tombol-kecil" id="tombol-cara" type="button" aria-haspopup="dialog">Cara main</button>
+    <div class="skor">
+      <div class="sel">
+        <span class="label">Kerupuk</span>
+        <span class="angka" id="angka-jumlah">0</span>
+      </div>
+      <div class="sel">
+        <span class="label">Tinggi</span>
+        <span class="angka" id="angka-tinggi">0,0<small> cm</small></span>
+        <span class="rekor-hud" id="hud-rekor">Belum ada rekor</span>
+      </div>
+    </div>
+    <div class="berikut">
+      <span class="label">Berikutnya</span>
+      <div class="berikut-isi">
+        <canvas id="kanvas-berikut" aria-hidden="true"></canvas>
+        <span class="nama" id="nama-berikut">Kerupuk udang</span>
+      </div>
+    </div>
+    <p class="papan">Papan ketik: <kbd>Spasi</kbd>, <kbd>Enter</kbd>, atau <kbd>panah bawah</kbd> melepas kerupuk.</p>
+  </header>
+
+  <main class="panggung" id="panggung" tabindex="0" role="application" aria-roledescription="meja warung"
+    aria-label="Meja warung dengan piring dan capit kerupuk. Tekan Spasi, Enter, atau panah bawah untuk melepas kerupuk."
+    aria-describedby="pengumum">
+    <canvas id="kanvas" aria-hidden="true"></canvas>
+    <p class="petunjuk" id="petunjuk"><span id="teks-petunjuk">Ketuk atau klik di mana saja, atau tekan Spasi, untuk melepas kerupuk.</span></p>
+    <div class="layar-status" id="layar-status" role="status">
+      <h2 id="status-judul">Menyiapkan meja warung</h2>
+      <p id="status-isi">Piring dan capit sedang disiapkan.</p>
+      <button class="tombol" id="tombol-muat" type="button" hidden>Muat ulang halaman</button>
+    </div>
+  </main>
+
+  <section class="hasil" id="hasil" aria-labelledby="judul-hasil" hidden>
+    <h2 id="judul-hasil" tabindex="-1">Meleset dari piring</h2>
+    <p class="sebab" id="sebab"></p>
+    <p class="saran"><b>Saran:</b> <span id="saran"></span></p>
+    <div class="baris-angka">
+      <div class="angka-hasil"><span>Kerupuk bertahan</span><strong id="jumlah-hasil">0</strong></div>
+      <div class="angka-hasil"><span>Tumpukan tertinggi</span><strong id="tinggi-hasil">0,0 cm</strong></div>
+    </div>
+    <p class="rekor" id="rekor-hasil"></p>
+    <button class="tombol utama" id="tombol-lagi" type="button">Tumpuk lagi</button>
+  </section>
+
+  <p class="sr" id="pengumum" aria-live="polite"></p>
+</div>
+
+<dialog id="dialog-cara" aria-labelledby="judul-cara">
+  <div class="isi-dialog">
+    <h2 id="judul-cara">Cara main</h2>
+    <ol>
+      <li>Capit di atas meja bergerak ke kiri dan kanan sambil menjepit satu kerupuk.</li>
+      <li>Ketuk layar, klik, atau tekan <kbd>Spasi</kbd> untuk melepasnya. Garis putus-putus menunjukkan tempat kerupuk akan mendarat.</li>
+      <li>Tumpuk kerupuk di atas piring setinggi mungkin. Kerupuk boleh bergeser atau menggelinding, asal tetap di atas piring.</li>
+      <li>Setelah melepas, tunggu capit mengambil kerupuk berikutnya. Capit makin cepat seiring tumpukan bertambah.</li>
+    </ol>
+    <h3>Selesai kalau</h3>
+    <p>Ada kerupuk yang menyentuh meja di luar piring. Kerupuk yang jatuh ditandai, lengkap dengan sebab dan saran.</p>
+    <h3>Sifat kerupuk</h3>
+    <ul>
+      <li>Kerupuk udang: lebar dan ringan, alas yang paling enak.</li>
+      <li>Kerupuk bawang: panjang dan pipih, sedikit licin.</li>
+      <li>Rengginang: bundar dan berat, mudah menggelinding.</li>
+      <li>Kerupuk kulit: kecil dan menggumpal, suka terguling.</li>
+    </ul>
+    <p class="kecil">Papan ketik: <kbd>Spasi</kbd>, <kbd>Enter</kbd>, atau <kbd>panah bawah</kbd> melepas kerupuk. <kbd>Tab</kbd> berpindah ke tombol, <kbd>Escape</kbd> menutup dialog ini.</p>
+    <p class="kecil">Tinggi diukur dari permukaan piring sampai puncak tumpukan yang sudah diam. Rekor hanya disimpan di peramban ini. Fisika memakai <a class="tautan" href="https://piqnt.com/planck.js/" target="_blank" rel="noopener">planck.js</a> (lisensi MIT).</p>
+    <form method="dialog"><button class="tombol" type="submit" id="tombol-tutup">Kembali menumpuk</button></form>
+  </div>
+</dialog>
+
+<script src="planck.min.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const el = {
+  app: $('#app'), panggung: $('#panggung'), kanvas: $('#kanvas'), petunjuk: $('#petunjuk'), teksPetunjuk: $('#teks-petunjuk'),
+  status: $('#layar-status'), statusJudul: $('#status-judul'), statusIsi: $('#status-isi'), tombolMuat: $('#tombol-muat'),
+  kepala: $('#kepala'), jumlah: $('#angka-jumlah'), tinggi: $('#angka-tinggi'), hudRekor: $('#hud-rekor'),
+  kanvasBerikut: $('#kanvas-berikut'), namaBerikut: $('#nama-berikut'),
+  hasil: $('#hasil'), judulHasil: $('#judul-hasil'), sebab: $('#sebab'), saran: $('#saran'),
+  jumlahHasil: $('#jumlah-hasil'), tinggiHasil: $('#tinggi-hasil'), rekorHasil: $('#rekor-hasil'), tombolLagi: $('#tombol-lagi'),
+  tombolCara: $('#tombol-cara'), dialog: $('#dialog-cara'), pengumum: $('#pengumum')
+};
+
+el.tombolMuat.addEventListener('click', () => location.reload());
+if (typeof planck === 'undefined') {
+  el.statusJudul.textContent = 'Mesin fisika tidak termuat';
+  el.statusIsi.textContent = 'Berkas planck.min.js gagal diambil. Periksa sambungan internet, lalu muat ulang halaman.';
+  el.tombolMuat.hidden = false;
+  return;
+}
+const pl = planck;
+
+// Satuan dunia: cm dan detik, sumbu y ke atas, 0 = permukaan piring.
+const S = 0.1; // 1 satuan planck = 10 cm, ukuran yang membuat pemecah Box2D paling stabil untuk benda sebesar ini
+const KONFIG = {
+  gravitasi: 260,        // cm/s², sekitar seperempat gravitasi bumi supaya jatuhnya masih terbaca mata
+  langkah: 1 / 120,
+  iterasiKecepatan: 10,
+  iterasiPosisi: 8,
+  celah: 9,              // jarak dasar kerupuk di capit ke puncak tumpukan
+  tinggiRel: 4.5,        // rel berada di atas kerupuk setinggi ini
+  jangkauan: 18,         // capit bergerak dari -18 sampai 18 cm
+  lajuAwal: 14,          // cm/s
+  lajuNaik: 0.045,       // tambahan relatif per kerupuk yang dilepas
+  lajuMaks: 34,
+  jedaMin: 0.55,         // detik minimum antar lepas
+  jedaMaks: 1.6,         // setelah ini capit mengambil kerupuk baru walau yang lama belum diam
+  lamaMuat: 0.22,
+  tenangLaju: 3,         // cm/s
+  tenangPutar: 0.6,      // rad/s
+  lebarPandang: 42,      // cm minimum yang terlihat mendatar
+  tinggiPandang: 60,
+  lamaGagal: 1.4,        // detik dari kerupuk menyentuh meja sampai lembar hasil muncul
+  lamaFisikaGagal: 5
+};
+const MEJA_Y = -2.2;
+const PIRING = {
+  dasar: [[-8.8, 0], [8.8, 0], [6.2, -2.2], [-6.2, -2.2]],
+  kiri: [[-8.8, 0], [-6.2, -2.2], [-13.8, 1.5], [-13.2, 1.8]],
+  kanan: [[8.8, 0], [13.2, 1.8], [13.8, 1.5], [6.2, -2.2]]
+};
+
+// Bentuk fisika sengaja bertepi atas-bawah datar untuk kerupuk pipih: tumpukan rapi tidak merayap.
+// Gelombang tepi hanya digambar, rata-ratanya mengikuti bentuk fisika.
+const JENIS = {
+  udang: {
+    nama: 'Kerupuk udang', kecil: 'kerupuk udang', massaJenis: 0.6, gesek: 0.9, redam: 0.6, guling: false,
+    warna: { isi: '#F3A584', terang: '#FCD6C3', gelap: '#D97A58', titik: '#E2604A' },
+    tepi: { amp: 0.3, jarak: 0.75, pola: 'gelombang' },
+    bentuk: r => { const w = 6 * (0.94 + r() * 0.12), h = 1.1; return [[-w + 1.6, h], [w - 1.6, h], [w - 0.2, h - 0.6], [w, -0.3], [w - 0.8, -h], [-w + 0.8, -h], [-w, -0.3], [-w + 0.2, h - 0.6]]; }
+  },
+  bawang: {
+    nama: 'Kerupuk bawang', kecil: 'kerupuk bawang', massaJenis: 1.0, gesek: 0.6, redam: 0.3, guling: false,
+    warna: { isi: '#DCE09A', terang: '#F1F4CC', gelap: '#A9B460', titik: '#55782C' },
+    tepi: { amp: 0.12, jarak: 0.8, pola: 'acak' },
+    bentuk: r => { const w = 7.5 * (0.95 + r() * 0.1), h = 0.8; return [[-w + 0.5, h], [w - 0.5, h], [w, 0.3], [w, -0.3], [w - 0.5, -h], [-w + 0.5, -h], [-w, -0.3], [-w, 0.3]]; }
+  },
+  rengginang: {
+    nama: 'Rengginang', kecil: 'rengginang', massaJenis: 1.6, gesek: 0.7, redam: 0.2, guling: true,
+    warna: { isi: '#EFE5CD', terang: '#FFFBEF', gelap: '#CDB78A', titik: '#D48A3E' },
+    tepi: { amp: 0.26, jarak: 0.5, pola: 'acak' },
+    // Cakram tebal bersudut bulat besar: punggungnya cukup datar untuk ditumpuki, sisinya membuatnya menggelinding di lereng.
+    bentuk: r => {
+      const a = 3.2 * (0.95 + r() * 0.1), b = 1.7, rc = 1.3, v = [];
+      for (const [sx, sy] of [[1, 1], [-1, 1], [-1, -1], [1, -1]]) {
+        for (let k = 0; k < 3; k++) {
+          const t = k * Math.PI / 4;
+          v.push([sx * (a - rc + rc * Math.cos(t)), sy * (b - rc + rc * Math.sin(t))]);
+        }
+      }
+      return v;
+    }
+  },
+  kulit: {
+    nama: 'Kerupuk kulit', kecil: 'kerupuk kulit', massaJenis: 0.9, gesek: 0.8, redam: 0.4, guling: true,
+    warna: { isi: '#EBC167', terang: '#F9E2A6', gelap: '#BF8933', titik: '#9C6A26' },
+    tepi: { amp: 0.4, jarak: 1.2, pola: 'acak' },
+    bentuk: r => { const v = []; for (let i = 0; i < 7; i++) { const t = (i + r() * 0.5) / 7 * Math.PI * 2, k = 0.85 + r() * 0.3; v.push([2.5 * k * Math.cos(t), 1.8 * k * Math.sin(t)]); } return v; }
+  }
+};
+// Kantong acak: kerupuk pipih dua kali lebih sering supaya tumpukan masih mungkin tinggi.
+const ISI_KANTONG = ['udang', 'udang', 'bawang', 'bawang', 'rengginang', 'kulit'];
+
+function buatAcak(benih) {
+  let a = benih >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function cembung(titik) {
+  const p = titik.slice().sort((a, b) => a.x - b.x || a.y - b.y);
+  const silang = (o, a, b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+  const bawah = [], atas = [];
+  for (const q of p) { while (bawah.length >= 2 && silang(bawah[bawah.length - 2], bawah[bawah.length - 1], q) <= 0) bawah.pop(); bawah.push(q); }
+  for (let i = p.length - 1; i >= 0; i--) { const q = p[i]; while (atas.length >= 2 && silang(atas[atas.length - 2], atas[atas.length - 1], q) <= 0) atas.pop(); atas.push(q); }
+  return bawah.slice(0, -1).concat(atas.slice(0, -1));
+}
+function luasDanPusat(v) {
+  let A = 0, cx = 0, cy = 0;
+  for (let i = 0; i < v.length; i++) {
+    const p = v[i], q = v[(i + 1) % v.length], c = p.x * q.y - q.x * p.y;
+    A += c; cx += (p.x + q.x) * c; cy += (p.y + q.y) * c;
+  }
+  A /= 2;
+  return { luas: A, x: cx / (6 * A), y: cy / (6 * A) };
+}
+function batas(v) {
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const p of v) { minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y); }
+  return { minX, maxX, minY, maxY };
+}
+function diDalam(v, x, y, sisip) {
+  for (let i = 0; i < v.length; i++) {
+    const p = v[i], q = v[(i + 1) % v.length], dx = q.x - p.x, dy = q.y - p.y;
+    if ((dx * (y - p.y) - dy * (x - p.x)) / Math.hypot(dx, dy) < sisip) return false;
+  }
+  return true;
+}
+
+// Tepi bergelombang: titik di sepanjang keliling digeser searah normal luar.
+function buatGaris(v, tepi, r) {
+  const titik = [];
+  let fase = r() * Math.PI * 2;
+  for (let i = 0; i < v.length; i++) {
+    const p = v[i], q = v[(i + 1) % v.length], dx = q.x - p.x, dy = q.y - p.y, L = Math.hypot(dx, dy);
+    const nx = dy / L, ny = -dx / L;
+    const m = Math.max(1, Math.round(L / tepi.jarak));
+    for (let j = 0; j < m; j++) {
+      let geser;
+      if (tepi.pola === 'gelombang') { geser = tepi.amp * Math.sin(fase); fase += Math.PI * (0.75 + r() * 0.5); }
+      else geser = tepi.amp * (r() * 1.3 - 0.45);
+      titik.push({ x: p.x + dx * j / m + nx * geser, y: p.y + dy * j / m + ny * geser });
+    }
+  }
+  return titik;
+}
+
+function buatHiasan(jenis, v, luas, r) {
+  const b = batas(v);
+  const acakDalam = sisip => {
+    for (let i = 0; i < 40; i++) {
+      const x = b.minX + r() * (b.maxX - b.minX), y = b.minY + r() * (b.maxY - b.minY);
+      if (diDalam(v, x, y, sisip)) return { x, y };
+    }
+    return null;
+  };
+  const h = [];
+  const tambah = (n, sisip, buat) => { for (let i = 0; i < n; i++) { const p = acakDalam(sisip); if (p) h.push(buat(p)); } };
+  if (jenis === 'udang') {
+    tambah(Math.round(luas / 2.1), 0.35, p => ({ t: 'gelembung', x: p.x, y: p.y, rx: 0.22 + r() * 0.45, ry: 0.16 + r() * 0.22 }));
+    tambah(6, 0.3, p => ({ t: 'titik', x: p.x, y: p.y, r: 0.07 + r() * 0.07 }));
+  } else if (jenis === 'rengginang') {
+    tambah(Math.round(luas / 0.42), 0.2, p => ({ t: 'butir', x: p.x, y: p.y, rx: 0.32 + r() * 0.12, ry: 0.14 + r() * 0.05, a: r() * Math.PI }));
+    tambah(4, 0.4, p => ({ t: 'titik', x: p.x, y: p.y, r: 0.1 + r() * 0.06 }));
+  } else if (jenis === 'kulit') {
+    tambah(4, 0.5, p => ({ t: 'cincin', x: p.x, y: p.y, r: 0.25 + r() * 0.3 }));
+    tambah(11, 0.25, p => ({ t: 'titik', x: p.x, y: p.y, r: 0.06 + r() * 0.07 }));
+  } else {
+    tambah(14, 0.2, p => ({ t: 'serpih', x: p.x, y: p.y, w: 0.28 + r() * 0.2, h: 0.1, a: r() * Math.PI }));
+    tambah(5, 0.2, p => ({ t: 'titikGelap', x: p.x, y: p.y, r: 0.06 }));
+  }
+  return h;
+}
+
+function buatSpek(jenis, r) {
+  const def = JENIS[jenis];
+  let v = cembung(def.bentuk(r).map(([x, y]) => ({ x, y })));
+  const lp = luasDanPusat(v);
+  v = v.map(p => ({ x: p.x - lp.x, y: p.y - lp.y }));
+  const b = batas(v);
+  return {
+    jenis, def, v,
+    garis: buatGaris(v, def.tepi, r),
+    hiasan: buatHiasan(jenis, v, lp.luas, r),
+    lebar: b.maxX - b.minX, tinggi: b.maxY - b.minY, bawah: b.minY, atas: b.maxY, kiri: b.minX, kanan: b.maxX
+  };
+}
+
+const KUNCI_REKOR = 'tumpuk-kerupuk:rekor';
+function bacaRekor() {
+  try {
+    const v = JSON.parse(localStorage.getItem(KUNCI_REKOR));
+    if (v && Number.isFinite(v.tinggi) && v.tinggi > 0) return { tinggi: v.tinggi, jumlah: Number.isFinite(v.jumlah) ? v.jumlah : 0 };
+  } catch (e) { /* penyimpanan diblokir: main tetap jalan tanpa rekor */ }
+  return null;
+}
+function simpanRekor(v) {
+  try { localStorage.setItem(KUNCI_REKOR, JSON.stringify(v)); return true; } catch (e) { return false; }
+}
+let rekor = bacaRekor();
+
+const fmt = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const cm = v => `${fmt.format(Math.round(v * 10) / 10)} cm`;
+
+let dunia, badanMeja, kerupuk, acak, benih, kantong, urutanPaksa = [];
+let status = 'main', jeda = false, waktu = 0, akumulasi = 0, fisikaBeku = false;
+let puncakTenang = 0, tinggiTertinggi = 0, jumlahBertahan = 0, dilepas = 0;
+let spekBerikut = null, penyebab = null, tGagal = 0, jumlahSaatGagal = 0, waktuHasil = 0;
+let capitBeku = false;
+const capit = { x: 0, arah: 1, memegang: null, muat: 1, buka: 0, goyang: 0, tLepas: -10 };
+const tampil = { dasar: KONFIG.celah };
+const kam = { cx: 0, cy: 20, s: 10, ay: 300, siap: false };
+let partikel = [], guncang = 0, teksPetunjukSampai = 0;
+
+const reduksi = matchMedia('(prefers-reduced-motion: reduce)');
+let gerakHias = !reduksi.matches;
+reduksi.addEventListener('change', () => { gerakHias = !reduksi.matches; });
+
+function lajuCapit() { return Math.min(KONFIG.lajuMaks, KONFIG.lajuAwal * (1 + KONFIG.lajuNaik * dilepas)); }
+
+function ambilJenis() {
+  if (urutanPaksa.length) return urutanPaksa.shift();
+  if (!kantong.length) {
+    kantong = ISI_KANTONG.slice();
+    for (let i = kantong.length - 1; i > 0; i--) { const j = Math.floor(acak() * (i + 1)); [kantong[i], kantong[j]] = [kantong[j], kantong[i]]; }
+  }
+  return kantong.pop();
+}
+
+function buatDunia() {
+  dunia = new pl.World({ gravity: pl.Vec2(0, -KONFIG.gravitasi * S) });
+  const P = pts => pl.Polygon(pts.map(([x, y]) => pl.Vec2(x * S, y * S)));
+  const piring = dunia.createBody({ type: 'static' });
+  piring.setUserData({ peran: 'piring' });
+  for (const k of ['dasar', 'kiri', 'kanan']) piring.createFixture(P(PIRING[k]), { friction: 0.7 });
+  badanMeja = dunia.createBody({ type: 'static' });
+  badanMeja.setUserData({ peran: 'meja' });
+  badanMeja.createFixture(pl.Box(500 * S, 5 * S, pl.Vec2(0, (MEJA_Y - 5) * S), 0), { friction: 0.8 });
+  dunia.on('begin-contact', tanganiKontak);
+}
+
+function tanganiKontak(kontak) {
+  const a = kontak.getFixtureA().getBody().getUserData(), b = kontak.getFixtureB().getBody().getUserData();
+  for (const [k, lain] of [[a, b], [b, a]]) {
+    if (!k || k.peran !== 'kerupuk' || !lain) continue;
+    if (lain.peran === 'meja') { tandaiJatuh(k); continue; }
+    if (!k.mendarat && !k.jatuh) {
+      k.mendarat = true;
+      k.tMendarat = waktu;
+      k.kontakPertama = lain.peran;
+      const vy = -k.badan.getLinearVelocity().y / S;
+      if (gerakHias && vy > 35) tebarRemah(k, Math.min(7, Math.round(vy / 25)));
+    }
+  }
+}
+
+function tandaiJatuh(k) {
+  if (k.jatuh) return;
+  k.jatuh = true;
+  k.tJatuh = waktu;
+  if (status === 'main') mulaiGagal(k);
+}
+
+function posisi(k) { const p = k.badan.getPosition(); return { x: p.x / S, y: p.y / S, a: k.badan.getAngle() }; }
+function puncakKerupuk(k) {
+  const { x, y, a } = posisi(k), c = Math.cos(a), s = Math.sin(a);
+  let m = -Infinity;
+  for (const p of k.spek.v) m = Math.max(m, y + p.x * s + p.y * c);
+  return m;
+}
+function lajuKerupuk(k) { const v = k.badan.getLinearVelocity(); return Math.hypot(v.x, v.y) / S; }
+
+function mulaiBaru(benihBaru) {
+  benih = Number.isFinite(benihBaru) ? benihBaru >>> 0 : (Math.random() * 2 ** 32) >>> 0;
+  acak = buatAcak(benih);
+  kantong = [];
+  buatDunia();
+  kerupuk = [];
+  status = 'main';
+  waktu = 0; akumulasi = 0; fisikaBeku = false;
+  puncakTenang = 0; tinggiTertinggi = 0; jumlahBertahan = 0; dilepas = 0;
+  penyebab = null; partikel = []; guncang = 0;
+  tampil.dasar = KONFIG.celah;
+  capit.x = (acak() < 0.5 ? -1 : 1) * KONFIG.jangkauan * (0.5 + acak() * 0.4);
+  capit.arah = acak() < 0.5 ? -1 : 1;
+  capit.buka = 0; capit.goyang = 0; capit.tLepas = -10;
+  // Kerupuk pertama selalu kerupuk udang: alas lebar untuk permulaan yang ramah.
+  if (!urutanPaksa.length) urutanPaksa.unshift('udang');
+  capit.memegang = buatSpek(ambilJenis(), acak);
+  capit.muat = 1;
+  spekBerikut = buatSpek(ambilJenis(), acak);
+  el.hasil.hidden = true;
+  el.app.classList.remove('ada-hasil');
+  tampilPetunjuk('Ketuk atau klik di mana saja, atau tekan Spasi, untuk melepas kerupuk.', Infinity);
+  perbaruiHud(true);
+  gambarBerikut();
+  hitungArea();
+  kam.siap = false;
+}
+
+function bisaLepas() { return status === 'main' && !jeda && !!capit.memegang && capit.muat >= 1; }
+
+function jatuhkan() {
+  if (status !== 'main' || jeda) return false;
+  if (!capit.memegang || capit.muat < 1) {
+    tampilPetunjuk('Sebentar, capit sedang mengambil kerupuk berikutnya.', 1.4);
+    return false;
+  }
+  const spek = capit.memegang;
+  // Jangan sampai muncul di dalam tumpukan yang belum diam: dasar paling rendah 1,5 cm di atas puncak sebenarnya.
+  let puncakNyata = 0;
+  for (const k of kerupuk) if (!k.jatuh) puncakNyata = Math.max(puncakNyata, puncakKerupuk(k));
+  const dasar = Math.max(tampil.dasar, puncakNyata + 1.5);
+  const badan = dunia.createBody({
+    type: 'dynamic',
+    position: pl.Vec2(capit.x * S, (dasar - spek.bawah) * S),
+    linearDamping: spek.def.redam,
+    angularDamping: 0.4
+  });
+  badan.createFixture(pl.Polygon(spek.v.map(p => pl.Vec2(p.x * S, p.y * S))), { density: spek.def.massaJenis, friction: spek.def.gesek, restitution: 0 });
+  const k = { peran: 'kerupuk', spek, badan, urutan: kerupuk.length + 1, mendarat: false, jatuh: false, putaran: 0, sudutLalu: 0, tLepas: waktu, diumumkan: false };
+  badan.setUserData(k);
+  kerupuk.push(k);
+  dilepas++;
+  capit.memegang = null;
+  capit.tLepas = waktu;
+  capit.buka = 1;
+  capit.goyang = gerakHias ? 1 : 0;
+  if (dilepas >= 2) sembunyikanPetunjuk();
+  return true;
+}
+
+function muatKerupuk() {
+  capit.memegang = spekBerikut;
+  capit.muat = gerakHias ? 0 : 1;
+  spekBerikut = buatSpek(ambilJenis(), acak);
+  gambarBerikut();
+  el.namaBerikut.textContent = spekBerikut.def.nama;
+}
+
+function cekKesiapan() {
+  if (status !== 'main' || capit.memegang) return;
+  const lama = waktu - capit.tLepas;
+  if (lama < KONFIG.jedaMin) return;
+  const k = kerupuk[kerupuk.length - 1];
+  const tenang = k && k.mendarat && lajuKerupuk(k) < KONFIG.tenangLaju && Math.abs(k.badan.getAngularVelocity()) < KONFIG.tenangPutar;
+  if (tenang || lama >= KONFIG.jedaMaks) muatKerupuk();
+}
+
+function hitungSkor() {
+  let n = 0, puncak = 0, semuaTenang = true;
+  for (const k of kerupuk) {
+    if (!k.mendarat || k.jatuh) continue;
+    n++;
+    if (lajuKerupuk(k) > KONFIG.tenangLaju || Math.abs(k.badan.getAngularVelocity()) > KONFIG.tenangPutar) semuaTenang = false;
+    puncak = Math.max(puncak, puncakKerupuk(k));
+  }
+  if (status !== 'main') return;
+  jumlahBertahan = n;
+  if (semuaTenang) {
+    puncakTenang = n ? Math.max(0, puncak) : 0;
+    tinggiTertinggi = Math.max(tinggiTertinggi, puncakTenang);
+    const baru = kerupuk.filter(k => k.mendarat && !k.jatuh && !k.diumumkan);
+    if (baru.length) {
+      for (const k of baru) k.diumumkan = true;
+      umumkan(`${baru[baru.length - 1].spek.def.nama} mendarat. ${n} kerupuk, tinggi ${cm(puncakTenang)}.`);
+    }
+  }
+}
+
+function analisis(k) {
+  const baru = kerupuk[kerupuk.length - 1];
+  const Nama = k.spek.def.nama, nama = k.spek.def.kecil;
+  if (k === baru) {
+    if (!k.mendarat) return {
+      jenis: 'meleset', judul: 'Meleset dari piring',
+      sebab: `${Nama} jatuh langsung ke meja tanpa menyentuh piring.`,
+      saran: 'Lepas saat capit tepat di atas piring. Garis putus-putus di bawah capit menunjukkan tempat kerupuk akan mendarat.'
+    };
+    if (k.spek.def.guling && k.putaran > 1.3) return {
+      jenis: 'berguling', judul: 'Menggelinding ke meja',
+      sebab: `${Nama} mendarat miring, lalu menggelinding dari ${k.kontakPertama === 'piring' ? 'piring' : 'tumpukan'} ke meja.`,
+      saran: k.spek.jenis === 'rengginang'
+        ? 'Rengginang bundar dan berat. Taruh di atas kerupuk yang lebar dan datar, misalnya kerupuk udang atau kerupuk bawang.'
+        : 'Kerupuk kulit menggumpal dan mudah terguling. Taruh di permukaan yang datar, jauh dari pinggir.'
+    };
+    if (k.kontakPertama === 'piring') return {
+      jenis: 'tergelincir', judul: 'Meluncur dari bibir piring',
+      sebab: `${Nama} mendarat di bibir piring yang melengkung, lalu meluncur ke meja.`,
+      saran: 'Incar bagian piring yang datar di tengah, bukan bibirnya.'
+    };
+    return {
+      jenis: 'tergelincir', judul: 'Kerupuknya meluncur',
+      sebab: `${Nama} mendarat di pinggir tumpukan dengan sebagian besar badannya menggantung, lalu meluncur ke meja.`,
+      saran: 'Lepas saat capit sejajar dengan tengah kerupuk paling atas.'
+    };
+  }
+  // Titik berat tumpukan (tanpa kerupuk terbaru) menentukan apakah ia memang sudah condong sebelum tertimpa.
+  let massa = 0, momen = 0;
+  for (const x of kerupuk) {
+    if (x === baru || !x.mendarat) continue;
+    const m = x.badan.getMass();
+    massa += m; momen += m * posisi(x).x;
+  }
+  const geserBerat = massa ? momen / massa : 0;
+  if (baru && baru.mendarat && waktu - baru.tMendarat < 2.5 && Math.abs(geserBerat) < 3) return {
+    jenis: 'tertimpa', judul: 'Tertimpa lalu jatuh',
+    sebab: `${baru.spek.def.nama} yang baru dilepas menimpa tumpukan, lalu kerupuk ke-${k.urutan} (${nama}) terdorong ke meja.`,
+    saran: 'Hindari menaruh kerupuk di ujung yang menjorok. Beban di ujung itu mengungkit kerupuk di bawahnya.'
+  };
+  const arah = (Math.abs(geserBerat) >= 1 ? geserBerat : posisi(k).x) >= 0 ? 'kanan' : 'kiri', lawan = arah === 'kanan' ? 'kiri' : 'kanan';
+  return {
+    jenis: 'roboh', judul: 'Tumpukannya condong', arah,
+    sebab: `Tumpukan condong ke ${arah} sampai kerupuk ke-${k.urutan} (${nama}) jatuh ke meja.`,
+    saran: `Kalau tumpukan mulai condong ke ${arah}, taruh kerupuk berikutnya agak ke ${lawan} untuk mengimbanginya.`
+  };
+}
+
+function mulaiGagal(k) {
+  status = 'gagal';
+  tGagal = waktu;
+  jumlahSaatGagal = kerupuk.filter(x => x.mendarat && !x.jatuh).length;
+  penyebab = { ...analisis(k), kerupuk: k };
+  sembunyikanPetunjuk();
+  if (gerakHias) guncang = 1;
+}
+
+function tampilkanHasil() {
+  status = 'hasil';
+  const p = penyebab;
+  el.judulHasil.textContent = p.judul;
+  el.sebab.textContent = p.sebab;
+  el.saran.textContent = p.saran;
+  el.jumlahHasil.textContent = String(jumlahSaatGagal);
+  el.tinggiHasil.textContent = cm(tinggiTertinggi);
+  const tinggi = Math.round(tinggiTertinggi * 10) / 10;
+  let teksRekor, baru = false;
+  if (tinggi > 0 && (!rekor || tinggi > rekor.tinggi)) {
+    const lama = rekor;
+    rekor = { tinggi, jumlah: jumlahSaatGagal };
+    const tersimpan = simpanRekor(rekor);
+    baru = true;
+    teksRekor = lama ? `Rekor baru. Sebelumnya ${cm(lama.tinggi)}.` : 'Rekor pertamamu.';
+    if (!tersimpan) teksRekor += ' Peramban ini tidak mengizinkan rekor disimpan.';
+  } else if (rekor) {
+    teksRekor = `Rekormu ${cm(rekor.tinggi)} dengan ${rekor.jumlah} kerupuk.`;
+  } else {
+    teksRekor = 'Belum ada rekor. Tumpukan pertama yang diam akan tercatat.';
+  }
+  el.rekorHasil.textContent = teksRekor;
+  el.rekorHasil.classList.toggle('baru', baru);
+  perbaruiHud(true);
+  el.hasil.hidden = false;
+  el.app.classList.add('ada-hasil');
+  waktuHasil = performance.now();
+  hitungArea();
+  el.tombolLagi.focus({ preventScroll: true });
+  umumkan(`${p.judul}. ${p.sebab} Saran: ${p.saran}`);
+}
+
+function targetKontrol(t) { return t instanceof Element && t.closest('button, a, input, select, textarea, dialog, .hasil'); }
+
+document.addEventListener('pointerdown', e => {
+  if (!e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  if (targetKontrol(e.target) || el.dialog.open) return;
+  if (status !== 'main') return;
+  e.preventDefault();
+  jatuhkan();
+});
+document.addEventListener('keydown', e => {
+  if (el.dialog.open || e.altKey || e.ctrlKey || e.metaKey) return;
+  const tombolLepas = e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown';
+  if (!tombolLepas) return;
+  // Spasi dan Enter pada tombol tetap milik tombol itu. Panah bawah tidak dipakai tombol, jadi selalu melepas.
+  if (e.key !== 'ArrowDown' && targetKontrol(e.target)) return;
+  if (status !== 'main') return;
+  e.preventDefault();
+  if (!e.repeat) jatuhkan();
+});
+el.tombolLagi.addEventListener('click', () => {
+  // Spasi yang masih tertahan dari permainan tidak boleh langsung memulai ulang.
+  if (performance.now() - waktuHasil < 450) return;
+  mulaiBaru();
+  el.panggung.focus({ preventScroll: true });
+});
+el.tombolCara.addEventListener('click', () => { el.dialog.showModal(); jeda = true; });
+el.dialog.addEventListener('close', () => { jeda = false; });
+// Klik di tirai (di luar kotak dialog) menutup dialog; klik di bantalan dalam kotak tidak.
+el.dialog.addEventListener('click', e => {
+  if (e.target !== el.dialog) return;
+  const r = el.dialog.getBoundingClientRect();
+  if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) el.dialog.close();
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden) akumulasi = 0; });
+
+let hudLalu = '';
+function perbaruiHud(paksa) {
+  const kunci = `${jumlahBertahan}|${puncakTenang.toFixed(1)}|${rekor ? rekor.tinggi : 0}`;
+  if (!paksa && kunci === hudLalu) return;
+  hudLalu = kunci;
+  el.jumlah.textContent = String(jumlahBertahan);
+  el.tinggi.innerHTML = `${fmt.format(Math.round(puncakTenang * 10) / 10)}<small> cm</small>`;
+  el.hudRekor.textContent = rekor ? `Rekor ${cm(rekor.tinggi)}` : 'Belum ada rekor';
+  if (spekBerikut) el.namaBerikut.textContent = spekBerikut.def.nama;
+}
+let jamUmum = 0;
+function umumkan(teks) {
+  clearTimeout(jamUmum);
+  el.pengumum.textContent = '';
+  jamUmum = setTimeout(() => { el.pengumum.textContent = teks; }, 60);
+}
+function tampilPetunjuk(teks, lama) {
+  el.teksPetunjuk.textContent = teks;
+  el.petunjuk.hidden = false;
+  teksPetunjukSampai = performance.now() + lama * 1000;
+}
+function sembunyikanPetunjuk() { el.petunjuk.hidden = true; teksPetunjukSampai = 0; }
+
+const WARNA = {};
+const NAMA_WARNA = ['dinding', 'lambris', 'lambris-garis', 'tinta', 'tinta-2', 'lembar', 'biru', 'aksen-teks', 'meja', 'meja-depan', 'serat', 'email', 'email-bayang', 'lis', 'logam', 'logam-gelap', 'garis-kerupuk'];
+function bacaWarna() {
+  const cs = getComputedStyle(document.documentElement);
+  for (const n of NAMA_WARNA) WARNA[n] = cs.getPropertyValue('--' + n).trim();
+  gambarBerikut();
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', bacaWarna);
+new MutationObserver(bacaWarna).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+const ukuran = { w: 1, h: 1, dpr: 1 };
+const area = { l: 0, t: 0, r: 1, b: 1 };
+function hitungArea() {
+  const app = el.app.getBoundingClientRect();
+  let a = { l: 0, t: 0, r: app.width, b: app.height };
+  // Panel yang menindih kanvas dipotong dari area; sisi terbesar yang tersisa dipakai kamera.
+  const potong = rect => {
+    if (!rect.width || !rect.height) return;
+    const o = { l: rect.left - app.left, t: rect.top - app.top, r: rect.right - app.left, b: rect.bottom - app.top };
+    if (o.r <= a.l || o.l >= a.r || o.b <= a.t || o.t >= a.b) return;
+    const calon = [
+      { ...a, b: Math.min(a.b, o.t) }, { ...a, t: Math.max(a.t, o.b) },
+      { ...a, r: Math.min(a.r, o.l) }, { ...a, l: Math.max(a.l, o.r) }
+    ];
+    a = calon.reduce((x, y) => ((y.r - y.l) * (y.b - y.t) > (x.r - x.l) * (x.b - x.t) ? y : x));
+  };
+  if (!el.app.classList.contains('ada-hasil')) potong(el.kepala.getBoundingClientRect());
+  if (!el.hasil.hidden) potong(el.hasil.getBoundingClientRect());
+  Object.assign(area, a);
+}
+function ukurKanvas() {
+  const r = el.app.getBoundingClientRect();
+  ukuran.w = Math.max(1, r.width); ukuran.h = Math.max(1, r.height);
+  ukuran.dpr = Math.min(2.5, window.devicePixelRatio || 1);
+  el.kanvas.width = Math.round(ukuran.w * ukuran.dpr);
+  el.kanvas.height = Math.round(ukuran.h * ukuran.dpr);
+  hitungArea();
+  kam.siap = false;
+  gambarBerikut();
+}
+const pengamat = new ResizeObserver(() => ukurKanvas());
+pengamat.observe(el.app);
+pengamat.observe(el.kepala);
+pengamat.observe(el.hasil);
+
+function skalaNormal() {
+  const w = Math.max(1, area.r - area.l), h = Math.max(1, area.b - area.t);
+  return Math.min(w / KONFIG.lebarPandang, h / KONFIG.tinggiPandang);
+}
+function railY() { return tampil.dasar + 3.8 + KONFIG.tinggiRel; }
+function sasaranKamera() {
+  const w = area.r - area.l, h = area.b - area.t, sN = skalaNormal();
+  if (status === 'main') {
+    const tinggiLihat = h / sN;
+    // Batas bawah -12,5 cm: pita meja cukup tinggi untuk menampung petunjuk tanpa menutupi piring.
+    const atas = Math.max(railY() + tinggiLihat * 0.08 + 1.5, -12.5 + tinggiLihat);
+    return { cx: 0, cy: atas - tinggiLihat / 2, s: sN, ax: area.l + w / 2, ay: area.t + h / 2 };
+  }
+  // Saat gagal: perkecil supaya piring, tumpukan, dan kerupuk yang jatuh terlihat bersama.
+  let minX = -15, maxX = 15, minY = MEJA_Y - 2.5, maxY = 6;
+  for (const k of kerupuk) {
+    const p = posisi(k), r = Math.max(k.spek.lebar, k.spek.tinggi) / 2;
+    if (Math.abs(p.x) > 70 || p.y < -30) continue;
+    if (k.jatuh || k.mendarat) { minX = Math.min(minX, p.x - r - 3); maxX = Math.max(maxX, p.x + r + 3); maxY = Math.max(maxY, p.y + r + 2.5); }
+  }
+  const lebar = maxX - minX, tinggi = maxY - minY;
+  const s = Math.min(sN * 1.15, (w - 32) / lebar, (h - 52) / tinggi);
+  // Geser sedikit ke bawah: ruang di atas dipakai label "Jatuh di sini".
+  return { cx: (minX + maxX) / 2, cy: (minY + maxY) / 2 + 10 / s, s, ax: area.l + w / 2, ay: area.t + h / 2 };
+}
+function gerakKamera(dt) {
+  const t = sasaranKamera();
+  const k = kam.siap ? 1 - Math.exp(-dt * (status === 'main' ? 5 : 3)) : 1;
+  kam.cx += (t.cx - kam.cx) * k;
+  kam.cy += (t.cy - kam.cy) * k;
+  kam.s += (t.s - kam.s) * k;
+  kam.ax = kam.siap ? kam.ax + (t.ax - kam.ax) * k : t.ax;
+  kam.ay = kam.siap ? kam.ay + (t.ay - kam.ay) * k : t.ay;
+  kam.siap = true;
+}
+
+function perbarui(dt) {
+  if (jeda) return;
+  if (status === 'main' && !capitBeku) {
+    capit.x += capit.arah * lajuCapit() * dt;
+    if (capit.x > KONFIG.jangkauan) { capit.x = 2 * KONFIG.jangkauan - capit.x; capit.arah = -1; }
+    if (capit.x < -KONFIG.jangkauan) { capit.x = -2 * KONFIG.jangkauan - capit.x; capit.arah = 1; }
+  }
+  if (!fisikaBeku) {
+    akumulasi += dt;
+    let n = 0;
+    while (akumulasi >= KONFIG.langkah && n < 10) {
+      dunia.step(KONFIG.langkah, KONFIG.iterasiKecepatan, KONFIG.iterasiPosisi);
+      waktu += KONFIG.langkah;
+      akumulasi -= KONFIG.langkah;
+      n++;
+      for (const k of kerupuk) {
+        const a = k.badan.getAngle();
+        if (k.mendarat) k.putaran += Math.abs(a - k.sudutLalu);
+        k.sudutLalu = a;
+      }
+    }
+    if (n === 10) akumulasi = 0;
+    if (status !== 'main' && waktu - tGagal > KONFIG.lamaFisikaGagal) fisikaBeku = true;
+  }
+  hitungSkor();
+  cekKesiapan();
+  if (status === 'gagal' && waktu - tGagal >= KONFIG.lamaGagal) tampilkanHasil();
+
+  if (capit.memegang && capit.muat < 1) capit.muat = Math.min(1, capit.muat + dt / KONFIG.lamaMuat);
+  if (capit.memegang) capit.buka = Math.max(0, capit.buka - dt / KONFIG.lamaMuat);
+  if (capit.goyang > 0) capit.goyang = Math.max(0, capit.goyang - dt * 2.2);
+  if (guncang > 0) guncang = Math.max(0, guncang - dt * 3);
+  tampil.dasar += (puncakTenang + KONFIG.celah - tampil.dasar) * (1 - Math.exp(-dt * 4));
+  for (const p of partikel) { p.vy -= 160 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.umur -= dt; if (p.y < MEJA_Y) { p.y = MEJA_Y; p.vy = 0; p.vx *= 0.5; } }
+  partikel = partikel.filter(p => p.umur > 0);
+  if (teksPetunjukSampai && teksPetunjukSampai !== Infinity && performance.now() > teksPetunjukSampai) {
+    if (dilepas < 2 && status === 'main') tampilPetunjuk('Ketuk atau klik di mana saja, atau tekan Spasi, untuk melepas kerupuk.', Infinity);
+    else sembunyikanPetunjuk();
+  }
+  gerakKamera(dt);
+  perbaruiHud(false);
+}
+
+function tebarRemah(k, n) {
+  const p = posisi(k), w = k.spek.def.warna;
+  for (let i = 0; i < n; i++) {
+    partikel.push({
+      x: p.x + (Math.random() - 0.5) * k.spek.lebar * 0.8, y: p.y + k.spek.bawah * 0.6,
+      vx: (Math.random() - 0.5) * 40, vy: 15 + Math.random() * 30, umur: 0.7 + Math.random() * 0.4,
+      r: 0.12 + Math.random() * 0.12, warna: Math.random() < 0.5 ? w.isi : w.gelap
+    });
+  }
+}
+
+const ctx = el.kanvas.getContext('2d');
+// Safari lama belum punya roundRect; tanpa ini setiap bingkai akan galat.
+function kotakBulat(c, x, y, w, h, r) {
+  if (c.roundRect) c.roundRect(x, y, w, h, r);
+  else c.rect(x, y, w, h);
+}
+
+function jalurHalus(c, t) {
+  const n = t.length, a = t[n - 1], b = t[0];
+  c.beginPath();
+  c.moveTo((a.x + b.x) / 2, (a.y + b.y) / 2);
+  for (let i = 0; i < n; i++) { const p = t[i], q = t[(i + 1) % n]; c.quadraticCurveTo(p.x, p.y, (p.x + q.x) / 2, (p.y + q.y) / 2); }
+  c.closePath();
+}
+
+function gambarKerupuk(c, spek, x, y, sudut, px, alpha) {
+  const w = spek.def.warna;
+  c.save();
+  c.translate(x, y);
+  c.rotate(sudut);
+  if (alpha < 1) c.globalAlpha = alpha;
+  jalurHalus(c, spek.garis);
+  const g = c.createLinearGradient(0, spek.atas, 0, spek.bawah);
+  g.addColorStop(0, w.terang);
+  g.addColorStop(0.45, w.isi);
+  g.addColorStop(1, w.gelap);
+  c.fillStyle = g;
+  c.fill();
+  c.save();
+  c.clip();
+  for (const h of spek.hiasan) {
+    c.beginPath();
+    if (h.t === 'gelembung') {
+      c.ellipse(h.x, h.y, h.rx, h.ry, 0, 0, Math.PI * 2);
+      c.fillStyle = w.terang; c.fill();
+      c.lineWidth = Math.max(px, 0.05); c.strokeStyle = w.gelap; c.stroke();
+    } else if (h.t === 'butir') {
+      c.ellipse(h.x, h.y, h.rx, h.ry, h.a, 0, Math.PI * 2);
+      c.fillStyle = w.terang; c.fill();
+      c.lineWidth = Math.max(px * 0.8, 0.04); c.strokeStyle = w.gelap; c.stroke();
+    } else if (h.t === 'cincin') {
+      c.arc(h.x, h.y, h.r, 0, Math.PI * 2);
+      c.lineWidth = Math.max(px, 0.06); c.strokeStyle = w.gelap; c.stroke();
+    } else if (h.t === 'serpih') {
+      c.save(); c.translate(h.x, h.y); c.rotate(h.a);
+      c.fillStyle = w.titik; c.fillRect(-h.w / 2, -h.h / 2, h.w, h.h);
+      c.restore();
+    } else if (h.t === 'titikGelap') {
+      c.arc(h.x, h.y, h.r, 0, Math.PI * 2); c.fillStyle = w.gelap; c.fill();
+    } else {
+      c.arc(h.x, h.y, h.r, 0, Math.PI * 2); c.fillStyle = w.titik; c.fill();
+    }
+  }
+  c.restore();
+  jalurHalus(c, spek.garis);
+  c.lineWidth = px * 1.6;
+  c.lineJoin = 'round';
+  c.strokeStyle = WARNA['garis-kerupuk'];
+  c.stroke();
+  c.restore();
+}
+
+function gambarBerikut() {
+  const c = el.kanvasBerikut, r = c.getBoundingClientRect();
+  if (!r.width || !spekBerikut || !WARNA.dinding) return;
+  const dpr = Math.min(2.5, window.devicePixelRatio || 1);
+  const w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+  if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+  const g = c.getContext('2d');
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.clearRect(0, 0, w, h);
+  const sp = spekBerikut;
+  // Skala dibatasi supaya kerupuk kecil tetap tampak kecil di pratinjau.
+  const s = Math.min((w - 6 * dpr) / sp.lebar, (h - 6 * dpr) / sp.tinggi, (r.width / 12) * dpr);
+  g.setTransform(s, 0, 0, -s, w / 2 - s * (sp.kiri + sp.kanan) / 2, h / 2 + s * (sp.atas + sp.bawah) / 2);
+  gambarKerupuk(g, sp, 0, 0, 0, dpr / s, 1);
+}
+
+function gambarPiringBelakang(px) {
+  ctx.beginPath();
+  ctx.ellipse(0, MEJA_Y, 12.5, 0.55, 0, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0, 0, 0, .16)';
+  ctx.fill();
+  // Bagian dalam piring (terlihat sedikit dari atas)
+  ctx.beginPath();
+  ctx.ellipse(0, 1.65, 13.6, 0.85, 0, 0, Math.PI * 2);
+  ctx.fillStyle = WARNA['email-bayang'];
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(0, 1.65, 13.6, 0.85, 0, 0, Math.PI, false);
+  ctx.lineWidth = 0.34;
+  ctx.strokeStyle = WARNA.lis;
+  ctx.stroke();
+}
+function jalurBadanPiring() {
+  ctx.beginPath();
+  ctx.moveTo(-13.6, 1.65);
+  ctx.bezierCurveTo(-12.6, -0.6, -9.5, -1.5, -6.6, -1.6);
+  ctx.lineTo(-6.2, MEJA_Y);
+  ctx.lineTo(6.2, MEJA_Y);
+  ctx.lineTo(6.6, -1.6);
+  ctx.bezierCurveTo(9.5, -1.5, 12.6, -0.6, 13.6, 1.65);
+  ctx.ellipse(0, 1.65, 13.6, 0.85, 0, 0, Math.PI, true);
+  ctx.closePath();
+}
+function gambarPiringDepan(px) {
+  jalurBadanPiring();
+  const g = ctx.createLinearGradient(0, 1.8, 0, MEJA_Y);
+  g.addColorStop(0, WARNA.email);
+  g.addColorStop(1, WARNA['email-bayang']);
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.lineWidth = px * 1.6;
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = WARNA['garis-kerupuk'];
+  ctx.stroke();
+  // Lis biru di bibir depan, ciri piring seng warung
+  ctx.beginPath();
+  ctx.ellipse(0, 1.65, 13.6, 0.85, 0, 0, Math.PI, true);
+  ctx.lineWidth = 0.34;
+  ctx.strokeStyle = WARNA.lis;
+  ctx.stroke();
+  // Email gempil di dekat bibir
+  ctx.beginPath();
+  ctx.moveTo(4.6, 0.75); ctx.lineTo(5.3, 0.62); ctx.lineTo(5.6, 0.25); ctx.lineTo(5.1, 0.05); ctx.lineTo(4.7, 0.3);
+  ctx.closePath();
+  ctx.fillStyle = WARNA['garis-kerupuk'];
+  ctx.fill();
+}
+
+function gambarDinding(kiri, kanan, bawah, px) {
+  const tinggiLambris = 24;
+  if (bawah < tinggiLambris) {
+    ctx.fillStyle = WARNA.lambris;
+    ctx.fillRect(kiri, MEJA_Y, kanan - kiri, tinggiLambris - MEJA_Y);
+    // Bingkai kayu di puncak lambris, sengaja berwarna kayu supaya tidak tertukar dengan rel capit yang abu-abu.
+    ctx.fillStyle = WARNA.meja;
+    ctx.fillRect(kiri, tinggiLambris, kanan - kiri, 0.9);
+    ctx.fillStyle = WARNA['meja-depan'];
+    ctx.fillRect(kiri, tinggiLambris, kanan - kiri, 0.25);
+    // Sambungan papan lambris
+    ctx.lineWidth = px;
+    ctx.strokeStyle = WARNA['lambris-garis'];
+    ctx.beginPath();
+    for (let x = Math.floor(kiri / 9) * 9 + 4.5; x < kanan; x += 9) { ctx.moveTo(x, MEJA_Y); ctx.lineTo(x, tinggiLambris); }
+    ctx.stroke();
+  }
+}
+function gambarMeja(kiri, kanan, bawah, px) {
+  if (bawah > MEJA_Y) return;
+  ctx.fillStyle = WARNA.meja;
+  ctx.fillRect(kiri, MEJA_Y - 3.2, kanan - kiri, 3.2);
+  ctx.fillStyle = WARNA['meja-depan'];
+  ctx.fillRect(kiri, Math.min(bawah, MEJA_Y - 3.2) - 1, kanan - kiri, MEJA_Y - 3.2 - Math.min(bawah, MEJA_Y - 3.2) + 1);
+  ctx.lineWidth = px;
+  ctx.strokeStyle = WARNA.serat;
+  ctx.beginPath();
+  for (let i = 0; i < 4; i++) {
+    const y = MEJA_Y - 5 - i * 2.6;
+    if (y < bawah) break;
+    ctx.moveTo(kiri, y);
+    for (let x = kiri; x <= kanan; x += 4) ctx.lineTo(x, y + Math.sin(x * 0.21 + i * 1.7) * 0.35);
+  }
+  ctx.moveTo(kiri, MEJA_Y - 3.2); ctx.lineTo(kanan, MEJA_Y - 3.2);
+  ctx.stroke();
+  ctx.lineWidth = px * 1.6;
+  ctx.strokeStyle = WARNA['garis-kerupuk'];
+  ctx.beginPath(); ctx.moveTo(kiri, MEJA_Y); ctx.lineTo(kanan, MEJA_Y); ctx.stroke();
+}
+
+function sinarJatuh(x, dari) {
+  let hasil = MEJA_Y;
+  dunia.rayCast(pl.Vec2(x * S, dari * S), pl.Vec2(x * S, (MEJA_Y - 1) * S), (fix, titik, normal, fraksi) => {
+    const d = fix.getBody().getUserData();
+    if (d && d.peran === 'kerupuk' && d.jatuh) return -1;
+    hasil = titik.y / S;
+    return fraksi;
+  });
+  return hasil;
+}
+
+function gambarCapit(kiri, kanan, px) {
+  const x = capit.x, rel = railY();
+  // Rel baja dengan bayangan di dinding, supaya terbaca sebagai benda di depan bingkai lambris.
+  ctx.fillStyle = 'rgba(0, 0, 0, .14)';
+  ctx.fillRect(kiri, rel - 0.95, kanan - kiri, 0.5);
+  ctx.fillStyle = WARNA['garis-kerupuk'];
+  ctx.fillRect(kiri, rel - 0.4 - px, kanan - kiri, 0.8 + 2 * px);
+  ctx.fillStyle = WARNA['logam-gelap'];
+  ctx.fillRect(kiri, rel - 0.4, kanan - kiri, 0.8);
+  ctx.fillStyle = WARNA.logam;
+  ctx.fillRect(kiri, rel + 0.05, kanan - kiri, 0.22);
+  const sp = capit.memegang;
+  const dasar = tampil.dasar;
+  const atasK = sp ? dasar - sp.bawah + sp.atas : dasar + 1.6;
+  const pivotY = rel - 1.3;
+  const goyang = gerakHias ? Math.sin(capit.goyang * 18) * capit.goyang * 0.5 : 0;
+  const buka = Math.min(1, capit.buka + goyang * 0.4);
+  const jepit = sp ? Math.min(2.2, Math.max(1.1, sp.lebar * 0.18)) : 1.6;
+  const lebar = jepit + buka * 1.9;
+  const ujungY = atasK + 0.1 + buka * 0.7;
+  if (sp) {
+    if (capit.muat >= 1 && status === 'main') {
+      const kena = sinarJatuh(x, dasar - 0.05);
+      ctx.save();
+      ctx.setLineDash([0.55, 0.45]);
+      ctx.lineWidth = px * 1.6;
+      ctx.strokeStyle = WARNA['tinta-2'];
+      ctx.beginPath(); ctx.moveTo(x, dasar - 0.3); ctx.lineTo(x, kena + 0.15); ctx.stroke();
+      ctx.restore();
+      ctx.lineWidth = px * 2;
+      ctx.strokeStyle = WARNA['tinta-2'];
+      ctx.beginPath(); ctx.moveTo(x - 0.7, kena + 0.15); ctx.lineTo(x + 0.7, kena + 0.15); ctx.stroke();
+    }
+    gambarKerupuk(ctx, sp, x, dasar - sp.bawah, 0, px, capit.muat);
+  }
+  ctx.fillStyle = WARNA['logam-gelap'];
+  ctx.beginPath();
+  kotakBulat(ctx, x - 1.7, rel - 0.85, 3.4, 1.7, 0.4);
+  ctx.fill();
+  ctx.lineWidth = px * 1.4;
+  ctx.strokeStyle = WARNA['garis-kerupuk'];
+  ctx.stroke();
+  // Dua lengan penjepit kerupuk dari engsel di troli
+  for (const sisi of [-1, 1]) {
+    const ux = x + sisi * lebar;
+    ctx.beginPath();
+    ctx.moveTo(x, pivotY);
+    ctx.quadraticCurveTo(x + sisi * lebar * 0.55, (pivotY + ujungY) / 2 + 0.4, ux, ujungY + 0.25);
+    ctx.lineTo(ux - sisi * 0.65, ujungY - 0.25);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 0.55 + px * 2.6;
+    ctx.strokeStyle = WARNA['garis-kerupuk'];
+    ctx.stroke();
+    ctx.lineWidth = 0.55;
+    ctx.strokeStyle = WARNA.logam;
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.arc(x, pivotY, 0.45, 0, Math.PI * 2);
+  ctx.fillStyle = WARNA['logam-gelap'];
+  ctx.fill();
+}
+
+// Ukuran bersama penggaris, penanda tinggi, dan penanda rekor (koordinat layar).
+function ukurPenanda(ty, s) {
+  const x0 = area.l + 14;
+  ctx.font = '700 12px "Plus Jakarta Sans", system-ui, sans-serif';
+  const teksTinggi = cm(puncakTenang);
+  const lw = ctx.measureText(teksTinggi).width + 14;
+  const yTinggi = ty - puncakTenang * s;
+  const adaTinggi = puncakTenang > 0.4 && status === 'main' && yTinggi > area.t + 12 && yTinggi < area.b - 12;
+  return { x0, teksTinggi, lw, yTinggi, adaTinggi };
+}
+
+// Penanda rekor seperti coretan di dinding: digambar sebelum piring, kerupuk, dan capit supaya tidak menutupi mereka.
+function gambarRekor(ty, s) {
+  if (!rekor || rekor.tinggi <= 0.5) return;
+  const { x0, lw, yTinggi, adaTinggi } = ukurPenanda(ty, s);
+  const y = ty - rekor.tinggi * s;
+  if (y < area.t + 10 || y > area.b - 10) return;
+  const xt = adaTinggi && Math.abs(y - yTinggi) < 26 ? x0 + lw + 22 : x0 + 58;
+  ctx.save();
+  ctx.strokeStyle = WARNA.biru;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(Math.min(area.r - 10, xt + 110), y); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = WARNA.biru;
+  ctx.font = '700 11px "Plus Jakarta Sans", system-ui, sans-serif';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(`Rekor ${cm(rekor.tinggi)}`, xt, y - 3);
+  ctx.restore();
+}
+
+function gambarPenggaris(tx, ty, s) {
+  const { x0, teksTinggi, lw, yTinggi, adaTinggi } = ukurPenanda(ty, s);
+  const yNol = ty;
+  const atasCm = (ty - area.t) / s;
+  ctx.save();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = WARNA['tinta-2'];
+  ctx.fillStyle = WARNA['tinta-2'];
+  ctx.font = '700 11px "Plus Jakarta Sans", system-ui, sans-serif';
+  ctx.textBaseline = 'middle';
+  ctx.beginPath();
+  ctx.moveTo(x0, Math.min(yNol, area.b));
+  ctx.lineTo(x0, area.t);
+  const langkahLabel = s * 5 >= 34 ? 5 : 10;
+  for (let c = 0; c <= atasCm + 1; c++) {
+    const y = yNol - c * s;
+    if (y > area.b + 2) continue;
+    if (y < area.t - 2) break;
+    const besar = c % 5 === 0;
+    if (!besar && s < 5) continue;
+    ctx.moveTo(x0, y); ctx.lineTo(x0 + (besar ? 10 : 5), y);
+  }
+  ctx.stroke();
+  const yRekor = rekor && rekor.tinggi > 0.5 ? yNol - rekor.tinggi * s : -1e9;
+  for (let c = langkahLabel; c <= atasCm + 1; c += langkahLabel) {
+    const y = yNol - c * s;
+    if (y > area.b - 8 || y < area.t + 8) continue;
+    // Lewati label yang akan dicoret garis rekor atau tertutup penanda tinggi.
+    if (Math.abs(y - yRekor) < 9 || (adaTinggi && Math.abs(y - yTinggi) < 18)) continue;
+    ctx.fillText(`${c} cm`, x0 + 14, y);
+  }
+  ctx.font = '700 12px "Plus Jakarta Sans", system-ui, sans-serif';
+  // Penanda tinggi tumpukan saat ini
+  if (adaTinggi) {
+    const y = yTinggi;
+    // Garis putus-putus berhenti tepat di kiri kerupuk teratas.
+    let teratas = null, tertinggi = -Infinity;
+    for (const k of kerupuk) {
+      if (!k.mendarat || k.jatuh) continue;
+      const t = puncakKerupuk(k);
+      if (t > tertinggi) { tertinggi = t; teratas = k; }
+    }
+    const ujung = Math.max(x0 + lw + 24, teratas ? tx + (posisi(teratas).x - teratas.spek.lebar / 2) * s - 6 : 0);
+    ctx.strokeStyle = WARNA.tinta;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(x0 + 10, y); ctx.lineTo(ujung, y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = WARNA.lembar;
+    ctx.beginPath(); kotakBulat(ctx, x0 + 10, y - 11, lw, 22, 6); ctx.fill();
+    ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = WARNA.tinta;
+    ctx.fillText(teksTinggi, x0 + 17, y + 0.5);
+  }
+  ctx.restore();
+}
+
+function gambarTandaJatuh(tx, ty, s) {
+  if (!penyebab) return;
+  // Hanya kerupuk pertama yang menyentuh meja yang dilingkari: dialah sebabnya, yang lain ikut jatuh sesudahnya.
+  const k = penyebab.kerupuk, p = posisi(k);
+  const X = tx + p.x * s, Y = ty - p.y * s;
+  const R = Math.max(22, (Math.max(k.spek.lebar, k.spek.tinggi) / 2 + 1.2) * s);
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(X, Y, R, 0, Math.PI * 2);
+  ctx.setLineDash([8, 5]);
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = WARNA.biru;
+  ctx.stroke();
+  ctx.setLineDash([]);
+  const teks = 'Jatuh di sini';
+  ctx.font = '700 13px "Plus Jakarta Sans", system-ui, sans-serif';
+  const lw = ctx.measureText(teks).width + 18;
+  let ly = Y - R - 30;
+  if (ly < area.t + 4) ly = Y + R + 8;
+  const lx = Math.min(Math.max(X - lw / 2, area.l + 8), area.r - lw - 8);
+  ctx.fillStyle = WARNA.biru;
+  ctx.beginPath(); kotakBulat(ctx, lx, ly, lw, 24, 7); ctx.fill();
+  ctx.fillStyle = WARNA['aksen-teks'];
+  ctx.textBaseline = 'middle';
+  ctx.fillText(teks, lx + 9, ly + 12.5);
+  ctx.restore();
+}
+
+function gambar() {
+  const { w: W, h: H, dpr } = ukuran;
+  if (!WARNA.dinding) bacaWarna();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = WARNA.dinding;
+  ctx.fillRect(0, 0, W, H);
+  if (!dunia) return;
+  const s = kam.s;
+  let gx = 0, gy = 0;
+  if (guncang > 0 && gerakHias) { gx = (Math.random() - 0.5) * 6 * guncang; gy = (Math.random() - 0.5) * 4 * guncang; }
+  const tx = kam.ax - kam.cx * s + gx, ty = kam.ay + kam.cy * s + gy;
+  ctx.setTransform(dpr * s, 0, 0, -dpr * s, dpr * tx, dpr * ty);
+  const px = 1 / s;
+  const kiri = -tx / s, kanan = (W - tx) / s, atas = ty / s, bawah = (ty - H) / s;
+  gambarDinding(kiri, kanan, bawah, px);
+  gambarMeja(kiri, kanan, bawah, px);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  gambarRekor(ty, s);
+  ctx.setTransform(dpr * s, 0, 0, -dpr * s, dpr * tx, dpr * ty);
+  gambarPiringBelakang(px);
+  for (const k of kerupuk) {
+    const p = posisi(k), r = Math.max(k.spek.lebar, k.spek.tinggi);
+    if (p.y + r < bawah || p.y - r > atas || p.x + r < kiri || p.x - r > kanan) continue;
+    gambarKerupuk(ctx, k.spek, p.x, p.y, p.a, px, 1);
+  }
+  gambarPiringDepan(px);
+  for (const p of partikel) {
+    ctx.globalAlpha = Math.min(1, p.umur * 2);
+    ctx.fillStyle = p.warna;
+    ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+  }
+  ctx.globalAlpha = 1;
+  if (status === 'main' || status === 'gagal') gambarCapit(kiri, kanan, px);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  gambarPenggaris(tx, ty, s);
+  gambarTandaJatuh(tx, ty, s);
+}
+
+let waktuLalu = performance.now();
+function putaran(sekarang) {
+  requestAnimationFrame(putaran);
+  const dt = Math.min(0.05, Math.max(0, (sekarang - waktuLalu) / 1000));
+  waktuLalu = sekarang;
+  perbarui(dt);
+  gambar();
+}
+
+bacaWarna();
+ukurKanvas();
+mulaiBaru();
+el.status.hidden = true;
+requestAnimationFrame(t => { waktuLalu = t; putaran(t); });
+
+// Kait untuk pengujian dan pembuatan gambar kartu: membaca keadaan dan menjalankan aksi tanpa masukan asli.
+function maju(detik, langkah = 1 / 60) { const n = Math.round(detik / langkah); for (let i = 0; i < n; i++) perbarui(langkah); }
+window.__tumpukKerupuk = {
+  KONFIG, JENIS: Object.keys(JENIS),
+  keadaan: () => ({
+    status, jeda, benih, waktu: +waktu.toFixed(3),
+    jumlah: jumlahBertahan, tinggi: +puncakTenang.toFixed(2), tinggiTertinggi: +tinggiTertinggi.toFixed(2), dilepas,
+    capitX: +capit.x.toFixed(2), laju: +lajuCapit().toFixed(2), siap: bisaLepas(),
+    memegang: capit.memegang ? capit.memegang.jenis : null, berikutnya: spekBerikut ? spekBerikut.jenis : null,
+    penyebab: penyebab ? { jenis: penyebab.jenis, judul: penyebab.judul, sebab: penyebab.sebab, saran: penyebab.saran, urutan: penyebab.kerupuk.urutan } : null,
+    rekor, skalaPxPerCm: +kam.s.toFixed(2), gerakHias, partikel: partikel.length,
+    fokus: document.activeElement ? document.activeElement.id || document.activeElement.tagName : null,
+    kerupuk: kerupuk.map(k => { const p = posisi(k); return { jenis: k.spek.jenis, x: +p.x.toFixed(2), y: +p.y.toFixed(2), sudut: +p.a.toFixed(3), mendarat: k.mendarat, jatuh: k.jatuh, laju: +lajuKerupuk(k).toFixed(2) }; })
+  }),
+  jatuhkan,
+  aturCapit: x => { capit.x = Math.max(-KONFIG.jangkauan, Math.min(KONFIG.jangkauan, x)); },
+  bekukanCapit: on => { capitBeku = !!on; },
+  maju,
+  // daftar (opsional): urutan jenis kerupuk yang dipakai lebih dulu, misalnya ['udang', 'bawang'].
+  mulaiUlang: (b, daftar) => { urutanPaksa = Array.isArray(daftar) ? daftar.slice() : []; mulaiBaru(b); },
+  urutan: daftar => { urutanPaksa = daftar.slice(); },
+  pegang: jenis => { capit.memegang = buatSpek(jenis, acak); capit.muat = 1; capit.buka = 0; },
+  // rencana: [[jenis, xCm], ...]; tiap kerupuk dilepas setelah capit siap, lalu dunia dimajukan.
+  // jenis null memakai kerupuk yang sedang dipegang capit (urutan acak biasa).
+  bangun: (rencana, lamaTunggu = 2.5) => {
+    for (const [jenis, x] of rencana) {
+      for (let i = 0; i < 300 && !bisaLepas() && status === 'main'; i++) maju(1 / 30);
+      if (status !== 'main') break;
+      if (jenis) { capit.memegang = buatSpek(jenis, acak); capit.muat = 1; capit.buka = 0; }
+      capit.x = x;
+      jatuhkan();
+      maju(lamaTunggu);
+    }
+    return window.__tumpukKerupuk.keadaan();
+  },
+  modeKartu: on => { el.app.classList.toggle('mode-kartu', !!on); el.kepala.hidden = !!on; sembunyikanPetunjuk(); hitungArea(); kam.siap = false; },
+  // Adegan gambar kartu 480x480: tumpukan 12 kerupuk yang agak condong ke kanan, capit membawa rengginang.
+  contohKartu: () => {
+    const t = window.__tumpukKerupuk;
+    t.mulaiUlang(21);
+    t.bekukanCapit(true);
+    t.bangun([['udang', 0], ['bawang', 0.4], ['udang', 0.8], ['bawang', 1.2], ['rengginang', 1.4], ['udang', 1.6], ['bawang', 1.9], ['udang', 2.2], ['kulit', 0.2], ['kulit', 4.2], ['bawang', 2.4], ['udang', 2.6]], 3);
+    t.modeKartu(true);
+    t.maju(3);
+    t.pegang('rengginang');
+    t.aturCapit(-6);
+    t.maju(1.5);
+    return t.keadaan();
+  }
+};
+})();
+</script>
+</body>
+</html>

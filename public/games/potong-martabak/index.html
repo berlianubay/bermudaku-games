@@ -1,0 +1,1450 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Potong Martabak</title>
+<link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap">
+<style>
+/* Satu layar tanpa gulir. Potret: kepala, pilihan tamu, piring, lalu petunjuk atau hasil di bawah jempol.
+   Lanskap: piring di kiri, kolom kanan berisi kepala, pilihan tamu, dan petunjuk atau hasil. */
+:root {
+  --latar: #F7EFE1;
+  --tinta: #2D1C12;
+  --tinta-2: #69513F;
+  --garis-kuat: #8B6F59;
+  --aksen: #B3261E;
+  --aksen-teks: #FFFFFF;
+  --lembar: #FFF9F0;
+  --piring: #FBF8F3;
+  --tirai: rgba(45, 28, 18, .45);
+  --bayang: rgba(45, 28, 18, .22);
+  --font-judul: "Alfa Slab One", Rockwell, Georgia, serif;
+  --font-teks: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --latar: #1C1410;
+    --tinta: #F6EADB;
+    --tinta-2: #CDB8A3;
+    --garis-kuat: #A08670;
+    --aksen: #F2836F;
+    --aksen-teks: #2A0D08;
+    --lembar: #2A1F19;
+    --piring: #E9E2D7;
+    --tirai: rgba(0, 0, 0, .6);
+    --bayang: rgba(0, 0, 0, .5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --latar: #1C1410;
+  --tinta: #F6EADB;
+  --tinta-2: #CDB8A3;
+  --garis-kuat: #A08670;
+  --aksen: #F2836F;
+  --aksen-teks: #2A0D08;
+  --lembar: #2A1F19;
+  --piring: #E9E2D7;
+  --tirai: rgba(0, 0, 0, .6);
+  --bayang: rgba(0, 0, 0, .5);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--latar);
+  color: var(--tinta);
+  font-family: var(--font-teks);
+  font-size: 15px;
+  line-height: 1.4;
+  -webkit-tap-highlight-color: transparent;
+}
+h1, h2, h3, p, ol, ul, fieldset { margin: 0; }
+button { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+.sr { position: absolute; top: 0; left: 0; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.app {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-areas: "kepala" "tamu" "panggung" "bawah";
+  gap: 8px;
+  padding-top: max(10px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.kepala {
+  grid-area: kepala;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  min-width: 0;
+}
+.kepala h1 {
+  font-family: var(--font-judul);
+  font-weight: 400;
+  font-size: clamp(1.3rem, 1.05rem + 1.1vw, 1.7rem);
+  line-height: 1.1;
+  letter-spacing: .01em;
+}
+.tombol-kecil {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--garis-kuat);
+  background: transparent;
+  font-weight: 600;
+  font-size: .9rem;
+  cursor: pointer;
+}
+
+/* Pilihan tamu: ikon kecil menunjukkan martabak dibelah sebanyak itu. */
+.tamu {
+  grid-area: tamu;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.pilih {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 13px 0 11px;
+  border: 1.5px solid var(--garis-kuat);
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: .92rem;
+  cursor: pointer;
+  user-select: none;
+}
+.pilih input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.pilih svg { width: 20px; height: 20px; flex: none; }
+.pilih svg circle { fill: none; stroke: currentColor; stroke-width: 1.6; }
+.pilih svg path { fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; }
+.pilih:has(input:checked) { background: var(--tinta); border-color: var(--tinta); color: var(--latar); }
+.pilih:has(input:focus-visible) { outline: 3px solid var(--tinta); outline-offset: 2px; }
+
+/* Panggung: kanvas mengisi ruang, piring selalu bulat di tengahnya. */
+.panggung { grid-area: panggung; position: relative; min-height: 0; }
+.papan {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  cursor: crosshair;
+}
+/* Cincin fokus papan diatur dari skrip (kelas .cincin) supaya muncul untuk papan ketik saja,
+   termasuk saat fokus dipindah skrip setelah "Potong lagi" ditekan dengan Enter. */
+.papan:focus { outline: none; }
+.papan.cincin:focus { outline: 3px solid var(--tinta); outline-offset: 2px; }
+.ada-hasil .papan { cursor: default; }
+#kanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+.info { grid-area: bawah; display: grid; gap: 3px; min-width: 0; }
+.status { font-weight: 700; }
+.status span { display: block; font-weight: 400; font-size: .86rem; color: var(--tinta-2); }
+.petunjuk { min-height: 2.8em; line-height: 1.4; }
+.rekor-main { font-size: .86rem; color: var(--tinta-2); }
+
+/* Hasil: kertas nota di bawah piring (potret) atau di kolom kanan (lanskap). */
+.hasil {
+  grid-area: bawah;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 12px 12px;
+  border-radius: 16px;
+  background: var(--lembar);
+  border: 1.5px solid var(--garis-kuat);
+}
+.hasil-atas { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.skor { display: grid; justify-items: start; flex: none; }
+.skor span, .skor small { font-size: .76rem; font-weight: 700; color: var(--tinta-2); line-height: 1.2; }
+.skor small { font-weight: 400; }
+.skor strong {
+  font-family: var(--font-judul);
+  font-weight: 400;
+  font-size: 2.2rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.ringkas { display: grid; gap: 2px; min-width: 0; }
+.ringkas h2 { font-family: var(--font-judul); font-weight: 400; font-size: 1.12rem; line-height: 1.15; }
+.ringkas p { font-size: .84rem; color: var(--tinta-2); line-height: 1.3; }
+.legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .86rem; padding: 0; list-style: none; }
+.legenda li { display: inline-flex; align-items: center; gap: 6px; }
+.cip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: .8rem;
+  font-variant-numeric: tabular-nums;
+  background: #FFF9F0;
+  color: #2D1C12;
+  box-shadow: 0 0 0 1px var(--garis-kuat);
+}
+.cip.besar { background: #2D1C12; color: #FFF9F0; }
+.cip.kecil { background: #B3261E; color: #FFFFFF; }
+.cip svg { width: 9px; height: 9px; fill: currentColor; }
+.komentar { font-size: .93rem; line-height: 1.4; }
+.komentar b { font-weight: 700; }
+.rekor { font-size: .86rem; color: var(--tinta-2); }
+.rekor b { color: var(--tinta); }
+.tombol {
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 14px;
+  border: 1.5px solid var(--garis-kuat);
+  background: transparent;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tombol.utama {
+  border-color: var(--aksen);
+  background: var(--aksen);
+  color: var(--aksen-teks);
+  font-family: var(--font-judul);
+  font-weight: 400;
+  font-size: 1.1rem;
+  letter-spacing: .02em;
+}
+.tombol:active, .tombol-kecil:active { transform: translateY(1px); }
+/* Di layar potret, saat hasil tampil, pilihan tamu disembunyikan supaya piring berlabel tetap cukup besar.
+   "Potong lagi" mengembalikannya. */
+.ada-hasil .tamu { display: none; }
+.tombol:focus-visible, .tombol-kecil:focus-visible, .tautan:focus-visible { outline: 3px solid var(--tinta); outline-offset: 3px; }
+
+dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  border: 0;
+  border-radius: 20px;
+  padding: 20px 20px 16px;
+  background: var(--lembar);
+  color: var(--tinta);
+  box-shadow: 0 16px 40px var(--bayang);
+}
+dialog::backdrop { background: var(--tirai); }
+.isi-dialog { display: grid; gap: 12px; line-height: 1.5; }
+.isi-dialog h2 { font-family: var(--font-judul); font-weight: 400; font-size: 1.4rem; }
+.isi-dialog h3 { font-size: 1rem; font-weight: 700; }
+.isi-dialog ol { padding-left: 1.3em; display: grid; gap: 4px; }
+.isi-dialog .kecil { font-size: .88rem; color: var(--tinta-2); }
+.isi-dialog form { display: flex; justify-content: flex-end; }
+kbd { font-family: var(--font-teks); font-weight: 600; font-size: .85em; padding: 0 5px; border-radius: 5px; border: 1px solid var(--garis-kuat); white-space: nowrap; }
+
+@media (orientation: landscape) and (min-width: 640px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr) clamp(290px, 31vw, 400px);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-areas: "panggung kepala" "panggung tamu" "panggung bawah";
+    column-gap: 24px;
+    row-gap: 12px;
+  }
+  .ada-hasil .tamu { display: flex; }
+  /* Kolom kanan tidak boleh memanjangkan baris piring; kalau sempit, lembar hasil bergulir sendiri. */
+  .info, .hasil { align-self: start; max-height: 100%; overflow-y: auto; }
+  .info { gap: 6px; }
+  .skor strong { font-size: 2.8rem; }
+  .ringkas h2 { font-size: 1.3rem; }
+  .komentar { font-size: 1rem; }
+  .hasil { gap: 12px; padding: 16px 18px 18px; }
+}
+/* HP diputar mendatar: kolom kanan lebih lebar dan rapat. */
+@media (orientation: landscape) and (min-width: 640px) and (max-height: 520px) {
+  .app { grid-template-columns: minmax(0, 1fr) clamp(290px, 44vw, 400px); column-gap: 16px; row-gap: 8px; }
+  .kepala h1 { font-size: 1.15rem; }
+  .pilih { padding: 0 9px 0 8px; gap: 5px; }
+  .ada-hasil .tamu { display: none; }
+  .skor strong { font-size: 2rem; }
+  .ringkas h2 { font-size: 1.1rem; }
+  .komentar { font-size: .9rem; }
+  .hasil { gap: 8px; padding: 10px 12px 12px; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="kepala">
+    <h1>Potong Martabak</h1>
+    <button class="tombol-kecil" id="tombol-cara" type="button" aria-haspopup="dialog">Cara main</button>
+  </header>
+
+  <fieldset class="tamu" id="pilihan-tamu">
+    <legend class="sr">Jumlah tamu</legend>
+    <label class="pilih"><input type="radio" name="tamu" value="4"><svg viewBox="-10 -10 20 20" aria-hidden="true"><circle r="8.5"/><path d="M-8.5 0H8.5M0 -8.5V8.5"/></svg><span>4 tamu</span></label>
+    <label class="pilih"><input type="radio" name="tamu" value="6"><svg viewBox="-10 -10 20 20" aria-hidden="true"><circle r="8.5"/><path d="M0 -8.5V8.5M7.36 4.25L-7.36 -4.25M-7.36 4.25L7.36 -4.25"/></svg><span>6 tamu</span></label>
+    <label class="pilih"><input type="radio" name="tamu" value="8" checked><svg viewBox="-10 -10 20 20" aria-hidden="true"><circle r="8.5"/><path d="M-8.5 0H8.5M0 -8.5V8.5M6 6L-6 -6M-6 6L6 -6"/></svg><span>8 tamu</span></label>
+  </fieldset>
+
+  <main class="panggung">
+    <div class="papan" id="papan" tabindex="0" role="application" aria-roledescription="papan potong"
+      aria-label="Martabak di atas piring. Seret garis lurus melintasi martabak untuk memotong. Dengan papan ketik: panah kiri dan kanan memutar garis pemandu, panah atas dan bawah menggesernya, Enter atau Spasi memotong."
+      aria-describedby="petunjuk">
+      <canvas id="kanvas" aria-hidden="true"></canvas>
+    </div>
+  </main>
+
+  <section class="info" id="info" aria-label="Keadaan babak">
+    <p class="status"><b id="status-potong">4 potongan lagi untuk 8 tamu</b> <span id="status-topping"></span></p>
+    <p class="petunjuk" id="petunjuk" role="status">Seret garis lurus melintasi martabak untuk memotong.</p>
+    <p class="rekor-main" id="rekor-main"></p>
+  </section>
+
+  <section class="hasil" id="hasil" aria-labelledby="judul-hasil" hidden>
+    <div class="hasil-atas">
+      <p class="skor"><span>Kerataan</span><strong id="skor">0,0</strong><small>dari 100</small></p>
+      <div class="ringkas">
+        <h2 id="judul-hasil">Hasil potongan</h2>
+        <p id="hitungan"></p>
+      </div>
+    </div>
+    <ul class="legenda" id="legenda"></ul>
+    <p class="komentar" id="komentar"></p>
+    <p class="rekor" id="rekor-hasil"></p>
+    <button class="tombol utama" id="tombol-lagi" type="button">Potong lagi</button>
+  </section>
+</div>
+
+<p class="sr" id="umum" role="status" aria-live="polite"></p>
+
+<dialog id="dialog-cara" aria-labelledby="judul-cara">
+  <div class="isi-dialog">
+    <h2 id="judul-cara">Cara main</h2>
+    <ol>
+      <li>Pilih jumlah tamu: 4, 6, atau 8. Kamu dapat potongan sebanyak separuh jumlah tamu, jadi 8 tamu berarti 4 kali potong.</li>
+      <li>Seret garis lurus melintasi martabak. Pisau memotong sepanjang garis itu dari tepi ke tepi, bukan hanya sepanjang seretanmu.</li>
+      <li>Potongan yang sudah dibuat tidak bisa dibatalkan. Setelah potongan terakhir, tiap bagian diberi persen.</li>
+    </ol>
+    <h3>Cara menghitung kerataan</h3>
+    <p>Potongan terbesar dibagikan ke tamu lebih dulu. Selisih tiap potongan dari bagian adil dijumlahkan. Potongan lebih yang tidak kebagian tamu dan tamu yang tidak kebagian potongan ikut menambah selisih. Kerataan 100 berarti semua tamu dapat bagian sama besar.</p>
+    <p class="kecil">Papan ketik: tekan <kbd>Tab</kbd> sampai martabak terpilih dan garis pemandu muncul. <kbd>←</kbd> <kbd>→</kbd> memutar garis 3 derajat (tahan <kbd>Shift</kbd> untuk 0,5 derajat), <kbd>↑</kbd> <kbd>↓</kbd> menggeser garis, <kbd>Enter</kbd> atau <kbd>Spasi</kbd> memotong. <kbd>Esc</kbd> membatalkan seretan atau menutup jendela ini.</p>
+    <p class="kecil">Rekor kerataan untuk tiap jumlah tamu hanya disimpan di peramban ini.</p>
+    <form method="dialog"><button class="tombol" type="submit">Tutup</button></form>
+  </div>
+</dialog>
+
+<script>
+'use strict';
+
+// Martabak didekati poligon cembung 128 sudut. Tiap garis membelah setiap poligon yang dilaluinya,
+// jadi semua potongan tetap cembung dan luasnya cukup dihitung dengan rumus shoelace.
+const SISI = 128;
+const EPS = 1e-10;
+const LINGKARAN = Array.from({ length: SISI }, (_, i) => {
+  const a = i / SISI * Math.PI * 2;
+  return [Math.cos(a), Math.sin(a)];
+});
+
+function luas(t) {
+  let s = 0;
+  for (let i = 0, n = t.length; i < n; i++) {
+    const a = t[i], b = t[(i + 1) % n];
+    s += a[0] * b[1] - b[0] * a[1];
+  }
+  return Math.abs(s) / 2;
+}
+
+function titikBerat(t) {
+  let a = 0, x = 0, y = 0;
+  for (let i = 0, n = t.length; i < n; i++) {
+    const p = t[i], q = t[(i + 1) % n];
+    const c = p[0] * q[1] - q[0] * p[1];
+    a += c; x += (p[0] + q[0]) * c; y += (p[1] + q[1]) * c;
+  }
+  if (Math.abs(a) < 1e-14) {
+    return [t.reduce((s, p) => s + p[0], 0) / t.length, t.reduce((s, p) => s + p[1], 0) / t.length];
+  }
+  return [x / (3 * a), y / (3 * a)];
+}
+
+const LUAS_TOTAL = luas(LINGKARAN);
+// Belahan yang lebih kecil dari ini hanya sisa hitungan floating point, bukan potongan sungguhan.
+const SERPIH = LUAS_TOTAL * 2e-5;
+
+function buatPotongan(titik) { return { titik, luas: luas(titik), pusat: titikBerat(titik) }; }
+
+// Garis disimpan sebagai sudut (radian, 0 sampai pi) dan geser = jarak bertanda dari pusat
+// sepanjang normal n = (-sin, cos). Sumbu y menunjuk ke bawah, sama dengan layar.
+function normal(sudut) { return [-Math.sin(sudut), Math.cos(sudut)]; }
+
+function rapikanGaris(sudut, geser) {
+  let s = sudut % Math.PI, g = geser;
+  if (s < 0) s += Math.PI;
+  // sudut dan sudut + pi adalah garis yang sama dengan normal terbalik
+  if (Math.round((sudut - s) / Math.PI) % 2 !== 0) g = -g;
+  return { sudut: s, geser: g };
+}
+
+function garisDariDuaTitik(a, b) {
+  const dx = b[0] - a[0], dy = b[1] - a[1];
+  let s = Math.atan2(dy, dx);
+  if (s < 0) s += Math.PI;
+  if (s >= Math.PI) s -= Math.PI;
+  const [nx, ny] = normal(s);
+  return { sudut: s, geser: a[0] * nx + a[1] * ny };
+}
+
+function belah(titik, nx, ny, d) {
+  const kiri = [], kanan = [];
+  for (let i = 0, n = titik.length; i < n; i++) {
+    const a = titik[i], b = titik[(i + 1) % n];
+    const sa = a[0] * nx + a[1] * ny - d, sb = b[0] * nx + b[1] * ny - d;
+    if (sa <= EPS) kiri.push(a);
+    if (sa >= -EPS) kanan.push(a);
+    if ((sa < -EPS && sb > EPS) || (sa > EPS && sb < -EPS)) {
+      const t = sa / (sa - sb);
+      const q = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+      kiri.push(q);
+      kanan.push(q);
+    }
+  }
+  return [kiri, kanan];
+}
+
+function potongSemua(potongan, garis) {
+  const [nx, ny] = normal(garis.sudut);
+  const baru = [];
+  let terbelah = 0;
+  for (const p of potongan) {
+    const [a, b] = belah(p.titik, nx, ny, garis.geser);
+    if (a.length >= 3 && b.length >= 3) {
+      const pa = buatPotongan(a), pb = buatPotongan(b);
+      if (pa.luas > SERPIH && pb.luas > SERPIH) {
+        baru.push(pa, pb);
+        terbelah++;
+        continue;
+      }
+    }
+    baru.push(p);
+  }
+  return { potongan: baru, terbelah };
+}
+
+// Potongan terbesar dibagikan lebih dulu. Tamu tanpa potongan dihitung mendapat 0,
+// potongan lebih punya bagian ideal 0, jadi keduanya ikut menambah selisih.
+function hitungKerataan(daftarLuas, tamu) {
+  const total = daftarLuas.reduce((s, v) => s + v, 0);
+  if (!total) return 0;
+  const adil = total / tamu;
+  const urut = [...daftarLuas].sort((a, b) => b - a);
+  const k = Math.max(tamu, urut.length);
+  let selisih = 0;
+  for (let i = 0; i < k; i++) selisih += Math.abs((urut[i] ?? 0) - (i < tamu ? adil : 0));
+  return Math.max(0, 100 * (1 - selisih / (2 * total)));
+}
+
+const BATAS_KECIL = 0.8;         // potongan di bawah 4/5 bagian adil disebut terlalu kecil
+const SERET_MIN = 0.6;           // 30% diameter, dalam satuan jari-jari
+const GESER_MAKS = 0.95;         // garis pemandu papan ketik selalu mengenai martabak
+const BATAS_KENA = 0.985;        // garis sejauh ini dari pusat dianggap tidak mengenai
+// Batas judul dikalibrasi dengan simulasi tangan rapi, sedang, dan kasar (lihat docs/games/potong-martabak.md).
+const JUDUL = [
+  [99, 'Rata seperti ditimbang'],
+  [97, 'Hampir rata'],
+  [93, 'Lumayan rata'],
+  [85, 'Ada yang melirik piring sebelah'],
+  [0, 'Tamu mulai protes'],
+];
+const TOPPING = {
+  meses: 'cokelat meses',
+  keju: 'keju parut',
+  kacang: 'kacang tanah',
+  campur: 'campur meses, keju, dan kacang',
+};
+
+const fmt1 = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const fmtSudut = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 });
+const teksPersen = v => (v < 0.05 ? '<0,1%' : `${fmt1.format(v)}%`);
+const bulat1 = v => Math.round(v * 10) / 10;
+
+function nilaiBabak(b) {
+  const tamu = b.tamu, n = b.potongan.length, jumlahGaris = b.garis.length;
+  const persen = b.potongan.map(p => p.luas / LUAS_TOTAL * 100).sort((x, y) => y - x);
+  const adil = 100 / tamu;
+  const kerataan = hitungKerataan(persen, tamu);
+  const kurang = Math.max(0, tamu - n);
+  const lebih = Math.max(0, n - tamu);
+  const kecil = persen.slice(0, tamu).filter(v => v < adil * BATAS_KECIL).length;
+  const meleset = Math.max(...b.garis.map(g => Math.abs(g.geser)));
+  const sudut = b.garis.map(g => g.sudut * 180 / Math.PI).sort((x, y) => x - y);
+  const sudutIdeal = 180 / jumlahGaris;
+  let selisihSudut = 0;
+  for (let i = 0; i < sudut.length; i++) {
+    const celah = i < sudut.length - 1 ? sudut[i + 1] - sudut[i] : sudut[0] + 180 - sudut[i];
+    selisihSudut = Math.max(selisihSudut, Math.abs(celah - sudutIdeal));
+  }
+  const k1 = bulat1(kerataan);
+  // Separuh tamu atau lebih dirugikan tetap disebut protes, berapa pun angkanya.
+  const judul = kurang + kecil >= tamu / 2 ? JUDUL[JUDUL.length - 1][1] : JUDUL.find(([batas]) => k1 >= batas)[1];
+
+  const kalimat = [];
+  if (kurang) kalimat.push(`${kurang} tamu tidak kebagian, karena martabaknya hanya jadi ${n} potongan.`);
+  if (kecil) kalimat.push(`${kecil} tamu dapat potongan terlalu kecil, di bawah ${teksPersen(adil * BATAS_KECIL)}.`);
+  if (lebih) kalimat.push(`${lebih} potongan lebih tersisa.`);
+  if (!kalimat.length) {
+    kalimat.push(k1 >= 99 ? 'Semua tamu dapat bagian yang sama besar.' : 'Tiap tamu dapat bagian yang cukup, meski tidak persis sama.');
+  }
+
+  let saran;
+  if (kurang) {
+    saran = 'Buat setiap garis lewat titik tengah supaya semua garis bersilangan di satu titik.';
+  } else if (meleset >= 0.04) {
+    saran = `Arahkan tiap garis lewat titik tengah. Yang paling meleset bergeser ${Math.round(meleset * 100)}% jari-jari.`;
+  } else if (selisihSudut >= 2) {
+    saran = `Jarak sudut antargaris idealnya ${fmtSudut.format(sudutIdeal)} derajat, punyamu selisih sampai ${Math.round(selisihSudut)} derajat.`;
+  } else if (k1 < 99) {
+    saran = `Tinggal sedikit lagi. Jaga tiap garis lewat tengah dan berjarak ${fmtSudut.format(sudutIdeal)} derajat.`;
+  } else if (tamu < 8) {
+    saran = `Coba ${tamu + 2} tamu. Makin banyak potongan, makin sempit ruang untuk meleset.`;
+  } else {
+    saran = `Pertahankan caranya: tiap garis lewat titik tengah, berjarak ${fmtSudut.format(sudutIdeal)} derajat.`;
+  }
+
+  return {
+    tamu, n, adil, kerataan, kerataanTampil: k1, judul, kurang, lebih, kecil,
+    terbesar: persen[0], terkecil: persen[n - 1], sama: persen[0] - persen[n - 1] < 0.1,
+    meleset, selisihSudut, sudutIdeal, komentar: kalimat.join(' '), saran,
+  };
+}
+
+// Rekor hanya milik pemain ini dan hanya disimpan di peramban ini.
+const KUNCI_REKOR = 'potong-martabak:rekor';
+const KUNCI_TAMU = 'potong-martabak:tamu';
+function bacaRekor() {
+  try {
+    const v = JSON.parse(localStorage.getItem(KUNCI_REKOR));
+    return v && typeof v === 'object' ? v : {};
+  } catch { return {}; }
+}
+function tulisRekor(v) {
+  try { localStorage.setItem(KUNCI_REKOR, JSON.stringify(v)); return true; } catch { return false; }
+}
+function bacaTamu() {
+  try { const v = Number(localStorage.getItem(KUNCI_TAMU)); return [4, 6, 8].includes(v) ? v : 8; } catch { return 8; }
+}
+function tulisTamu(v) { try { localStorage.setItem(KUNCI_TAMU, String(v)); } catch {} }
+
+// Martabak dilukis sekali per babak (dan per ukuran) ke kanvas lepas layar, lalu dipakai ulang tiap bingkai.
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function lukisMartabak(t, benih, topping) {
+  const acak = mulberry32(benih);
+  const r = (a, b) => a + (b - a) * acak();
+  const pilih = daftar => daftar[Math.floor(acak() * daftar.length)];
+  const dalam = batas => { const a = r(0, Math.PI * 2), d = Math.sqrt(acak()) * batas; return [Math.cos(a) * d, Math.sin(a) * d]; };
+
+  // Kuning keemasan di tengah, makin cokelat ke tepi tempat adonan menempel di loyang.
+  const dasar = t.createRadialGradient(-0.12, -0.16, 0.05, 0, 0, 1);
+  dasar.addColorStop(0, '#E0AB55');
+  dasar.addColorStop(0.55, '#D39744');
+  dasar.addColorStop(0.86, '#BC7932');
+  dasar.addColorStop(0.97, '#93511F');
+  dasar.addColorStop(1, '#7C4018');
+  t.fillStyle = dasar;
+  t.beginPath(); t.arc(0, 0, 1, 0, Math.PI * 2); t.fill();
+
+  // Pori-pori sarang: kisi segi enam yang digeser acak supaya rapat tapi tidak tampak berpola.
+  const jarak = 0.05, tinggiBaris = jarak * 0.87;
+  for (let baris = -Math.ceil(1 / tinggiBaris); baris * tinggiBaris <= 1; baris++) {
+    const y = baris * tinggiBaris;
+    for (let x = -1 + (baris % 2 ? jarak / 2 : 0); x <= 1; x += jarak) {
+      const px = x + r(-0.38, 0.38) * jarak, py = y + r(-0.38, 0.38) * jarak;
+      const d = Math.hypot(px, py);
+      if (d > 0.93) continue;
+      const besar = (1 - d * 0.5) * r(0.008, 0.018);
+      t.save();
+      t.translate(px, py);
+      t.rotate(r(0, Math.PI));
+      t.scale(1, r(0.72, 1.12));
+      t.fillStyle = acak() < 0.5 ? 'rgba(104, 52, 16, .82)' : 'rgba(122, 64, 22, .78)';
+      t.beginPath(); t.arc(0, 0, besar, 0, Math.PI * 2); t.fill();
+      t.restore();
+      t.strokeStyle = 'rgba(252, 220, 150, .5)';
+      t.lineWidth = besar * 0.42;
+      t.beginPath(); t.arc(px + besar * 0.2, py + besar * 0.25, besar * 1.05, 0.15 * Math.PI, 0.85 * Math.PI); t.stroke();
+    }
+  }
+
+  t.strokeStyle = 'rgba(108, 50, 14, .55)';
+  t.lineWidth = 0.035;
+  t.beginPath(); t.arc(0, 0, 0.982, 0, Math.PI * 2); t.stroke();
+  t.strokeStyle = 'rgba(255, 222, 150, .22)';
+  t.lineWidth = 0.012;
+  t.beginPath(); t.arc(0, 0, 0.94, 0, Math.PI * 2); t.stroke();
+
+  // Susu kental manis dituang meliuk sebelum taburan; tipis dan tidak rata seperti tuangan tangan.
+  t.save();
+  t.beginPath(); t.arc(0, 0, 0.9, 0, Math.PI * 2); t.clip();
+  t.strokeStyle = 'rgba(255, 251, 238, .55)';
+  t.lineCap = 'round';
+  t.lineJoin = 'round';
+  const miring = r(-0.5, 0.5);
+  for (let i = 0; i < 5; i++) {
+    const y0 = -0.72 + i * 0.36 + r(-0.06, 0.06), amp = r(0.03, 0.06), frek = r(9, 14), fase0 = r(0, 6);
+    t.lineWidth = r(0.007, 0.011);
+    t.beginPath();
+    for (let x = -0.95, k = 0; x <= 0.95; x += 0.02, k++) {
+      const y = y0 + x * miring * 0.3 + Math.sin(x * frek + fase0) * amp * (0.7 + 0.3 * Math.sin(x * 3 + i));
+      if (k === 0) t.moveTo(x, y); else t.lineTo(x, y);
+    }
+    t.stroke();
+  }
+  t.restore();
+
+  const meses = () => {
+    const [x, y] = dalam(0.89);
+    const s = r(0, Math.PI), p = r(0.034, 0.05) / 2, l = r(0.011, 0.015);
+    const dx = Math.cos(s) * p, dy = Math.sin(s) * p;
+    t.lineCap = 'round';
+    t.strokeStyle = pilih(['#3A2116', '#4B2C1D', '#2E1A10', '#55311F']);
+    t.lineWidth = l;
+    t.beginPath(); t.moveTo(x - dx, y - dy); t.lineTo(x + dx, y + dy); t.stroke();
+    t.strokeStyle = 'rgba(255, 236, 220, .16)';
+    t.lineWidth = l * 0.35;
+    t.beginPath(); t.moveTo(x - dx * 0.7 - l * 0.15, y - dy * 0.7 - l * 0.2); t.lineTo(x + dx * 0.7 - l * 0.15, y + dy * 0.7 - l * 0.2); t.stroke();
+  };
+  const keju = () => {
+    const [x, y] = dalam(0.88);
+    const s = r(0, Math.PI), p = r(0.05, 0.09) / 2, l = r(0.015, 0.022), lengkung = r(-0.025, 0.025);
+    const dx = Math.cos(s) * p, dy = Math.sin(s) * p, kx = -Math.sin(s) * lengkung, ky = Math.cos(s) * lengkung;
+    t.lineCap = 'round';
+    const garis = (ox, oy) => { t.beginPath(); t.moveTo(x - dx + ox, y - dy + oy); t.quadraticCurveTo(x + kx + ox, y + ky + oy, x + dx + ox, y + dy + oy); t.stroke(); };
+    t.strokeStyle = 'rgba(118, 70, 20, .35)';
+    t.lineWidth = l;
+    garis(0.004, 0.006);
+    t.strokeStyle = pilih(['#F8E9AE', '#FFF4C9', '#F0D98E', '#F5E3A0']);
+    garis(0, 0);
+  };
+  const kacang = () => {
+    const [x, y] = dalam(0.88);
+    const rr = r(0.02, 0.04), sisi = 5 + Math.floor(acak() * 3), mulai = r(0, Math.PI);
+    const titik = [];
+    for (let k = 0; k < sisi; k++) {
+      const a = mulai + k / sisi * Math.PI * 2 + r(-0.3, 0.3), d = rr * r(0.62, 1.1);
+      titik.push([x + Math.cos(a) * d, y + Math.sin(a) * d]);
+    }
+    const jalur = (ox, oy) => { t.beginPath(); titik.forEach(([px, py], k) => (k ? t.lineTo(px + ox, py + oy) : t.moveTo(px + ox, py + oy))); t.closePath(); };
+    jalur(0.004, 0.006);
+    t.fillStyle = 'rgba(92, 50, 14, .35)';
+    t.fill();
+    jalur(0, 0);
+    t.fillStyle = pilih(['#D6A867', '#E2BC86', '#C38E4E', '#CC9B5C']);
+    t.fill();
+    t.strokeStyle = 'rgba(122, 74, 30, .95)';
+    t.lineWidth = 0.0035;
+    t.stroke();
+    t.fillStyle = 'rgba(255, 242, 214, .35)';
+    t.beginPath(); t.arc(x - rr * 0.25, y - rr * 0.25, rr * 0.35, 0, Math.PI * 2); t.fill();
+  };
+
+  const daftar = [];
+  const tambah = (fn, n) => { for (let i = 0; i < n; i++) daftar.push(fn); };
+  if (topping === 'meses') tambah(meses, 720);
+  else if (topping === 'keju') tambah(keju, 430);
+  else if (topping === 'kacang') tambah(kacang, 300);
+  else { tambah(kacang, 110); tambah(keju, 180); tambah(meses, 320); }
+  if (topping === 'campur') {
+    for (let i = daftar.length - 1; i > 0; i--) { const j = Math.floor(acak() * (i + 1)); [daftar[i], daftar[j]] = [daftar[j], daftar[i]]; }
+  }
+  for (const fn of daftar) fn();
+}
+
+const cacheTekstur = new Map();
+function ambilTekstur(rDev) {
+  const rKunci = Math.max(8, Math.round(rDev * 2) / 2);
+  const kunci = `${babak.benih}|${babak.topping}|${rKunci}`;
+  let tx = cacheTekstur.get(kunci);
+  if (tx) return tx;
+  const ukuran = Math.ceil(rKunci * 2 + 6);
+  const kanvas = document.createElement('canvas');
+  kanvas.width = kanvas.height = ukuran;
+  const t = kanvas.getContext('2d');
+  t.translate(ukuran / 2, ukuran / 2);
+  t.scale(rKunci, rKunci);
+  lukisMartabak(t, babak.benih, babak.topping);
+  tx = { kanvas, ukuran, r: rKunci };
+  if (cacheTekstur.size > 3) cacheTekstur.delete(cacheTekstur.keys().next().value);
+  cacheTekstur.set(kunci, tx);
+  return tx;
+}
+
+const $ = id => document.getElementById(id);
+const el = {
+  app: $('app'), papan: $('papan'), kanvas: $('kanvas'), info: $('info'), hasil: $('hasil'),
+  statusPotong: $('status-potong'), statusTopping: $('status-topping'), petunjuk: $('petunjuk'),
+  rekorMain: $('rekor-main'), skor: $('skor'), judulHasil: $('judul-hasil'), hitungan: $('hitungan'),
+  legenda: $('legenda'), komentar: $('komentar'), rekorHasil: $('rekor-hasil'), tombolLagi: $('tombol-lagi'),
+  umum: $('umum'), dialog: $('dialog-cara'), tombolCara: $('tombol-cara'),
+};
+const g = el.kanvas.getContext('2d');
+const reduksiGerak = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+const SEBAR_MAIN = 0.012;   // celah kecil supaya bekas potongan terbaca selama bermain
+const SEBAR_AKHIR = 0.04;   // potongan direnggangkan saat hasil supaya label punya ruang
+const LAMA_PISAU = 300;
+const LAMA_SEBAR = 320;
+
+let babak = null;
+let fase = 'main';          // main | hasil
+let anim = null;            // { jenis: 'pisau' | 'sebar', mulai, lama, ... }
+let seret = null;           // { id, a, b } dalam satuan jari-jari
+let pemandu = { sudut: 0, geser: 0 };   // sudut dalam derajat, geser dalam satuan jari-jari
+let pemanduAktif = false;
+let labelSiap = false;
+let tahanKlik = false;
+let instan = false;
+let toppingLalu = null;
+let ukuran = { W: 1, H: 1, dpr: 1 };
+let token = {};
+
+function bacaToken() {
+  const s = getComputedStyle(document.documentElement);
+  token = { latar: s.getPropertyValue('--latar').trim(), piring: s.getPropertyValue('--piring').trim() || '#FBF8F3' };
+}
+
+function tanpaGerak() { return instan || reduksiGerak.matches; }
+
+function acakTopping() {
+  const pilihan = Object.keys(TOPPING).filter(k => k !== toppingLalu);
+  return pilihan[Math.floor(Math.random() * pilihan.length)];
+}
+
+function babakBaru(opsi = {}) {
+  const tamu = [4, 6, 8].includes(opsi.tamu) ? opsi.tamu : (babak ? babak.tamu : bacaTamu());
+  const topping = TOPPING[opsi.topping] ? opsi.topping : acakTopping();
+  toppingLalu = topping;
+  babak = {
+    tamu,
+    topping,
+    benih: Number.isFinite(opsi.benih) ? opsi.benih : Math.floor(Math.random() * 1e9),
+    potongan: [buatPotongan(LINGKARAN)],
+    garis: [],
+    hasil: null,
+  };
+  fase = 'main';
+  anim = null;
+  seret = null;
+  labelSiap = false;
+  pemandu = { sudut: 3 * Math.floor(Math.random() * 60), geser: 0 };
+  document.querySelectorAll('input[name="tamu"]').forEach(inp => { inp.checked = Number(inp.value) === tamu; });
+  el.app.classList.remove('ada-hasil');
+  el.hasil.hidden = true;
+  el.info.hidden = false;
+  perbaruiStatus();
+  aturPetunjuk(opsi.pesan || 'Seret garis lurus melintasi martabak untuk memotong.');
+  minta();
+}
+
+function sisaPotong() { return babak.tamu / 2 - babak.garis.length; }
+
+function perbaruiStatus() {
+  const sisa = sisaPotong();
+  el.statusPotong.textContent = sisa === 1 ? `Potongan terakhir untuk ${babak.tamu} tamu` : `${sisa} potongan lagi untuk ${babak.tamu} tamu`;
+  el.statusTopping.textContent = `Martabak ${TOPPING[babak.topping]}`;
+  const rekor = bacaRekor()[babak.tamu];
+  el.rekorMain.textContent = typeof rekor === 'number' ? `Rekor kerataan ${babak.tamu} tamu: ${fmt1.format(rekor)}` : `Belum ada rekor untuk ${babak.tamu} tamu.`;
+}
+
+function aturPetunjuk(teks) {
+  if (el.petunjuk.textContent !== teks) el.petunjuk.textContent = teks;
+}
+
+function teksPemandu() {
+  const sudut = fmtSudut.format(pemandu.sudut);
+  const geser = Math.abs(pemandu.geser) < 0.0005 ? 'tepat di tengah' : `${fmtSudut.format(Math.abs(pemandu.geser) * 100)}% dari tengah`;
+  return `Garis pemandu: sudut ${sudut} derajat, ${geser}. Enter atau Spasi memotong.`;
+}
+
+function pemanduTampil() {
+  return fase === 'main' && pemanduAktif && !seret && document.activeElement === el.papan;
+}
+
+const PESAN = {
+  pendek: 'Seretannya terlalu pendek, jadi dibatalkan. Tarik garis paling tidak sepertiga lebar martabak.',
+  meleset: 'Garisnya tidak mengenai martabak. Tarik garis yang melintasi martabak.',
+  menimpa: 'Garis itu menimpa potongan yang sudah ada. Geser atau putar sedikit.',
+};
+
+function talibusur(garis) {
+  const u = [Math.cos(garis.sudut), Math.sin(garis.sudut)];
+  const n = normal(garis.sudut);
+  const h = Math.sqrt(Math.max(0, 1 - garis.geser * garis.geser));
+  const m = [n[0] * garis.geser, n[1] * garis.geser];
+  return [[m[0] - u[0] * h, m[1] - u[1] * h], [m[0] + u[0] * h, m[1] + u[1] * h]];
+}
+
+function cobaPotong(garis, arah) {
+  if (fase !== 'main') return { diterima: false, alasan: 'selesai' };
+  if (anim) return { diterima: false, alasan: 'sibuk' };
+  if (Math.abs(garis.geser) >= BATAS_KENA) {
+    aturPetunjuk(PESAN.meleset);
+    return { diterima: false, alasan: 'meleset' };
+  }
+  const { potongan, terbelah } = potongSemua(babak.potongan, garis);
+  if (!terbelah) {
+    const alasan = Math.abs(garis.geser) > 0.97 ? 'meleset' : 'menimpa';
+    aturPetunjuk(PESAN[alasan]);
+    return { diterima: false, alasan };
+  }
+  const sebelum = babak.potongan;
+  babak.potongan = potongan;
+  babak.garis.push(garis);
+  const terakhir = sisaPotong() === 0;
+  if (terakhir) {
+    fase = 'hasil';
+    babak.hasil = nilaiBabak(babak);
+  } else {
+    perbaruiStatus();
+    aturPetunjuk(pemanduAktif && document.activeElement === el.papan ? teksPemandu() : 'Seret garis berikutnya melintasi martabak.');
+  }
+  let [a, b] = talibusur(garis);
+  if (arah && (b[0] - a[0]) * arah[0] + (b[1] - a[1]) * arah[1] < 0) [a, b] = [b, a];
+  const lanjut = () => { if (terakhir) mulaiSebar(); };
+  if (tanpaGerak()) lanjut();
+  else anim = { jenis: 'pisau', mulai: performance.now(), lama: LAMA_PISAU, a, b, sebelum, selesai: lanjut };
+  minta();
+  return { diterima: true, potongan: babak.potongan.length };
+}
+
+function mulaiSebar() {
+  if (tanpaGerak()) { labelSiap = true; tampilkanHasil(); minta(); return; }
+  anim = { jenis: 'sebar', mulai: performance.now(), lama: LAMA_SEBAR, selesai: () => { labelSiap = true; tampilkanHasil(); } };
+  minta();
+}
+
+function tampilkanHasil() {
+  const h = babak.hasil;
+  el.skor.textContent = fmt1.format(h.kerataanTampil);
+  el.judulHasil.textContent = h.judul;
+  el.hitungan.textContent = `${h.n} potongan untuk ${h.tamu} tamu. Bagian adil ${teksPersen(h.adil)}.`;
+  const segitiga = naik => `<svg viewBox="0 0 10 10" aria-hidden="true"><path d="${naik ? 'M5 1L9.5 9H0.5Z' : 'M5 9L9.5 1H0.5Z'}"/></svg>`;
+  el.legenda.innerHTML = h.sama
+    ? `<li>Semua potongan <span class="cip">${teksPersen(h.terbesar)}</span></li>`
+    : `<li>Terbesar <span class="cip besar">${segitiga(true)}${teksPersen(h.terbesar)}</span></li>
+       <li>Terkecil <span class="cip kecil">${segitiga(false)}${teksPersen(h.terkecil)}</span></li>`;
+  el.komentar.innerHTML = '';
+  el.komentar.append(`${h.komentar} `);
+  const b = document.createElement('b');
+  b.textContent = 'Saran:';
+  el.komentar.append(b, ` ${h.saran}`);
+
+  const rekor = bacaRekor();
+  const lama = rekor[h.tamu];
+  let teksRekor;
+  if (typeof lama !== 'number' || h.kerataanTampil > lama) {
+    rekor[h.tamu] = h.kerataanTampil;
+    if (tulisRekor(rekor)) {
+      teksRekor = typeof lama === 'number' ? `Rekor baru untuk ${h.tamu} tamu. Sebelumnya ${fmt1.format(lama)}.` : `Rekor pertamamu untuk ${h.tamu} tamu tercatat.`;
+    } else {
+      teksRekor = 'Rekor tidak bisa disimpan di peramban ini.';
+    }
+    h.rekorBaru = true;
+  } else {
+    teksRekor = `Rekor ${h.tamu} tamu: <b>${fmt1.format(lama)}</b>.`;
+  }
+  el.rekorHasil.innerHTML = teksRekor;
+
+  el.info.hidden = true;
+  el.hasil.hidden = false;
+  el.app.classList.add('ada-hasil');
+  el.umum.textContent = `Selesai. Kerataan ${fmt1.format(h.kerataanTampil)} dari 100. ${h.komentar}`;
+  el.tombolLagi.focus({ preventScroll: true });
+}
+
+el.tombolLagi.addEventListener('click', e => {
+  if (tahanKlik) return;
+  const dariPapanKetik = e.detail === 0;
+  babakBaru();
+  el.papan.focus({ preventScroll: true });
+  pemanduAktif = dariPapanKetik;
+  if (pemanduAktif) aturPetunjuk(teksPemandu());
+  minta();
+});
+
+document.querySelectorAll('input[name="tamu"]').forEach(inp => {
+  inp.addEventListener('change', () => {
+    if (!inp.checked) return;
+    const tamu = Number(inp.value);
+    tulisTamu(tamu);
+    babakBaru({ tamu, pesan: `Martabak baru untuk ${tamu} tamu. Seret garis lurus melintasi martabak.` });
+  });
+});
+
+function tataLetak(W, H) {
+  const S = Math.min(W, H);
+  return { W, H, S, cx: W / 2, cy: H / 2, R: S * 0.355, Rp: S * 0.475 };
+}
+
+function keModel(e) {
+  const kotak = el.kanvas.getBoundingClientRect();
+  const L = tataLetak(ukuran.W, ukuran.H);
+  return [(e.clientX - kotak.left - L.cx) / L.R, (e.clientY - kotak.top - L.cy) / L.R];
+}
+
+// Garis pemandu hanya untuk pemain papan ketik. Fokus dari tetikus dibiarkan terjadi secara bawaan
+// (bukan focus() dari skrip), karena Chrome menganggap focus() di pointerdown sebagai fokus papan ketik.
+let lewatPapanKetik = false;
+document.addEventListener('keydown', () => { lewatPapanKetik = true; }, true);
+document.addEventListener('pointerdown', () => { lewatPapanKetik = false; }, true);
+
+el.papan.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  pemanduAktif = false;
+  if (fase !== 'main' || anim || seret) return;
+  try { el.papan.setPointerCapture(e.pointerId); } catch {}
+  const p = keModel(e);
+  seret = { id: e.pointerId, a: p, b: p };
+  minta();
+});
+el.papan.addEventListener('pointermove', e => {
+  if (!seret || e.pointerId !== seret.id) return;
+  seret.b = keModel(e);
+  minta();
+});
+el.papan.addEventListener('pointerup', e => {
+  if (!seret || e.pointerId !== seret.id) return;
+  seret.b = keModel(e);
+  selesaiSeret();
+});
+// Seretan yang terputus tanpa pointerup (ganti tab, gestur sistem) dibatalkan supaya seretan baru tidak terkunci.
+function putusSeret(e) {
+  if (!seret || (e.pointerId !== undefined && e.pointerId !== seret.id)) return;
+  seret = null;
+  aturPetunjuk('Seretan terputus. Coba tarik garisnya lagi.');
+  minta();
+}
+el.papan.addEventListener('pointercancel', putusSeret);
+el.papan.addEventListener('lostpointercapture', putusSeret);
+window.addEventListener('blur', () => putusSeret({}));
+el.papan.addEventListener('contextmenu', e => e.preventDefault());
+
+function potongSeret(a, b) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], panjang = Math.hypot(dx, dy);
+  if (panjang < SERET_MIN) {
+    aturPetunjuk(PESAN.pendek);
+    minta();
+    return { diterima: false, alasan: 'pendek' };
+  }
+  return cobaPotong(garisDariDuaTitik(a, b), [dx / panjang, dy / panjang]);
+}
+
+function selesaiSeret() {
+  const { a, b, id } = seret;
+  seret = null;
+  try { el.papan.releasePointerCapture(id); } catch {}
+  potongSeret(a, b);
+  minta();
+}
+
+function putarPemandu(langkah) {
+  let s = Math.round((pemandu.sudut + langkah) * 10) / 10;
+  let geser = pemandu.geser;
+  // Lewat 180 derajat arah garis berbalik, jadi tanda geser ikut dibalik supaya garis tidak melompat.
+  if (s >= 180) { s -= 180; geser = -geser; }
+  if (s < 0) { s += 180; geser = -geser; }
+  pemandu = { sudut: s, geser };
+}
+
+function geserPemandu(langkahKeAtas) {
+  // Panah atas menggeser garis ke arah atas layar (untuk garis tegak: ke kiri).
+  const ny = Math.cos(pemandu.sudut * Math.PI / 180);
+  const tanda = ny > 1e-9 ? -1 : 1;
+  const geser = Math.round((pemandu.geser + tanda * langkahKeAtas) * 1000) / 1000;
+  pemandu = { sudut: pemandu.sudut, geser: Math.max(-GESER_MAKS, Math.min(GESER_MAKS, geser)) };
+}
+
+function potongPemandu() {
+  const garis = rapikanGaris(pemandu.sudut * Math.PI / 180, pemandu.geser);
+  return cobaPotong(garis, null);
+}
+
+el.papan.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && seret) {
+    e.preventDefault();
+    try { el.papan.releasePointerCapture(seret.id); } catch {}
+    seret = null;
+    aturPetunjuk('Seretan dibatalkan.');
+    minta();
+    return;
+  }
+  if (fase !== 'main' || e.altKey || e.ctrlKey || e.metaKey) return;
+  const halus = e.shiftKey;
+  switch (e.key) {
+    case 'ArrowLeft': putarPemandu(halus ? -0.5 : -3); break;
+    case 'ArrowRight': putarPemandu(halus ? 0.5 : 3); break;
+    case 'ArrowUp': geserPemandu(halus ? 0.005 : 0.02); break;
+    case 'ArrowDown': geserPemandu(halus ? -0.005 : -0.02); break;
+    case 'Enter':
+    case ' ':
+      e.preventDefault();
+      if (e.repeat) return;
+      if (!pemanduAktif) { pemanduAktif = true; aturPetunjuk(teksPemandu()); minta(); return; }
+      if (sisaPotong() === 1) tahanKlik = true;
+      potongPemandu();
+      return;
+    default: return;
+  }
+  e.preventDefault();
+  pemanduAktif = true;
+  aturPetunjuk(teksPemandu());
+  minta();
+});
+document.addEventListener('keyup', e => {
+  if (e.key === 'Enter' || e.key === ' ') setTimeout(() => { tahanKlik = false; }, 0);
+});
+el.papan.addEventListener('focus', () => {
+  if (lewatPapanKetik && fase === 'main') {
+    pemanduAktif = true;
+    aturPetunjuk(teksPemandu());
+  }
+  minta();
+});
+el.papan.addEventListener('blur', () => {
+  if (fase === 'main' && pemanduAktif) aturPetunjuk('Seret garis lurus melintasi martabak untuk memotong.');
+  minta();
+});
+
+const WARNA = {
+  pisauHalo: '#FFF9F0',
+  pisau: '#B3261E',
+  lemah: '#6E5A4A',
+  tepiPotong: 'rgba(92, 44, 12, .85)',
+  cip: '#FFF9F0',
+  cipTeks: '#2D1C12',
+  cipBesar: '#2D1C12',
+  cipBesarTeks: '#FFF9F0',
+  cipKecil: '#B3261E',
+  cipKecilTeks: '#FFFFFF',
+};
+
+function geserDari(p, sebar) {
+  const [x, y] = p.pusat, d = Math.hypot(x, y);
+  if (d < 0.02 || !sebar) return [0, 0];
+  return [x / d * sebar, y / d * sebar];
+}
+
+function jalurPoligon(c, L, titik, o) {
+  c.beginPath();
+  titik.forEach(([x, y], i) => {
+    const px = L.cx + (x + o[0]) * L.R, py = L.cy + (y + o[1]) * L.R;
+    if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+  });
+  c.closePath();
+}
+
+const halus = s => s * s * (3 - 2 * s);
+
+function sebarSekarang() {
+  if (fase === 'hasil') {
+    if (anim && anim.jenis === 'sebar') return SEBAR_MAIN + (SEBAR_AKHIR - SEBAR_MAIN) * halus(anim.s ?? 0);
+    if (anim && anim.jenis === 'pisau') return SEBAR_MAIN;
+    return SEBAR_AKHIR;
+  }
+  return SEBAR_MAIN;
+}
+
+function gambarPiring(c, L) {
+  c.save();
+  c.shadowColor = 'rgba(40, 24, 12, .24)';
+  c.shadowBlur = L.S * 0.03;
+  c.shadowOffsetY = L.S * 0.01;
+  c.fillStyle = token.piring;
+  c.beginPath(); c.arc(L.cx, L.cy, L.Rp, 0, Math.PI * 2); c.fill();
+  c.restore();
+  c.lineWidth = 1;
+  c.strokeStyle = 'rgba(120, 96, 70, .22)';
+  c.beginPath(); c.arc(L.cx, L.cy, L.Rp * 0.86, 0, Math.PI * 2); c.stroke();
+  c.strokeStyle = 'rgba(120, 96, 70, .3)';
+  c.beginPath(); c.arc(L.cx, L.cy, L.Rp - 0.5, 0, Math.PI * 2); c.stroke();
+}
+
+function gambarPotongan(c, L, daftar, sebar, tx) {
+  c.save();
+  c.shadowColor = 'rgba(70, 34, 10, .3)';
+  c.shadowBlur = L.R * 0.05;
+  c.shadowOffsetY = L.R * 0.02;
+  c.fillStyle = '#8E4C1C';
+  for (const p of daftar) { jalurPoligon(c, L, p.titik, geserDari(p, sebar)); c.fill(); }
+  c.restore();
+  const skala = L.R / tx.r, sisi = tx.ukuran * skala;
+  for (const p of daftar) {
+    const o = geserDari(p, sebar);
+    c.save();
+    jalurPoligon(c, L, p.titik, o);
+    c.clip();
+    c.drawImage(tx.kanvas, L.cx + o[0] * L.R - sisi / 2, L.cy + o[1] * L.R - sisi / 2, sisi, sisi);
+    c.restore();
+    jalurPoligon(c, L, p.titik, o);
+    c.strokeStyle = WARNA.tepiPotong;
+    c.lineWidth = Math.max(1, L.R * 0.008);
+    c.lineJoin = 'round';
+    c.stroke();
+  }
+}
+
+function keLayar(L, p) { return [L.cx + p[0] * L.R, L.cy + p[1] * L.R]; }
+
+function garisDenganHalo(c, dari, ke, lebar, warna, putus) {
+  c.save();
+  c.lineCap = 'round';
+  c.setLineDash(putus || []);
+  c.strokeStyle = WARNA.pisauHalo;
+  c.lineWidth = lebar + 4;
+  c.beginPath(); c.moveTo(...dari); c.lineTo(...ke); c.stroke();
+  c.strokeStyle = warna;
+  c.lineWidth = lebar;
+  c.beginPath(); c.moveTo(...dari); c.lineTo(...ke); c.stroke();
+  c.restore();
+}
+
+function gambarGarisPisau(c, L, garis, warna) {
+  const u = [Math.cos(garis.sudut), Math.sin(garis.sudut)], n = normal(garis.sudut);
+  const m = [n[0] * garis.geser, n[1] * garis.geser], jauh = 12;
+  const lebar = Math.max(2, L.R * 0.016);
+  garisDenganHalo(c, keLayar(L, [m[0] - u[0] * jauh, m[1] - u[1] * jauh]), keLayar(L, [m[0] + u[0] * jauh, m[1] + u[1] * jauh]), lebar * 0.8, warna, [lebar * 3, lebar * 2.5]);
+  if (Math.abs(garis.geser) < 1) {
+    const [a, b] = talibusur(garis);
+    garisDenganHalo(c, keLayar(L, a), keLayar(L, b), lebar, warna);
+  }
+}
+
+function gambarSeret(c, L) {
+  const { a, b } = seret;
+  const panjang = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  if (panjang < 0.02) return;
+  const cukup = panjang >= SERET_MIN;
+  const warna = cukup ? WARNA.pisau : WARNA.lemah;
+  gambarGarisPisau(c, L, garisDariDuaTitik(a, b), warna);
+  const lebar = Math.max(2, L.R * 0.016);
+  for (const p of [a, b]) {
+    const [x, y] = keLayar(L, p);
+    c.fillStyle = WARNA.pisauHalo;
+    c.beginPath(); c.arc(x, y, lebar * 2.6, 0, Math.PI * 2); c.fill();
+    c.fillStyle = warna;
+    c.beginPath(); c.arc(x, y, lebar * 1.7, 0, Math.PI * 2); c.fill();
+  }
+}
+
+function gambarPemandu(c, L) {
+  gambarGarisPisau(c, L, rapikanGaris(pemandu.sudut * Math.PI / 180, pemandu.geser), WARNA.pisau);
+}
+
+// Pisau dilihat dari atas: bilah baja dan gagang kayu, ujungnya meluncur sepanjang tali busur.
+function gambarPisau(c, L, a) {
+  const s = halus(Math.min(1, a.s ?? 0));
+  const A = keLayar(L, a.a), B = keLayar(L, a.b);
+  const tip = [A[0] + (B[0] - A[0]) * s, A[1] + (B[1] - A[1]) * s];
+  c.save();
+  c.lineCap = 'round';
+  c.strokeStyle = 'rgba(84, 38, 10, .9)';
+  c.lineWidth = Math.max(1.5, L.R * 0.012);
+  c.beginPath(); c.moveTo(...A); c.lineTo(...tip); c.stroke();
+  c.translate(...tip);
+  c.rotate(Math.atan2(B[1] - A[1], B[0] - A[0]));
+  const R = L.R;
+  c.shadowColor = 'rgba(0, 0, 0, .28)';
+  c.shadowBlur = R * 0.04;
+  c.shadowOffsetY = R * 0.02;
+  c.fillStyle = '#5B3A22';
+  c.beginPath(); c.roundRect(-R * 0.98, -R * 0.05, R * 0.38, R * 0.1, R * 0.03); c.fill();
+  c.fillStyle = '#D5DADF';
+  c.beginPath();
+  c.moveTo(-R * 0.62, -R * 0.055);
+  c.lineTo(-R * 0.08, -R * 0.055);
+  c.lineTo(R * 0.02, 0);
+  c.lineTo(-R * 0.08, R * 0.04);
+  c.lineTo(-R * 0.62, R * 0.04);
+  c.closePath();
+  c.fill();
+  c.shadowColor = 'transparent';
+  c.strokeStyle = '#7D868F';
+  c.lineWidth = 1;
+  c.stroke();
+  c.strokeStyle = 'rgba(255, 255, 255, .75)';
+  c.beginPath(); c.moveTo(-R * 0.58, -R * 0.03); c.lineTo(-R * 0.1, -R * 0.03); c.stroke();
+  c.fillStyle = '#C9CED3';
+  for (const x of [-0.9, -0.75]) { c.beginPath(); c.arc(R * x, 0, R * 0.014, 0, Math.PI * 2); c.fill(); }
+  c.restore();
+}
+
+function ukuranHuruf(L) { return Math.max(11, Math.min(16, Math.round(L.S * 0.038))); }
+function hurufCip(L) { return `700 ${ukuranHuruf(L)}px "Plus Jakarta Sans", system-ui, sans-serif`; }
+
+function kotakDalam(k, poli, tepi) {
+  let tanda = 0;
+  for (let i = 0; i < poli.length; i++) {
+    const a = poli[i], b = poli[(i + 1) % poli.length];
+    tanda += (b[0] - a[0]) * (a[1] + b[1]);
+  }
+  const arahDalam = tanda < 0 ? 1 : -1;
+  const sudut = [[k.x - tepi, k.y - tepi], [k.x + k.w + tepi, k.y - tepi], [k.x + k.w + tepi, k.y + k.h + tepi], [k.x - tepi, k.y + k.h + tepi]];
+  for (const p of sudut) {
+    for (let i = 0; i < poli.length; i++) {
+      const a = poli[i], b = poli[(i + 1) % poli.length];
+      const silang = (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]);
+      if (silang * arahDalam < 0) return false;
+    }
+  }
+  return true;
+}
+// Geseran calon letak label dari titik berat: k searah keluar dari pusat martabak, j menyamping.
+const CALON_LETAK = [];
+for (let k = -0.15; k <= 0.3001; k += 0.05) for (const j of [0, -0.05, 0.05, -0.1, 0.1]) CALON_LETAK.push([k, j]);
+CALON_LETAK.sort((a, b) => Math.hypot(...a) - Math.hypot(...b));
+const tabrak = (p, q, jarak = 3) => p.x < q.x + q.w + jarak && q.x < p.x + p.w + jarak && p.y < q.y + q.h + jarak && q.y < p.y + p.h + jarak;
+
+function aturLabel(c, L, daftar, sebar) {
+  c.font = hurufCip(L);
+  const fs = ukuranHuruf(L), tinggi = fs + 8, pad = Math.round(fs * 0.42);
+  const item = daftar.map(p => ({ p, persen: p.luas / LUAS_TOTAL * 100 })).sort((x, y) => y.persen - x.persen);
+  const sama = item[0].persen - item[item.length - 1].persen < 0.1;
+  const dalam = [], luar = [];
+  item.forEach((it, i) => {
+    const jenis = sama ? 'biasa' : i === 0 ? 'besar' : i === item.length - 1 ? 'kecil' : 'biasa';
+    const teks = teksPersen(it.persen);
+    const lebarIkon = jenis === 'biasa' ? 0 : Math.round(fs * 0.62) + 3;
+    const w = Math.ceil(c.measureText(teks).width) + pad * 2 + lebarIkon, h = tinggi;
+    const o = geserDari(it.p, sebar);
+    const poli = it.p.titik.map(([x, y]) => [L.cx + (x + o[0]) * L.R, L.cy + (y + o[1]) * L.R]);
+    const pusat = [L.cx + (it.p.pusat[0] + o[0]) * L.R, L.cy + (it.p.pusat[1] + o[1]) * L.R];
+    const d = Math.hypot(...it.p.pusat);
+    const arah = d > 1e-3 ? [it.p.pusat[0] / d, it.p.pusat[1] / d] : [0, -1];
+    const cip = { teks, jenis, w, h, lebarIkon, pusat, arah, persen: it.persen };
+    // Utamakan titik berat. Kalau tidak muat, coba titik di sekitarnya, yang terdekat lebih dulu.
+    for (const [k, j] of CALON_LETAK) {
+      const x = pusat[0] + (arah[0] * k - arah[1] * j) * L.R - w / 2;
+      const y = pusat[1] + (arah[1] * k + arah[0] * j) * L.R - h / 2;
+      const kotak = { x, y, w, h };
+      if (kotakDalam(kotak, poli, 2) && !dalam.some(q => tabrak(kotak, q))) {
+        dalam.push(Object.assign(cip, kotak, { luar: false }));
+        return;
+      }
+    }
+    luar.push(cip);
+  });
+
+  // Potongan yang terlalu kecil diberi label di bibir piring dengan garis penunjuk.
+  const rTepi = L.R * (1 + sebar) + 6;
+  const letakkan = q => {
+    const ex = Math.abs(Math.cos(q.sudut)) * q.w / 2 + Math.abs(Math.sin(q.sudut)) * q.h / 2;
+    const r = rTepi + ex;
+    q.x = Math.max(2, Math.min(L.W - q.w - 2, L.cx + Math.cos(q.sudut) * r - q.w / 2));
+    q.y = Math.max(2, Math.min(L.H - q.h - 2, L.cy + Math.sin(q.sudut) * r - q.h / 2));
+  };
+  for (const q of luar) { q.sudut = Math.atan2(q.arah[1], q.arah[0]); q.luar = true; letakkan(q); }
+  for (let iter = 0; iter < 80 && luar.length > 1; iter++) {
+    let ada = false;
+    luar.sort((p, q) => p.sudut - q.sudut);
+    for (let i = 0; i < luar.length; i++) {
+      const p = luar[i], q = luar[(i + 1) % luar.length];
+      if (p === q || !tabrak(p, q, 4)) continue;
+      ada = true;
+      let selisih = q.sudut - p.sudut;
+      if (selisih < 0) selisih += Math.PI * 2;
+      if (selisih > Math.PI) { p.sudut += 0.03; q.sudut -= 0.03; } else { p.sudut -= 0.03; q.sudut += 0.03; }
+      letakkan(p); letakkan(q);
+    }
+    if (!ada) break;
+  }
+  return dalam.concat(luar);
+}
+
+function gambarLabel(c, L, sebar) {
+  const daftar = aturLabel(c, L, babak.potongan, sebar);
+  const fs = ukuranHuruf(L);
+  for (const q of daftar) {
+    if (!q.luar) continue;
+    const ujung = [Math.max(q.x, Math.min(q.x + q.w, q.pusat[0])), Math.max(q.y, Math.min(q.y + q.h, q.pusat[1]))];
+    garisDenganHalo(c, q.pusat, ujung, 1.5, WARNA.cipTeks);
+    c.fillStyle = WARNA.cipTeks;
+    c.beginPath(); c.arc(q.pusat[0], q.pusat[1], 2.6, 0, Math.PI * 2); c.fill();
+  }
+  c.font = hurufCip(L);
+  c.textBaseline = 'middle';
+  c.textAlign = 'left';
+  for (const q of daftar) {
+    const isi = q.jenis === 'besar' ? WARNA.cipBesar : q.jenis === 'kecil' ? WARNA.cipKecil : WARNA.cip;
+    const teks = q.jenis === 'besar' ? WARNA.cipBesarTeks : q.jenis === 'kecil' ? WARNA.cipKecilTeks : WARNA.cipTeks;
+    c.save();
+    c.shadowColor = 'rgba(45, 28, 18, .3)';
+    c.shadowBlur = 3;
+    c.shadowOffsetY = 1;
+    c.fillStyle = isi;
+    c.beginPath(); c.roundRect(q.x, q.y, q.w, q.h, 6); c.fill();
+    c.restore();
+    if (q.jenis === 'biasa') {
+      c.strokeStyle = 'rgba(45, 28, 18, .55)';
+      c.lineWidth = 1;
+      c.beginPath(); c.roundRect(q.x + 0.5, q.y + 0.5, q.w - 1, q.h - 1, 6); c.stroke();
+    }
+    let x = q.x + Math.round(fs * 0.5);
+    const tengah = q.y + q.h / 2;
+    if (q.lebarIkon) {
+      const s = fs * 0.62;
+      c.fillStyle = teks;
+      c.beginPath();
+      if (q.jenis === 'besar') { c.moveTo(x + s / 2, tengah - s / 2); c.lineTo(x + s, tengah + s / 2); c.lineTo(x, tengah + s / 2); }
+      else { c.moveTo(x + s / 2, tengah + s / 2); c.lineTo(x + s, tengah - s / 2); c.lineTo(x, tengah - s / 2); }
+      c.closePath();
+      c.fill();
+      x += q.lebarIkon;
+    }
+    c.fillStyle = teks;
+    c.fillText(q.teks, x, tengah + 0.5);
+  }
+  return daftar;
+}
+
+function gambarAdegan(c, W, H, dpr, opsi = {}) {
+  const L = tataLetak(W, H);
+  c.clearRect(0, 0, W, H);
+  if (opsi.latar) { c.fillStyle = token.latar; c.fillRect(0, 0, W, H); }
+  gambarPiring(c, L);
+  const sebar = opsi.sebar ?? sebarSekarang();
+  const pisau = !opsi.diam && anim && anim.jenis === 'pisau' ? anim : null;
+  gambarPotongan(c, L, pisau ? pisau.sebelum : babak.potongan, sebar, ambilTekstur(L.R * dpr));
+  if (pisau) gambarPisau(c, L, pisau);
+  else if (!opsi.diam && fase === 'main') {
+    if (seret) gambarSeret(c, L);
+    else if (pemanduTampil()) gambarPemandu(c, L);
+  }
+  if (fase === 'hasil' && (labelSiap || opsi.diam)) return gambarLabel(c, L, sebar);
+  return [];
+}
+
+let labelTerakhir = [];
+function gambar() {
+  const { W, H, dpr } = ukuran;
+  el.papan.classList.toggle('cincin', document.activeElement === el.papan && (pemanduAktif || lewatPapanKetik));
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  labelTerakhir = gambarAdegan(g, W, H, dpr);
+}
+
+let jadwal = 0;
+function minta() { if (!jadwal) jadwal = requestAnimationFrame(langkah); }
+function langkah(t) {
+  jadwal = 0;
+  if (anim) {
+    anim.s = Math.min(1, Math.max(0, (t - anim.mulai) / anim.lama));
+    if (anim.s >= 1) {
+      const selesai = anim.selesai;
+      anim = null;
+      if (selesai) selesai();
+    }
+  }
+  gambar();
+  if (anim) minta();
+}
+
+function ukurPanggung() {
+  const kotak = el.papan.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const W = Math.max(1, kotak.width), H = Math.max(1, kotak.height);
+  ukuran = { W, H, dpr };
+  el.kanvas.width = Math.round(W * dpr);
+  el.kanvas.height = Math.round(H * dpr);
+  gambar();
+}
+new ResizeObserver(ukurPanggung).observe(el.papan);
+
+function segarkanTema() { bacaToken(); minta(); }
+new MutationObserver(segarkanTema).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', segarkanTema);
+if (document.fonts) {
+  document.fonts.load('700 14px "Plus Jakarta Sans"').then(() => minta(), () => {});
+  document.fonts.ready.then(() => minta());
+}
+
+el.tombolCara.addEventListener('click', () => el.dialog.showModal());
+el.dialog.addEventListener('click', e => { if (e.target === el.dialog) el.dialog.close(); });
+
+bacaToken();
+babakBaru();
+ukurPanggung();
+
+// Pengait uji: memeriksa keadaan dan menjalankan aksi tanpa input asli.
+window.__potongMartabak = {
+  keadaan: () => ({
+    fase,
+    tamu: babak.tamu,
+    topping: babak.topping,
+    benih: babak.benih,
+    potonganDibuat: babak.garis.length,
+    potonganMaks: babak.tamu / 2,
+    jumlahPotongan: babak.potongan.length,
+    persen: babak.potongan.map(p => +(p.luas / LUAS_TOTAL * 100).toFixed(3)).sort((a, b) => b - a),
+    garis: babak.garis.map(x => ({ sudut: +(x.sudut * 180 / Math.PI).toFixed(3), geser: +x.geser.toFixed(4) })),
+    pemandu: { ...pemandu, tampil: pemanduTampil() },
+    animasi: !!anim,
+    hasil: babak.hasil ? { ...babak.hasil } : null,
+    hasilTampil: !el.hasil.hidden,
+    petunjuk: el.petunjuk.textContent,
+  }),
+  baru: (opsi = {}) => { babakBaru(opsi); return window.__potongMartabak.keadaan(); },
+  potong: (sudutDerajat, geser = 0) => cobaPotong(rapikanGaris(sudutDerajat * Math.PI / 180, geser), null),
+  seret: (x1, y1, x2, y2) => potongSeret([x1, y1], [x2, y2]),
+  pemandu: (sudutDerajat, geser = 0) => { pemandu = { sudut: sudutDerajat, geser }; minta(); return { ...pemandu }; },
+  hitung: (daftarGaris, tamu = 8) => {
+    let potongan = [buatPotongan(LINGKARAN)];
+    const garis = [];
+    for (const [sudut, geser = 0] of daftarGaris) {
+      const x = rapikanGaris(sudut * Math.PI / 180, geser);
+      const h = potongSemua(potongan, x);
+      if (h.terbelah) { potongan = h.potongan; garis.push(x); }
+    }
+    const n = nilaiBabak({ tamu, potongan, garis });
+    return { jumlahPotongan: potongan.length, persen: potongan.map(p => +(p.luas / LUAS_TOTAL * 100).toFixed(3)).sort((a, b) => b - a), kerataan: n.kerataan, judul: n.judul, komentar: n.komentar, saran: n.saran };
+  },
+  kerataan: hitungKerataan,
+  instan: v => { instan = !!v; return instan; },
+  // Letak martabak di halaman (piksel CSS): untuk menggerakkan tetikus atau sentuhan sungguhan.
+  tataLetak: () => {
+    const k = el.kanvas.getBoundingClientRect(), L = tataLetak(ukuran.W, ukuran.H);
+    return { cx: k.left + L.cx, cy: k.top + L.cy, R: L.R, Rpiring: L.Rp };
+  },
+  label: () => labelTerakhir.map(q => ({ teks: q.teks, jenis: q.jenis, luar: q.luar, x: q.x, y: q.y, w: q.w, h: q.h })),
+  // Gambar persegi dari piring saat ini, misalnya untuk gambar kartu 480x480.
+  gambarPersegi: (sisi = 480) => {
+    const k = document.createElement('canvas');
+    k.width = k.height = sisi;
+    const c = k.getContext('2d');
+    gambarAdegan(c, sisi, sisi, 1, { latar: true, diam: true });
+    return k.toDataURL('image/png');
+  },
+};
+</script>
+</body>
+</html>
