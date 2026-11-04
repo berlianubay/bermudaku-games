@@ -3,6 +3,36 @@
 // `rilis` dipakai untuk urutan "Terbaru"; `kategori` harus salah satu kunci KATEGORI di app.js.
 window.GAMES = [
   {
+    id: 'panjat-pinang',
+    judul: 'Panjat Pinang',
+    rilis: '2026-11-04',
+    kategori: 'singkat',
+    deskripsi: {
+      id: 'Panjat batang pinang berlumur oli dengan tangan kiri dan kanan bergantian. Jaga iramanya: terlalu cepat tergelincir, terlalu lambat melorot.',
+      en: 'Climb a greased pole with alternating left and right hands. Keep the rhythm: too fast and you slip, too slow and you slide down.'
+    }
+  },
+  {
+    id: 'es-teh-plastik',
+    judul: 'Es Teh Plastik',
+    rilis: '2026-11-04',
+    kategori: 'singkat',
+    deskripsi: {
+      id: 'Tuang es teh ke kantong plastik pas sampai garis, lalu ikat dengan karet. Lima pesanan, jangan sampai tumpah.',
+      en: 'Pour iced tea into a plastic bag right up to the line, then tie it with a rubber band. Five orders, no spills.'
+    }
+  },
+  {
+    id: 'gebok-sandal',
+    judul: 'Gebok Sandal',
+    rilis: '2026-11-04',
+    kategori: 'singkat',
+    deskripsi: {
+      id: 'Lempar sandal jepit untuk merobohkan susunan kaleng dari bangku. Tiga sandal per level, dan jangan kena kucing yang tidur.',
+      en: 'Throw a flip-flop to knock the cans off the bench. Three flip-flops per level, and do not hit the sleeping cat.'
+    }
+  },
+  {
     id: 'potong-martabak',
     judul: 'Potong Martabak',
     rilis: '2026-11-04',

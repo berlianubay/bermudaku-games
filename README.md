@@ -10,6 +10,9 @@ Arah desain ada di [DESIGN.md](DESIGN.md).
 
 | Game | Folder | Catatan desain |
 |---|---|---|
+| Panjat Pinang | `public/games/panjat-pinang/` | `docs/games/panjat-pinang.md` |
+| Es Teh Plastik | `public/games/es-teh-plastik/` | `docs/games/es-teh-plastik.md` |
+| Gebok Sandal | `public/games/gebok-sandal/` | `docs/games/gebok-sandal.md` (memakai planck.js, MIT) |
 | Potong Martabak | `public/games/potong-martabak/` | `docs/games/potong-martabak.md` |
 | Parkir Angkot | `public/games/parkir-angkot/` | `docs/games/parkir-angkot.md` |
 | Tumpuk Kerupuk | `public/games/tumpuk-kerupuk/` | `docs/games/tumpuk-kerupuk.md` (memakai planck.js, MIT) |

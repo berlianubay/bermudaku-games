@@ -1,0 +1,2094 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+<title>Panjat Pinang</title>
+<meta name="description" content="Panjat batang pinang berlumur oli dengan irama tangan kiri dan kanan, lalu raih hadiah di puncak sebelum waktu habis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titan+One&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* Tata letak kisi: pita skor (atas di HP, kolom kiri di layar lebar), panggung kanvas, dan panel kendali tangan.
+   Kanvas hanya mengisi sel panggung, jadi kamera tidak perlu menebak bagian mana yang tertutup panel. */
+:root {
+  --kertas: #FBF4E6;
+  --lembar: #FFFDF8;
+  --tinta: #241B15;
+  --tinta-2: #5F5045;
+  --merah: #B01A2E;
+  --aksen-teks: #FFFFFF;
+  --garis: #8E7C6C;
+  --garis-halus: #E3D6C0;
+  --jalur: #EFE4D0;
+  --bayang: rgba(36, 27, 21, .22);
+  --tirai: rgba(36, 27, 21, .5);
+  /* Warna dunia: isi lapangan, bukan warna antarmuka */
+  --langit-atas: #B7D7E4;
+  --langit-bawah: #EEF1E2;
+  --awan: #FFFFFF;
+  --rumah: #E4CFAF;
+  --rumah-gelap: #C4A580;
+  --atap: #B4613C;
+  --pohon: #7F9C5A;
+  --pohon-gelap: #5E7A42;
+  --rumput: #A5B46B;
+  --tanah: #CFA675;
+  --tanah-gelap: #B08556;
+  --bambu: #C29C52;
+  --batang: #86603D;
+  --oli: #17110C;
+  --kulit: #A86A40;
+  --kulit-gelap: #7A4828;
+  --rambut: #1B1410;
+  --putih: #FFFDF8;
+  --bendera: #C8202F;
+  --lampu: #FFD27A;
+  --garis-dunia: #2A1F18;
+  --penonton-baju: #5E7F8F, #D3A24C, #9C5A45, #E9E1D2, #5B7A52, #7D6A5C, #C4C9C0;
+  --penonton-kulit: #B47A4E, #8E5B37, #C8916A, #73482A;
+  --font-judul: "Titan One", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --font-teks: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --kertas: #17120F;
+    --lembar: #241D18;
+    --tinta: #F4EADB;
+    --tinta-2: #CDBBA5;
+    --merah: #F2858F;
+    --aksen-teks: #2B0A0F;
+    --garis: #A3907C;
+    --garis-halus: #3A2F27;
+    --jalur: #332A22;
+    --bayang: rgba(0, 0, 0, .5);
+    --tirai: rgba(0, 0, 0, .62);
+    --langit-atas: #17181D;
+    --langit-bawah: #4A2B21;
+    --awan: #3A2E2C;
+    --rumah: #3D3029;
+    --rumah-gelap: #2A201B;
+    --atap: #5A3021;
+    --pohon: #2F3B26;
+    --pohon-gelap: #222B1B;
+    --rumput: #3B452B;
+    --tanah: #5E4532;
+    --tanah-gelap: #4A3522;
+    --bambu: #9A7C44;
+    --batang: #8A6440;
+    --oli: #0A0705;
+    --kulit: #96603A;
+    --kulit-gelap: #6A3E22;
+    --rambut: #0E0A08;
+    --putih: #EDE3D3;
+    --bendera: #C42433;
+    --lampu: #FFD27A;
+    --garis-dunia: #0E0A08;
+    --penonton-baju: #3F5662, #8E6C32, #6C3E30, #9D968A, #3E5638, #57493F, #85897F;
+    --penonton-kulit: #7E5536, #5F3C24, #8C6448, #4C2F1B;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --kertas: #17120F;
+  --lembar: #241D18;
+  --tinta: #F4EADB;
+  --tinta-2: #CDBBA5;
+  --merah: #F2858F;
+  --aksen-teks: #2B0A0F;
+  --garis: #A3907C;
+  --garis-halus: #3A2F27;
+  --jalur: #332A22;
+  --bayang: rgba(0, 0, 0, .5);
+  --tirai: rgba(0, 0, 0, .62);
+  --langit-atas: #17181D;
+  --langit-bawah: #4A2B21;
+  --awan: #3A2E2C;
+  --rumah: #3D3029;
+  --rumah-gelap: #2A201B;
+  --atap: #5A3021;
+  --pohon: #2F3B26;
+  --pohon-gelap: #222B1B;
+  --rumput: #3B452B;
+  --tanah: #5E4532;
+  --tanah-gelap: #4A3522;
+  --bambu: #9A7C44;
+  --batang: #8A6440;
+  --oli: #0A0705;
+  --kulit: #96603A;
+  --kulit-gelap: #6A3E22;
+  --rambut: #0E0A08;
+  --putih: #EDE3D3;
+  --bendera: #C42433;
+  --lampu: #FFD27A;
+  --garis-dunia: #0E0A08;
+  --penonton-baju: #3F5662, #8E6C32, #6C3E30, #9D968A, #3E5638, #57493F, #85897F;
+  --penonton-kulit: #7E5536, #5F3C24, #8C6448, #4C2F1B;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--kertas);
+  color: var(--tinta);
+  font-family: var(--font-teks);
+  font-size: 15px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+h1, h2, h3, p, ol, ul { margin: 0; }
+button { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.app {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: "kepala" "panggung" "kendali";
+}
+
+/* Bendera kecil merah putih: tanda identitas di judul dan lembar hasil */
+.bendera-kecil {
+  display: inline-block;
+  flex: none;
+  width: 1.05em;
+  height: .7em;
+  border: 2px solid var(--tinta);
+  border-radius: 2px;
+  background: linear-gradient(var(--bendera) 50%, var(--putih) 50%);
+}
+
+/* Pita skor (HP potret) */
+.kepala {
+  grid-area: kepala;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "judul cara" "skor skor";
+  align-items: center;
+  gap: 4px 12px;
+  padding: max(8px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) 8px max(14px, env(safe-area-inset-left, 0px));
+  background: var(--kertas);
+  border-bottom: 2px solid var(--garis-halus);
+  min-width: 0;
+}
+.kepala h1 {
+  grid-area: judul;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-family: var(--font-judul);
+  font-weight: 400;
+  font-size: clamp(1.35rem, 1.05rem + 1.3vw, 2.2rem);
+  line-height: 1;
+  letter-spacing: .01em;
+}
+.tombol-kecil {
+  grid-area: cara;
+  justify-self: end;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 2px solid var(--garis);
+  background: var(--lembar);
+  font-weight: 700;
+  font-size: .9rem;
+  cursor: pointer;
+}
+.skor { grid-area: skor; display: flex; gap: 22px; align-items: flex-start; min-width: 0; }
+.sel { display: grid; gap: 1px; min-width: 0; }
+.label { font-size: .75rem; font-weight: 700; color: var(--tinta-2); }
+.angka {
+  font-family: var(--font-judul);
+  font-size: 1.6rem;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.angka small { font-family: var(--font-teks); font-weight: 700; font-size: .5em; color: var(--tinta-2); }
+.sub { font-size: .76rem; color: var(--tinta-2); white-space: nowrap; }
+.ruas-info, .papan { display: none; }
+kbd {
+  font-family: var(--font-teks);
+  font-weight: 700;
+  font-size: .85em;
+  padding: 1px 6px;
+  border-radius: 6px;
+  border: 1.5px solid var(--garis);
+  background: var(--lembar);
+  color: var(--tinta);
+  white-space: nowrap;
+}
+
+/* Panggung */
+.panggung {
+  grid-area: panggung;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  cursor: pointer;
+}
+#kanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.petunjuk {
+  position: absolute;
+  top: 10px;
+  left: 64px;
+  right: 12px;
+  text-align: center;
+  pointer-events: none;
+  font-size: .86rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.petunjuk span {
+  display: inline-block;
+  max-width: 36ch;
+  padding: 7px 12px;
+  border-radius: 12px;
+  border: 2px solid var(--garis);
+  background: var(--lembar);
+  text-wrap: balance;
+}
+.layar-status {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 16px;
+  text-align: center;
+  background: var(--kertas);
+}
+.layar-status h2 { font-family: var(--font-judul); font-weight: 400; font-size: 1.4rem; }
+.layar-status p { max-width: 38ch; color: var(--tinta-2); line-height: 1.5; }
+
+/* Panel kendali: dua tombol tangan besar dan dua meteran */
+.kendali {
+  grid-area: kendali;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: "meter meter" "kiri kanan";
+  gap: 8px 10px;
+  padding: 8px max(12px, env(safe-area-inset-right, 0px)) max(10px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+  background: var(--kertas);
+  border-top: 2px solid var(--garis-halus);
+}
+.tangan {
+  min-height: 86px;
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 16px;
+  border: 3px solid var(--garis);
+  background: var(--lembar);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 5px;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#tombol-kiri { grid-area: kiri; }
+#tombol-kanan { grid-area: kanan; }
+.tangan .nama { font-weight: 800; font-size: 1.08rem; line-height: 1.1; }
+.tangan .kunci { font-size: .78rem; font-weight: 600; color: var(--tinta-2); white-space: nowrap; }
+.tangan.giliran { border-color: var(--merah); background: var(--merah); color: var(--aksen-teks); }
+.tangan.giliran .kunci { color: var(--aksen-teks); }
+.tangan.tunggu, .tangan[aria-disabled="true"] { border-style: dashed; }
+.tangan.ditekan { transform: translateY(3px); }
+@media (pointer: coarse) {
+  .tangan .kunci { display: none; }
+}
+.meter { grid-area: meter; display: grid; gap: 3px; min-width: 0; align-content: center; }
+.baris-meter {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--tinta-2);
+}
+.baris-meter > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.baris-meter b { color: var(--tinta); }
+.baris-meter .nilai { flex: none; color: var(--tinta); }
+.bilah {
+  position: relative;
+  height: 12px;
+  border-radius: 6px;
+  border: 2px solid var(--garis);
+  background: var(--jalur);
+  overflow: hidden;
+}
+.bilah.grip { margin-bottom: 4px; }
+#isi-grip { position: absolute; top: 0; bottom: 0; left: 0; width: 70%; background: var(--tinta); }
+.bilah.irama { height: 30px; border-radius: 9px; overflow: visible; }
+.zona {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  font-size: .7rem;
+  font-weight: 700;
+  color: var(--tinta-2);
+  white-space: nowrap;
+}
+/* Arsiran menandai bagian bilah yang bukan tempat menekan */
+.zona.cepat, .zona.lambat { background: repeating-linear-gradient(135deg, transparent 0 6px, var(--garis-halus) 6px 9px); }
+.zona.cepat { border-radius: 7px 0 0 7px; }
+.zona.lambat { border-radius: 0 7px 7px 0; }
+.zona.pas { border-left: 2px solid var(--tinta); border-right: 2px solid var(--tinta); color: var(--tinta); font-weight: 800; }
+.zona.pas.aktif { background: var(--merah); color: var(--aksen-teks); }
+.jarum {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: 0;
+  width: 4px;
+  margin-left: -2px;
+  border-radius: 2px;
+  background: var(--tinta);
+  box-shadow: 0 0 0 2px var(--lembar);
+}
+
+/* Lembar hasil: bertepi merah seperti pita bendera; bayangan menandai ia mengapung di atas lapangan. */
+.hasil {
+  position: absolute;
+  z-index: 4;
+  left: max(10px, env(safe-area-inset-left, 0px));
+  right: max(10px, env(safe-area-inset-right, 0px));
+  bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  max-height: calc(100% - 20px);
+  overflow: auto;
+  display: grid;
+  gap: 7px;
+  padding: 13px 15px;
+  border-radius: 18px;
+  border: 3px solid var(--merah);
+  background: var(--lembar);
+  box-shadow: 0 12px 30px var(--bayang);
+  cursor: default;
+}
+.hasil h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-judul);
+  font-weight: 400;
+  font-size: 1.4rem;
+  line-height: 1.1;
+}
+.hasil h2:focus { outline: none; }
+.sebab, .saran { line-height: 1.4; font-size: .9rem; }
+.saran { color: var(--tinta-2); }
+.saran b { color: var(--tinta); }
+.baris-angka { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+.angka-hasil { display: grid; gap: 1px; }
+.angka-hasil span { font-size: .76rem; font-weight: 700; color: var(--tinta-2); }
+.angka-hasil strong { font-family: var(--font-judul); font-weight: 400; font-size: 1.4rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.rekor { font-size: .86rem; color: var(--tinta-2); }
+.rekor.baru { color: var(--merah); font-weight: 700; }
+.tombol {
+  min-height: 50px;
+  padding: 0 18px;
+  border-radius: 14px;
+  border: 2px solid var(--garis);
+  background: transparent;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tombol.utama {
+  border-color: var(--merah);
+  background: var(--merah);
+  color: var(--aksen-teks);
+  font-family: var(--font-judul);
+  font-weight: 400;
+  font-size: 1.25rem;
+  letter-spacing: .01em;
+}
+.tombol:active, .tombol-kecil:active { transform: translateY(1px); }
+.tombol:focus-visible, .tombol-kecil:focus-visible, .tautan:focus-visible, .tangan:focus-visible {
+  outline: 3px solid var(--tinta);
+  outline-offset: 3px;
+}
+.ada-hasil .tangan { visibility: hidden; }
+
+/* Dialog cara main */
+dialog {
+  width: min(680px, calc(100vw - 28px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  border: 3px solid var(--merah);
+  border-radius: 20px;
+  padding: 18px 20px 14px;
+  background: var(--lembar);
+  color: var(--tinta);
+  box-shadow: 0 16px 40px var(--bayang);
+}
+dialog::backdrop { background: var(--tirai); }
+.isi-dialog { display: grid; gap: 10px; line-height: 1.45; font-size: .94rem; }
+.isi-dialog h2 { display: flex; align-items: center; gap: 10px; font-family: var(--font-judul); font-weight: 400; font-size: 1.6rem; line-height: 1.1; }
+.isi-dialog h3 { font-size: 1rem; font-weight: 800; }
+.isi-dialog ol, .isi-dialog ul { padding-left: 1.3em; display: grid; gap: 3px; }
+.isi-dialog .kecil { font-size: .86rem; color: var(--tinta-2); }
+.isi-dialog form { display: flex; justify-content: flex-end; }
+.tautan { color: inherit; text-underline-offset: 2px; }
+
+/* Mode kartu: hanya panggung, untuk gambar kartu 480x480 */
+.app.mode-kartu { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); grid-template-areas: "panggung"; }
+.mode-kartu .kepala, .mode-kartu .kendali, .mode-kartu .petunjuk { display: none; }
+
+/* Layar lebar: pita skor menjadi kolom kiri; kendali di bawah panggung dengan tangan kiri di kiri dan kanan di kanan. */
+@media (orientation: landscape) and (min-width: 700px) {
+  .app {
+    --lebar-sisi: clamp(250px, 23vw, 310px);
+    grid-template-columns: var(--lebar-sisi) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas: "kepala panggung" "kepala kendali";
+  }
+  .kepala {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "judul" "cara" "skor" "ruas" "papan";
+    grid-template-rows: auto auto auto auto 1fr;
+    align-items: start;
+    align-content: start;
+    gap: 18px;
+    padding: max(22px, env(safe-area-inset-top, 0px)) 20px max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
+    border-bottom: 0;
+    border-right: 2px solid var(--garis-halus);
+    overflow: auto;
+  }
+  .kepala h1 { font-size: clamp(1.8rem, 1.2rem + 1.3vw, 2.4rem); line-height: 1.05; }
+  .tombol-kecil { justify-self: start; }
+  .skor { flex-direction: column; gap: 14px; }
+  .angka { font-size: 2.4rem; }
+  .ruas-info { grid-area: ruas; display: grid; gap: 3px; line-height: 1.4; }
+  .ruas-info strong { font-size: 1rem; }
+  .ruas-info span:last-child { font-size: .86rem; color: var(--tinta-2); }
+  .papan { grid-area: papan; display: block; align-self: end; font-size: .86rem; line-height: 1.6; color: var(--tinta-2); }
+  .petunjuk { left: 76px; }
+  .kendali {
+    grid-template-columns: minmax(150px, 210px) minmax(0, 1fr) minmax(150px, 210px);
+    grid-template-areas: "kiri meter kanan";
+    gap: 16px;
+    padding: 12px 16px max(12px, env(safe-area-inset-bottom, 0px));
+  }
+  .tangan { min-height: 92px; }
+  .meter { max-width: 560px; width: 100%; justify-self: center; }
+  .hasil {
+    right: auto;
+    top: 12px;
+    bottom: auto;
+    width: calc(var(--lebar-sisi) - 24px);
+    gap: 10px;
+    padding: 16px 16px;
+  }
+  .hasil h2 { font-size: 1.6rem; }
+  .sebab, .saran { font-size: .95rem; line-height: 1.5; }
+  .angka-hasil strong { font-size: 1.7rem; }
+  .ada-hasil .kepala { visibility: hidden; }
+  .ada-hasil .tangan { visibility: visible; }
+}
+/* HP mendatar: tinggi layar sempit, jadi panel dirapatkan. */
+@media (orientation: landscape) and (min-width: 700px) and (max-height: 520px) {
+  .kepala { gap: 8px; padding-top: 12px; padding-bottom: 12px; }
+  .kepala h1 { font-size: 1.5rem; }
+  .angka { font-size: 1.7rem; }
+  .skor { gap: 6px; }
+  .papan, .ruas-info span:last-child { display: none; }
+  .tangan { min-height: 64px; }
+  .tangan .nama { font-size: .95rem; }
+  .kendali { grid-template-columns: minmax(96px, 140px) minmax(0, 1fr) minmax(96px, 140px); padding-top: 8px; gap: 10px; }
+  .hasil { width: min(440px, 52vw); top: 8px; gap: 5px; padding: 10px 14px; max-height: calc(100% - 16px); }
+  .hasil h2 { font-size: 1.25rem; }
+  .sebab, .saran { font-size: .84rem; line-height: 1.35; }
+  .angka-hasil strong { font-size: 1.3rem; }
+  .tombol { min-height: 46px; }
+}
+/* HP potret yang pendek: tombol tangan sedikit lebih rendah supaya panggung tetap lega. */
+@media (max-height: 600px) and (orientation: portrait) {
+  .tangan { min-height: 70px; }
+  .angka { font-size: 1.35rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tombol:active, .tombol-kecil:active, .tangan.ditekan { transform: none; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="kepala" id="kepala">
+    <h1><span class="bendera-kecil" aria-hidden="true"></span>Panjat Pinang</h1>
+    <button class="tombol-kecil" id="tombol-cara" type="button" aria-haspopup="dialog">Cara main</button>
+    <div class="skor">
+      <div class="sel">
+        <span class="label">Sisa waktu</span>
+        <span class="angka" id="angka-waktu">60,0<small> dtk</small></span>
+        <span class="sub" id="hud-rekor">Belum ada rekor</span>
+      </div>
+      <div class="sel">
+        <span class="label">Tinggi</span>
+        <span class="angka" id="angka-tinggi">0,0<small> m</small></span>
+        <span class="sub">Puncak 8 m</span>
+      </div>
+    </div>
+    <div class="ruas-info">
+      <span class="label">Ruas sekarang</span>
+      <strong id="ruas-nama">Ruas 1 dari 5: oli tipis</strong>
+      <span id="ruas-jendela">Jarak antar tarikan 0,25 sampai 0,85 detik.</span>
+    </div>
+    <p class="papan">Papan ketik: <kbd>←</kbd> atau <kbd>A</kbd> tangan kiri, <kbd>→</kbd> atau <kbd>D</kbd> tangan kanan.</p>
+  </header>
+
+  <main class="panggung" id="panggung" aria-label="Lapangan lomba panjat pinang. Pemanjat naik dengan menarik tangan kiri dan kanan bergantian." aria-describedby="pengumum">
+    <canvas id="kanvas" aria-hidden="true"></canvas>
+    <p class="petunjuk" id="petunjuk"><span id="teks-petunjuk">Tekan tangan kiri dan kanan bergantian. Tekan saat jarum masuk kotak Pas.</span></p>
+    <div class="layar-status" id="layar-status" role="status">
+      <h2 id="status-judul">Menyiapkan lapangan</h2>
+      <p id="status-isi">Batang pinang sedang dilumuri oli.</p>
+    </div>
+  </main>
+
+  <section class="kendali" id="kendali" aria-label="Tangan pemanjat">
+    <button class="tangan" id="tombol-kiri" type="button" aria-keyshortcuts="ArrowLeft A">
+      <span class="nama">Tangan kiri</span>
+      <span class="kunci"><kbd>←</kbd> atau <kbd>A</kbd></span>
+    </button>
+    <div class="meter">
+      <div class="baris-meter">
+        <span>Cengkeraman</span>
+        <span class="nilai" id="nilai-grip">70%</span>
+      </div>
+      <div class="bilah grip" aria-hidden="true"><span id="isi-grip"></span></div>
+      <div class="baris-meter">
+        <span>Berikutnya: <b id="giliran">tangan mana saja</b></span>
+        <span class="nilai" id="nilai-oli">oli tipis</span>
+      </div>
+      <div class="bilah irama" aria-hidden="true">
+        <span class="zona cepat" id="zona-cepat">cepat</span>
+        <span class="zona pas" id="zona-pas">Pas</span>
+        <span class="zona lambat" id="zona-lambat">melorot</span>
+        <span class="jarum" id="jarum"></span>
+      </div>
+    </div>
+    <button class="tangan" id="tombol-kanan" type="button" aria-keyshortcuts="ArrowRight D">
+      <span class="nama">Tangan kanan</span>
+      <span class="kunci"><kbd>→</kbd> atau <kbd>D</kbd></span>
+    </button>
+  </section>
+
+  <section class="hasil" id="hasil" aria-labelledby="judul-hasil" hidden>
+    <h2 id="judul-hasil" tabindex="-1"><span class="bendera-kecil" id="bendera-hasil" aria-hidden="true"></span><span id="teks-judul-hasil">Waktu habis</span></h2>
+    <p class="sebab" id="sebab"></p>
+    <p class="saran"><b>Saran:</b> <span id="saran"></span></p>
+    <div class="baris-angka">
+      <div class="angka-hasil"><span>Waktu</span><strong id="waktu-hasil">0,0 dtk</strong></div>
+      <div class="angka-hasil"><span>Tertinggi</span><strong id="tinggi-hasil">0,0 m</strong></div>
+      <div class="angka-hasil"><span>Hadiah</span><strong id="hadiah-hasil">Belum ada</strong></div>
+    </div>
+    <p class="rekor" id="rekor-hasil"></p>
+    <button class="tombol utama" id="tombol-lagi" type="button">Panjat lagi</button>
+  </section>
+
+  <p class="sr" id="pengumum" aria-live="polite"></p>
+</div>
+
+<dialog id="dialog-cara" aria-labelledby="judul-cara">
+  <div class="isi-dialog">
+    <h2 id="judul-cara"><span class="bendera-kecil" aria-hidden="true"></span>Cara main</h2>
+    <ol>
+      <li>Pemanjat naik dengan menarik tangan kiri dan kanan bergantian: kiri, kanan, kiri, kanan. Tombol yang menyala merah adalah giliran berikutnya.</li>
+      <li>Tekan saat jarum di bilah irama masuk kotak <b>Pas</b>. Menekan terlalu cepat, atau menekan tangan yang sama dua kali, membuat pemanjat tergelincir turun.</li>
+      <li>Kalau terlambat, jarum lewat kotak Pas dan pemanjat melorot pelan karena oli. Tarik lagi untuk berhenti melorot.</li>
+      <li>Irama yang ajek menambah cengkeraman. Makin kuat cengkeraman, makin jauh tiap tarikan.</li>
+    </ol>
+    <h3>Ruas batang</h3>
+    <p>Batang dibagi lima ruas. Ruas yang lebih mengilap berlumur oli lebih tebal: butuh irama lebih pelan dan lebih teratur, karena kotak Pas-nya lebih sempit dan bergeser ke kanan.</p>
+    <h3>Menang dan kalah</h3>
+    <p>Sampai puncak 8 meter sebelum 60 detik habis. Waktu mulai berjalan sejak tarikan pertama. Hadiahnya tergantung kecepatan: sampai dalam 23 detik meraih sepeda, 32 detik payung, 44 detik ember, lebih dari itu kaus. Babak gagal kalau waktu habis, atau pemanjat melorot sampai tanah setelah sempat naik satu meter.</p>
+    <p class="kecil">Papan ketik: <kbd>←</kbd> atau <kbd>A</kbd> tangan kiri, <kbd>→</kbd> atau <kbd>D</kbd> tangan kanan. Bisa juga mengetuk sisi kiri atau kanan lapangan. <kbd>Tab</kbd> berpindah ke tombol, <kbd>Escape</kbd> menutup dialog ini dan permainan lanjut.</p>
+    <p class="kecil">Rekor waktu tercepat hanya disimpan di peramban ini.</p>
+    <form method="dialog"><button class="tombol" type="submit" id="tombol-tutup">Kembali memanjat</button></form>
+  </div>
+</dialog>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const el = {
+  app: $('#app'), kepala: $('#kepala'), panggung: $('#panggung'), kanvas: $('#kanvas'),
+  petunjuk: $('#petunjuk'), teksPetunjuk: $('#teks-petunjuk'),
+  status: $('#layar-status'), statusJudul: $('#status-judul'), statusIsi: $('#status-isi'),
+  waktu: $('#angka-waktu'), tinggi: $('#angka-tinggi'), hudRekor: $('#hud-rekor'),
+  ruasNama: $('#ruas-nama'), ruasJendela: $('#ruas-jendela'),
+  kendali: $('#kendali'), kiri: $('#tombol-kiri'), kanan: $('#tombol-kanan'),
+  nilaiGrip: $('#nilai-grip'), isiGrip: $('#isi-grip'), giliran: $('#giliran'), nilaiOli: $('#nilai-oli'),
+  zonaCepat: $('#zona-cepat'), zonaPas: $('#zona-pas'), zonaLambat: $('#zona-lambat'), jarum: $('#jarum'),
+  hasil: $('#hasil'), judulHasil: $('#judul-hasil'), teksJudulHasil: $('#teks-judul-hasil'), benderaHasil: $('#bendera-hasil'),
+  sebab: $('#sebab'), saran: $('#saran'), waktuHasil: $('#waktu-hasil'), tinggiHasil: $('#tinggi-hasil'),
+  hadiahHasil: $('#hadiah-hasil'), rekorHasil: $('#rekor-hasil'), tombolLagi: $('#tombol-lagi'),
+  tombolCara: $('#tombol-cara'), dialog: $('#dialog-cara'), pengumum: $('#pengumum')
+};
+
+const ctx = el.kanvas.getContext && el.kanvas.getContext('2d');
+if (!ctx) {
+  el.statusJudul.textContent = 'Peramban ini belum bisa menggambar lapangan';
+  el.statusIsi.textContent = 'Game ini butuh Canvas 2D. Coba buka di Chrome, Firefox, Safari, atau Edge versi terbaru.';
+  return;
+}
+
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// Satuan dunia: meter dan detik, sumbu y ke atas, 0 = tanah di pangkal batang.
+// Ketinggian pemanjat diukur dari telapak kakinya.
+const KONFIG = {
+  puncak: 8,             // tinggi kaki saat tangan meraih roda hadiah
+  waktuBatas: 60,        // detik, mulai berjalan sejak tarikan pertama
+  sempatNaik: 1,         // melorot ke tanah baru dihitung gagal setelah pernah setinggi ini
+  gripAwal: 70,
+  gripTarik: 10,         // tambahan cengkeraman per tarikan yang pas
+  gripTergelincir: 25,
+  gripMelorot: 22,       // per detik selama melorot
+  faktorGripMin: 0.5,    // pada cengkeraman 0, tarikan hanya separuh jarak penuh
+  lamaTergelincir: 0.5,  // detik meluncur turun; tekanan selama itu diabaikan
+  rampMelorot: 0.4,      // detik sampai laju melorot penuh
+  faktorLepas: 1.8,      // pengali laju melorot saat cengkeraman habis
+  skalaIrama: 1.4,       // detik yang dicakup bilah irama
+  jedaHasil: { menang: 1.8, tanah: 1.2, waktu: 0.9 },
+  tinggiPandang: 4.9,    // meter yang terlihat tegak di panggung
+  lebarPandang: 3.2
+};
+// Tiga tingkat oli. Makin tebal: jendela tekan lebih sempit dan bergeser ke kanan (irama lebih pelan),
+// tarikan lebih pendek, melorot lebih cepat, dan tergelincir lebih jauh.
+const OLI = [
+  null,
+  { nama: 'oli tipis', min: 0.22, max: 0.62, naik: 0.24, melorot: 0.22, tergelincir: 0.6, kuras: 4 },
+  { nama: 'oli sedang', min: 0.40, max: 0.78, naik: 0.22, melorot: 0.32, tergelincir: 0.8, kuras: 6 },
+  { nama: 'oli tebal', min: 0.62, max: 0.94, naik: 0.20, melorot: 0.45, tergelincir: 1.0, kuras: 9 }
+];
+const RUAS = [[0, 1.6, 1], [1.6, 3.2, 2], [3.2, 4.8, 3], [4.8, 6.4, 2], [6.4, 8, 3]]
+  .map(([dari, sampai, tingkat], i) => ({ no: i + 1, dari, sampai, tingkat, oli: OLI[tingkat] }));
+const HADIAH = [
+  { id: 'sepeda', nama: 'Sepeda', batas: 23 },
+  { id: 'payung', nama: 'Payung', batas: 32 },
+  { id: 'ember', nama: 'Ember', batas: 44 },
+  { id: 'kaus', nama: 'Kaus', batas: Infinity }
+];
+const RODA = { y: 10.05, rx: 1.25, ry: 0.2 };
+const TIANG = { r: 0.12, atas: 10.45 };
+// Gantungan di roda: sudut (derajat, 90 = paling belakang) dan panjang tali (m). Dari samping roda terlihat
+// gepeng, jadi posisi mendatar dibuat berjauhan supaya hadiah tidak saling menutupi, dan tidak ada yang
+// tergantung di depan batang supaya pemanjat di puncak tetap terlihat.
+const GANTUNGAN = [
+  { id: 'ember', sudut: 60, tali: 0.3 },
+  { id: 'payung', sudut: 120, tali: 0.24 },
+  { id: 'sepeda', sudut: 0, tali: 0.3 },
+  { id: 'kaus', sudut: 180, tali: 0.34 }
+];
+
+function buatAcak(benih) {
+  let a = benih >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const fmt1 = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const fmt2 = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const satu = v => fmt1.format(Math.max(0, Math.round(v * 10) / 10));
+const dua = v => fmt2.format(v);
+const meter = v => `${satu(v)} m`;
+const detik = v => `${satu(v)} detik`;
+
+const KUNCI_REKOR = 'panjat-pinang:rekor';
+function bacaRekor() {
+  try {
+    const v = JSON.parse(localStorage.getItem(KUNCI_REKOR));
+    if (v && Number.isFinite(v.waktu) && v.waktu > 0) return { waktu: v.waktu, hadiah: typeof v.hadiah === 'string' ? v.hadiah : '' };
+  } catch (e) { /* penyimpanan diblokir: main tetap jalan tanpa rekor */ }
+  return null;
+}
+function simpanRekor(v) {
+  try { localStorage.setItem(KUNCI_REKOR, JSON.stringify(v)); return true; } catch (e) { return false; }
+}
+let rekor = bacaRekor();
+
+const reduksi = matchMedia('(prefers-reduced-motion: reduce)');
+let gerakHias = !reduksi.matches;
+reduksi.addEventListener('change', () => { gerakHias = !reduksi.matches; if (!gerakHias) partikel = []; });
+
+// ---------- Keadaan babak ----------
+let status = 'siap';  // siap | main | menang | gagal | hasil
+let jeda = false, beku = false, modeKartu = false, kamKartu = null;
+let h = 0, hMaks = 0, grip = KONFIG.gripAwal, waktu = 0, sejak = 0;
+let tanganLalu = null, bebas = true, melorot = false, lajuMelorot = 0;
+let slip = { sisa: 0, jarak: 0, jenis: null };
+let stat, akhir = null, tAkhir = 0, hadiahDiraih = null, ruasDiumumkan = 0, waktuHasil = 0;
+let label = { teks: '', sampai: 0, gelap: false };
+let partikel = [], jamDunia = 0, sisaDiumumkan = false;
+const pose = { hT: 0, kiri: 1.66, kanan: 1.95, sasaran: { kiri: 1.66, kanan: 1.95 }, kaget: 0 };
+const tekanTerakhir = { kiri: -1, kanan: -1 };
+
+function statBaru() {
+  return {
+    tarikan: 0, cepat: 0, sama: 0, abaikan: 0,
+    hilang: { cepat: 0, sama: 0, melorot: 0 },
+    melorotRuas: RUAS.map(() => 0), cepatRuas: RUAS.map(() => 0),
+    jedaJumlah: 0, jedaN: 0, slipTerakhir: null, ruasMulaiMelorot: 0, diamSaatJatuh: 0
+  };
+}
+
+function ruasIndeks(y) {
+  for (let i = 0; i < RUAS.length; i++) if (y < RUAS[i].sampai) return i;
+  return RUAS.length - 1;
+}
+function ruasSekarang() { return RUAS[ruasIndeks(h)]; }
+function lawan(t) { return t === 'kiri' ? 'kanan' : 'kiri'; }
+
+function mulaiBaru() {
+  status = 'siap';
+  h = 0; hMaks = 0; grip = KONFIG.gripAwal; waktu = 0; sejak = 0;
+  tanganLalu = null; bebas = true; melorot = false; lajuMelorot = 0;
+  slip = { sisa: 0, jarak: 0, jenis: null };
+  stat = statBaru();
+  akhir = null; tAkhir = 0; hadiahDiraih = null; ruasDiumumkan = 0; sisaDiumumkan = false;
+  label = { teks: '', sampai: 0, gelap: false };
+  partikel = [];
+  pose.hT = 0; pose.kiri = pose.sasaran.kiri = 1.66; pose.kanan = pose.sasaran.kanan = 1.95; pose.kaget = 0;
+  el.hasil.hidden = true;
+  el.app.classList.remove('ada-hasil');
+  for (const b of [el.kiri, el.kanan]) b.removeAttribute('aria-disabled');
+  tampilPetunjuk('Tekan tangan kiri dan kanan bergantian. Tekan saat jarum masuk kotak Pas.');
+  kam.siap = false;
+  zonaLalu = '';
+  perbaruiHud(true);
+  perbaruiRuasInfo();
+}
+
+// ---------- Aksi tangan ----------
+let waktuBingkai = performance.now();
+function tekan(tangan, dariKait) {
+  if (jeda || el.dialog.open) return false;
+  if (status !== 'siap' && status !== 'main') return false;
+  kedipTombol(tangan);
+  // Selama meluncur tekanan diabaikan; label "tergelincir" dibiarkan supaya sebabnya tetap terbaca.
+  if (slip.sisa > 0) { stat.abaikan++; return false; }
+  // Waktu sejak bingkai terakhir ikut dihitung supaya jarak tekan tidak dibulatkan ke bingkai.
+  const tambahan = dariKait || beku ? 0 : Math.min(0.1, Math.max(0, (performance.now() - waktuBingkai) / 1000));
+  const jarak = sejak + tambahan;
+  if (status === 'siap') {
+    status = 'main';
+    umumkan('Mulai. Waktu 60 detik berjalan.');
+  }
+  const o = ruasSekarang().oli;
+  if (!bebas && tangan === tanganLalu) tergelincir('sama', tangan, jarak);
+  else if (!bebas && jarak < o.min) tergelincir('cepat', tangan, jarak);
+  else tarik(tangan, jarak);
+  return true;
+}
+
+function tarik(tangan, jarak) {
+  const r = ruasSekarang(), o = r.oli;
+  if (!bebas) { stat.jedaJumlah += jarak; stat.jedaN++; }
+  const naik = o.naik * (KONFIG.faktorGripMin + (1 - KONFIG.faktorGripMin) * grip / 100);
+  h = Math.min(KONFIG.puncak, h + naik);
+  hMaks = Math.max(hMaks, h);
+  grip = Math.min(100, grip + KONFIG.gripTarik);
+  stat.tarikan++;
+  tanganLalu = tangan; bebas = false; sejak = 0; melorot = false; lajuMelorot = 0;
+  pose.sasaran[tangan] = h + 1.98;
+  if (label.teks && !label.gelap) label.sampai = 0;
+  if (stat.tarikan >= 4) sembunyikanPetunjuk();
+  if (h >= KONFIG.puncak - 1e-9) selesai('menang');
+}
+
+function tergelincir(jenis, tangan, jarak) {
+  const i = ruasIndeks(h), o = RUAS[i].oli;
+  slip = { sisa: KONFIG.lamaTergelincir, jarak: o.tergelincir, jenis };
+  grip = Math.max(0, grip - KONFIG.gripTergelincir);
+  stat[jenis]++;
+  if (jenis === 'cepat') stat.cepatRuas[i]++;
+  stat.slipTerakhir = { jenis, jarak, ruas: i, tangan };
+  bebas = true; tanganLalu = tangan; sejak = 0; melorot = false; lajuMelorot = 0;
+  pose.kaget = 1;
+  const teks = jenis === 'cepat' ? 'Terlalu cepat, tergelincir' : `Tangan ${tangan} dua kali, tergelincir`;
+  pasangLabel(teks, 1.3, true);
+  umumkan(jenis === 'cepat'
+    ? `Terlalu cepat, jarak ${dua(jarak)} detik. Tergelincir turun.`
+    : `Tangan ${tangan} ditekan dua kali. Tergelincir turun.`);
+  if (gerakHias && h > 0.05) percikanOli();
+}
+
+function selesai(jenis, sebab) {
+  status = jenis === 'menang' ? 'menang' : 'gagal';
+  tAkhir = 0;
+  if (jenis === 'menang') hadiahDiraih = HADIAH.find(x => waktu <= x.batas);
+  if (jenis === 'tanah') stat.diamSaatJatuh = sejak;
+  akhir = { jenis, ...analisis(jenis, sebab) };
+  melorot = false; lajuMelorot = 0; slip.sisa = 0;
+  label.sampai = 0;
+  sembunyikanPetunjuk();
+  if (jenis === 'menang') umumkan(`Sampai puncak dalam ${detik(waktu)}. ${hadiahDiraih.nama} diraih.`);
+  else if (jenis === 'waktu') umumkan(`Waktu habis di ketinggian ${meter(h)}.`);
+  else umumkan('Pemanjat sampai di tanah.');
+  if (jenis === 'tanah' && gerakHias) debu();
+}
+
+function tipUtama() {
+  const slipN = stat.cepat + stat.sama, hilangSlip = stat.hilang.cepat + stat.hilang.sama;
+  if (slipN > 0) return `Kamu tergelincir ${slipN} kali dan kehilangan ${meter(hilangSlip)}. Tunggu jarum masuk kotak Pas sebelum menekan.`;
+  if (stat.hilang.melorot > 0.3) return `Kamu sempat melorot ${meter(stat.hilang.melorot)}. Tarik lagi sebelum jarum lewat dari kotak Pas.`;
+  return 'Irama sudah rapi. Tekan di bagian awal kotak Pas supaya jarak antar tarikan lebih rapat.';
+}
+
+function analisis(jenis, sebab) {
+  if (jenis === 'menang') {
+    const hd = hadiahDiraih, i = HADIAH.indexOf(hd);
+    return {
+      judul: `${hd.nama} diraih`,
+      sebab: `Kamu sampai di roda hadiah dalam ${detik(waktu)} dan meraih ${hd.nama.toLowerCase()}.`,
+      saran: i > 0 ? `Sampai dalam ${HADIAH[i - 1].batas} detik untuk meraih ${HADIAH[i - 1].nama.toLowerCase()}. ${tipUtama()}` : tipUtama()
+    };
+  }
+  if (jenis === 'tanah') {
+    if (sebab === 'melorot') {
+      const r = RUAS[stat.ruasMulaiMelorot];
+      return {
+        judul: 'Melorot sampai tanah',
+        sebab: `Kamu berhenti menarik ${detik(stat.diamSaatJatuh)} di ruas ${r.no} (${r.oli.nama}). Batang yang licin membuat pemanjat melorot pelan sampai ke tanah.`,
+        saran: `Tarik lagi selagi jarum masih di kotak Pas. Di ${r.oli.nama}, jarak antar tarikan paling lama ${dua(r.oli.max)} detik.`
+      };
+    }
+    const s = stat.slipTerakhir, r = RUAS[s.ruas];
+    if (sebab === 'cepat') return {
+      judul: 'Tergelincir sampai tanah',
+      sebab: `Tarikan terakhir hanya berjarak ${dua(s.jarak)} detik di ruas ${r.no} (${r.oli.nama}), lebih cepat dari batas ${dua(r.oli.min)} detik, jadi pemanjat tergelincir sampai tanah.${stat.cepat > 1 ? ` Babak ini kamu ${stat.cepat} kali tergelincir karena terburu-buru.` : ''}`,
+      saran: 'Tunggu jarum masuk kotak Pas sebelum menekan. Makin licin ruasnya, makin lama jarum perlu ditunggu.'
+    };
+    return {
+      judul: 'Tergelincir sampai tanah',
+      sebab: `Tangan ${s.tangan} ditekan dua kali berturut-turut di ruas ${r.no}, pegangan terlepas, dan pemanjat tergelincir sampai tanah.`,
+      saran: 'Ganti tangan setiap tarikan: kiri, kanan, kiri, kanan. Tombol yang menyala merah menunjukkan giliran berikutnya.'
+    };
+  }
+  const hil = stat.hilang, total = hil.cepat + hil.sama + hil.melorot;
+  const awal = `Pemanjat tertahan di ${meter(h)}, kurang ${meter(KONFIG.puncak - h)} lagi ke puncak.`;
+  if (total >= 0.8) {
+    const besar = ['melorot', 'cepat', 'sama'].reduce((a, b) => (hil[b] > hil[a] ? b : a));
+    if (besar === 'melorot') {
+      const i = stat.melorotRuas.indexOf(Math.max(...stat.melorotRuas)), r = RUAS[i];
+      return {
+        judul: 'Waktu habis',
+        sebab: `${awal} Total ${meter(hil.melorot)} hilang karena melorot saat jarak antar tarikan terlalu lama, paling banyak di ruas ${r.no} (${r.oli.nama}).`,
+        saran: 'Tarik lagi begitu jarum masuk kotak Pas, jangan menunggu sampai ujungnya.'
+      };
+    }
+    if (besar === 'cepat') {
+      const i = stat.cepatRuas.indexOf(Math.max(...stat.cepatRuas)), r = RUAS[i];
+      return {
+        judul: 'Waktu habis',
+        sebab: `${awal} Kamu tergelincir ${stat.cepat} kali karena menekan terlalu cepat dan kehilangan ${meter(hil.cepat)}, paling sering di ruas ${r.no} (${r.oli.nama}).`,
+        saran: `Tunggu jarum masuk kotak Pas sebelum menekan. Di ${r.oli.nama} jaraknya paling sedikit ${dua(r.oli.min)} detik.`
+      };
+    }
+    return {
+      judul: 'Waktu habis',
+      sebab: `${awal} Tangan yang sama ditekan dua kali sebanyak ${stat.sama} kali, dan setiap kali itu pemanjat tergelincir (total ${meter(hil.sama)}).`,
+      saran: 'Ganti tangan setiap tarikan. Tombol yang menyala merah menunjukkan giliran berikutnya.'
+    };
+  }
+  const rata = stat.jedaN ? stat.jedaJumlah / stat.jedaN : 0;
+  return {
+    judul: 'Waktu habis',
+    sebab: `${awal} Kamu jarang tergelincir, tapi tarikannya pendek karena cengkeraman sering lemah${rata ? ` (rata-rata jarak antar tarikan ${dua(rata)} detik)` : ''}.`,
+    saran: 'Jaga irama ajek di dalam kotak Pas. Setiap tarikan yang pas menambah cengkeraman, dan cengkeraman kuat membuat tarikan lebih jauh.'
+  };
+}
+
+function tampilkanHasil() {
+  status = 'hasil';
+  const a = akhir;
+  el.teksJudulHasil.textContent = a.judul;
+  el.benderaHasil.hidden = a.jenis !== 'menang';
+  el.sebab.textContent = a.sebab;
+  el.saran.textContent = a.saran;
+  el.waktuHasil.textContent = `${satu(waktu)} dtk`;
+  el.tinggiHasil.textContent = meter(hMaks);
+  el.hadiahHasil.textContent = hadiahDiraih ? hadiahDiraih.nama : 'Belum ada';
+  let teksRekor, baru = false;
+  if (a.jenis === 'menang') {
+    const w = Math.round(waktu * 10) / 10;
+    if (!rekor || w < rekor.waktu) {
+      const lama = rekor;
+      rekor = { waktu: w, hadiah: hadiahDiraih.nama };
+      const tersimpan = simpanRekor(rekor);
+      baru = true;
+      teksRekor = lama ? `Rekor baru. Sebelumnya ${satu(lama.waktu)} detik.` : 'Rekor pertamamu.';
+      if (!tersimpan) teksRekor += ' Peramban ini tidak mengizinkan rekor disimpan.';
+    } else teksRekor = `Rekormu ${satu(rekor.waktu)} detik${rekor.hadiah ? ` dengan hadiah ${rekor.hadiah.toLowerCase()}` : ''}.`;
+  } else if (rekor) {
+    teksRekor = `Rekormu ${satu(rekor.waktu)} detik${rekor.hadiah ? ` dengan hadiah ${rekor.hadiah.toLowerCase()}` : ''}.`;
+  } else {
+    teksRekor = 'Belum ada rekor. Sampai di puncak untuk mencatat waktu tercepat.';
+  }
+  el.rekorHasil.textContent = teksRekor;
+  el.rekorHasil.classList.toggle('baru', baru);
+  for (const b of [el.kiri, el.kanan]) b.setAttribute('aria-disabled', 'true');
+  el.hasil.hidden = false;
+  el.app.classList.add('ada-hasil');
+  waktuHasil = performance.now();
+  perbaruiHud(true);
+  hitungTutup();
+  el.tombolLagi.focus({ preventScroll: true });
+  umumkan(`${a.judul}. ${a.sebab} Saran: ${a.saran}`);
+}
+
+// ---------- Masukan ----------
+function kedipTombol(tangan) {
+  const b = tangan === 'kiri' ? el.kiri : el.kanan;
+  b.classList.add('ditekan');
+  clearTimeout(b._jam);
+  b._jam = setTimeout(() => b.classList.remove('ditekan'), 110);
+}
+for (const [b, tangan] of [[el.kiri, 'kiri'], [el.kanan, 'kanan']]) {
+  // pointerdown, bukan click: ketukan cepat dua jempol harus langsung terbaca.
+  b.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    tekanTerakhir[tangan] = performance.now();
+    tekan(tangan);
+  });
+  // Klik dari Enter/Spasi saat tombol difokus; klik susulan dari pointer diabaikan.
+  b.addEventListener('click', () => {
+    if (performance.now() - tekanTerakhir[tangan] < 800) return;
+    tekan(tangan);
+  });
+}
+el.panggung.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  if (el.dialog.open || (status !== 'siap' && status !== 'main')) return;
+  e.preventDefault();
+  const r = el.panggung.getBoundingClientRect();
+  tekan(e.clientX < r.left + r.width / 2 ? 'kiri' : 'kanan');
+});
+el.panggung.addEventListener('contextmenu', e => e.preventDefault());
+el.kendali.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if (el.dialog.open || e.altKey || e.ctrlKey || e.metaKey) return;
+  const k = e.key, kode = e.code;
+  let tangan = null;
+  if (k === 'ArrowLeft' || kode === 'KeyA' || k === 'a' || k === 'A') tangan = 'kiri';
+  else if (k === 'ArrowRight' || kode === 'KeyD' || k === 'd' || k === 'D') tangan = 'kanan';
+  if (!tangan) return;
+  if (status !== 'siap' && status !== 'main') return;
+  e.preventDefault();
+  // Tombol yang ditahan tidak dihitung sebagai tarikan berulang.
+  if (!e.repeat) tekan(tangan);
+});
+el.tombolLagi.addEventListener('click', () => {
+  // Tekanan yang masih tertahan dari babak sebelumnya tidak boleh langsung memulai ulang.
+  if (performance.now() - waktuHasil < 450) return;
+  mulaiBaru();
+  el.kiri.focus({ preventScroll: true });
+});
+el.tombolCara.addEventListener('click', () => { el.dialog.showModal(); aturJeda(true); });
+el.dialog.addEventListener('close', () => aturJeda(false));
+// Escape ditangani sendiri juga: Chrome kadang menahan Escape pertama setelah dialog dibuka (pencegah penyalahgunaan).
+el.dialog.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { e.preventDefault(); el.dialog.close(); }
+});
+el.dialog.addEventListener('click', e => {
+  if (e.target !== el.dialog) return;
+  const r = el.dialog.getBoundingClientRect();
+  if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) el.dialog.close();
+});
+function aturJeda(on) {
+  jeda = on;
+  // Setelah jeda irama dimulai ulang: tarikan berikutnya bebas tangan dan bebas jarak.
+  if (!on && status === 'main') { bebas = true; sejak = 0; melorot = false; lajuMelorot = 0; }
+}
+
+// ---------- Teks layar ----------
+let jamUmum = 0;
+function umumkan(teks) {
+  clearTimeout(jamUmum);
+  el.pengumum.textContent = '';
+  jamUmum = setTimeout(() => { el.pengumum.textContent = teks; }, 60);
+}
+function tampilPetunjuk(teks) { el.teksPetunjuk.textContent = teks; el.petunjuk.hidden = false; }
+function sembunyikanPetunjuk() { el.petunjuk.hidden = true; }
+function pasangLabel(teks, lama, gelap) { label = { teks, sampai: jamDunia + lama, gelap: !!gelap }; }
+
+let hudLalu = '';
+function perbaruiHud(paksa) {
+  const sisa = Math.max(0, KONFIG.waktuBatas - waktu);
+  const kunci = `${satu(sisa)}|${satu(h)}|${rekor ? rekor.waktu : 0}`;
+  if (!paksa && kunci === hudLalu) return;
+  hudLalu = kunci;
+  el.waktu.innerHTML = `${satu(sisa)}<small> dtk</small>`;
+  el.tinggi.innerHTML = `${satu(h)}<small> m</small>`;
+  el.hudRekor.textContent = rekor ? `Rekor ${satu(rekor.waktu)} dtk` : 'Belum ada rekor';
+}
+let ruasInfoLalu = -1;
+function perbaruiRuasInfo() {
+  const r = ruasSekarang();
+  if (r.no === ruasInfoLalu) return;
+  ruasInfoLalu = r.no;
+  el.ruasNama.textContent = `Ruas ${r.no} dari ${RUAS.length}: ${r.oli.nama}`;
+  el.ruasJendela.textContent = `Jarak antar tarikan ${dua(r.oli.min)} sampai ${dua(r.oli.max)} detik.`;
+  el.nilaiOli.textContent = `Ruas ${r.no}: ${r.oli.nama}`;
+}
+
+let zonaLalu = '', gripLalu = -1, giliranLalu = '', aktifLalu = null;
+function perbaruiKendali() {
+  const o = ruasSekarang().oli, S = KONFIG.skalaIrama;
+  const zMin = bebas ? 0 : o.min, zMax = o.max;
+  const kunci = `${zMin}|${zMax}`;
+  if (kunci !== zonaLalu) {
+    zonaLalu = kunci;
+    const p = v => `${(v / S * 100).toFixed(2)}%`;
+    el.zonaCepat.hidden = zMin <= 0;
+    el.zonaCepat.style.left = '0';
+    el.zonaCepat.style.width = p(zMin);
+    el.zonaPas.style.left = p(zMin);
+    el.zonaPas.style.width = p(zMax - zMin);
+    el.zonaLambat.style.left = p(zMax);
+    el.zonaLambat.style.width = p(S - zMax);
+  }
+  const main = status === 'main' || status === 'siap';
+  const posisi = status === 'siap' || slip.sisa > 0 ? 0 : Math.min(sejak, S) / S;
+  el.jarum.style.left = `${(posisi * 100).toFixed(2)}%`;
+  const aktif = main && slip.sisa <= 0 && (status === 'siap' || (sejak >= zMin && sejak <= zMax));
+  if (aktif !== aktifLalu) { aktifLalu = aktif; el.zonaPas.classList.toggle('aktif', aktif); }
+  const g = Math.round(grip);
+  if (g !== gripLalu) {
+    gripLalu = g;
+    el.isiGrip.style.width = `${g}%`;
+    el.nilaiGrip.textContent = g < 30 ? `${g}%, lemah` : `${g}%`;
+  }
+  let gil, kelas;
+  if (!main) { gil = 'babak selesai'; kelas = ''; }
+  else if (slip.sisa > 0) { gil = 'tunggu sebentar'; kelas = 'tunggu'; }
+  else if (bebas) { gil = 'tangan mana saja'; kelas = ''; }
+  else { gil = `tangan ${lawan(tanganLalu)}`; kelas = lawan(tanganLalu); }
+  const kunciGil = `${gil}|${kelas}`;
+  if (kunciGil !== giliranLalu) {
+    giliranLalu = kunciGil;
+    el.giliran.textContent = gil;
+    el.kiri.classList.toggle('giliran', kelas === 'kiri');
+    el.kanan.classList.toggle('giliran', kelas === 'kanan');
+    el.kiri.classList.toggle('tunggu', kelas === 'tunggu');
+    el.kanan.classList.toggle('tunggu', kelas === 'tunggu');
+  }
+}
+
+// ---------- Pembaruan ----------
+function perbarui(dt) {
+  waktuBingkai = performance.now();
+  if (jeda) return;
+  jamDunia += dt;
+  if (status === 'main') {
+    waktu += dt;
+    const i = ruasIndeks(h), o = RUAS[i].oli;
+    if (h > 0.02) grip -= o.kuras * dt;
+    // Sebab turun di bingkai ini dicatat sebelum keadaan tergelincir dihapus, supaya bingkai terakhir
+    // luncuran yang menyentuh tanah tidak salah dihitung sebagai melorot.
+    let sebabTurun = 'melorot';
+    if (slip.sisa > 0) {
+      sebabTurun = slip.jenis;
+      const turun = Math.min(Math.min(slip.sisa, dt) / KONFIG.lamaTergelincir * slip.jarak, h);
+      h -= turun;
+      // Sisa pembulatan beberapa milimeter dihitung sudah di tanah.
+      if (h < 0.005) h = 0;
+      stat.hilang[slip.jenis] += turun;
+      slip.sisa -= dt;
+      if (slip.sisa <= 0) { slip.sisa = 0; sejak = 0; }
+    } else {
+      sejak += dt;
+      if (sejak > o.max && h > 0) {
+        if (!melorot) {
+          melorot = true;
+          stat.ruasMulaiMelorot = i;
+          umumkan('Melorot. Tarik lagi.');
+        }
+        const ramp = Math.min(1, (sejak - o.max) / KONFIG.rampMelorot);
+        lajuMelorot = o.melorot * ramp * (grip <= 0 ? KONFIG.faktorLepas : 1);
+        const turun = Math.min(lajuMelorot * dt, h);
+        h -= turun;
+        stat.hilang.melorot += turun;
+        stat.melorotRuas[i] += turun;
+        grip -= KONFIG.gripMelorot * dt;
+        pasangLabel(grip <= 0 ? 'Pegangan lepas, tarik lagi' : 'Melorot, tarik lagi', 0.15, false);
+      } else {
+        lajuMelorot = 0;
+      }
+    }
+    grip = clamp(grip, 0, 100);
+    if (h <= 0) {
+      h = 0;
+      if (hMaks >= KONFIG.sempatNaik) selesai('tanah', sebabTurun);
+      else { melorot = false; lajuMelorot = 0; slip.sisa = 0; }
+    }
+    if (status === 'main') {
+      if (waktu >= KONFIG.waktuBatas) { waktu = KONFIG.waktuBatas; selesai('waktu'); }
+      else if (!sisaDiumumkan && KONFIG.waktuBatas - waktu <= 10) { sisaDiumumkan = true; umumkan('Sisa 10 detik.'); }
+    }
+    const iBaru = ruasIndeks(h);
+    if (iBaru > ruasDiumumkan && status === 'main') {
+      ruasDiumumkan = iBaru;
+      const r = RUAS[iBaru];
+      umumkan(`Ruas ${r.no}: ${r.oli.nama}. Jarak antar tarikan ${dua(r.oli.min)} sampai ${dua(r.oli.max)} detik.`);
+    }
+  } else if (status === 'menang' || status === 'gagal') {
+    tAkhir += dt;
+    if (tAkhir >= KONFIG.jedaHasil[akhir.jenis]) tampilkanHasil();
+  }
+  perbaruiPose(dt);
+  for (const p of partikel) { p.vy -= 9 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.umur -= dt; }
+  partikel = partikel.filter(p => p.umur > 0 && p.y > -0.2);
+  gerakKamera(dt);
+  perbaruiHud(false);
+  perbaruiRuasInfo();
+  perbaruiKendali();
+}
+
+function perbaruiPose(dt) {
+  const k = 1 - Math.exp(-dt * 16);
+  pose.hT += (h - pose.hT) * k;
+  if (Math.abs(h - pose.hT) < 1e-4) pose.hT = h;
+  const kt = 1 - Math.exp(-dt * 28);
+  for (const t of ['kiri', 'kanan']) {
+    pose[t] += (pose.sasaran[t] - pose[t]) * kt;
+    // Tangan yang tidak bergerak tetap di batang, tapi tidak boleh lepas dari jangkauan lengan.
+    const lo = pose.hT + 1.58, hi = pose.hT + 2.02;
+    pose[t] = clamp(pose[t], lo, hi);
+    pose.sasaran[t] = clamp(pose.sasaran[t], lo, hi + 0.1);
+  }
+  if (pose.kaget > 0) pose.kaget = Math.max(0, pose.kaget - dt * 2.2);
+}
+
+function percikanOli() {
+  for (let i = 0; i < 9; i++) {
+    const sisi = Math.random() < 0.5 ? -1 : 1;
+    partikel.push({
+      x: sisi * (0.12 + Math.random() * 0.1), y: pose.hT + 1.5 + Math.random() * 0.3,
+      vx: sisi * (0.6 + Math.random() * 1.2), vy: 0.8 + Math.random() * 1.4,
+      umur: 0.5 + Math.random() * 0.4, r: 0.025 + Math.random() * 0.025, jenis: 'oli'
+    });
+  }
+}
+function debu() {
+  for (let i = 0; i < 12; i++) {
+    const sisi = Math.random() < 0.5 ? -1 : 1;
+    partikel.push({
+      x: sisi * (0.2 + Math.random() * 0.4), y: 0.05,
+      vx: sisi * (0.4 + Math.random() * 0.9), vy: 0.3 + Math.random() * 0.8,
+      umur: 0.6 + Math.random() * 0.5, r: 0.05 + Math.random() * 0.06, jenis: 'debu'
+    });
+  }
+}
+
+// ---------- Warna ----------
+const WARNA = {};
+const NAMA_WARNA = ['kertas', 'lembar', 'tinta', 'tinta-2', 'merah', 'aksen-teks', 'garis', 'garis-halus',
+  'langit-atas', 'langit-bawah', 'awan', 'rumah', 'rumah-gelap', 'atap', 'pohon', 'pohon-gelap', 'rumput', 'tanah',
+  'tanah-gelap', 'bambu', 'batang', 'oli', 'kulit', 'kulit-gelap', 'rambut', 'putih', 'bendera', 'lampu', 'garis-dunia'];
+let temaGelap = false;
+function bacaWarna() {
+  const cs = getComputedStyle(document.documentElement);
+  for (const n of NAMA_WARNA) WARNA[n] = cs.getPropertyValue('--' + n).trim();
+  WARNA.baju = cs.getPropertyValue('--penonton-baju').split(',').map(s => s.trim());
+  WARNA.kulitOrang = cs.getPropertyValue('--penonton-kulit').split(',').map(s => s.trim());
+  temaGelap = cs.colorScheme === 'dark' || cs.getPropertyValue('color-scheme').trim() === 'dark';
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', bacaWarna);
+new MutationObserver(bacaWarna).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+// ---------- Ukuran dan kamera ----------
+const ukuran = { w: 1, h: 1, dpr: 1 };
+const kam = { cy: 1.8, siap: false };
+const T = { s: 80, ax: 0, ay: 0, cy: 0, cy0: 0, visH: 1 };
+let tutupBawah = 0;
+function ukurKanvas() {
+  const r = el.panggung.getBoundingClientRect();
+  ukuran.w = Math.max(1, r.width); ukuran.h = Math.max(1, r.height);
+  ukuran.dpr = Math.min(2.5, window.devicePixelRatio || 1);
+  el.kanvas.width = Math.round(ukuran.w * ukuran.dpr);
+  el.kanvas.height = Math.round(ukuran.h * ukuran.dpr);
+  hitungTutup();
+  kam.siap = false;
+}
+// Di HP lembar hasil menutupi bagian bawah panggung; kamera memakai sisa yang terlihat.
+function hitungTutup() {
+  tutupBawah = 0;
+  if (el.hasil.hidden) return;
+  const p = el.panggung.getBoundingClientRect(), q = el.hasil.getBoundingClientRect();
+  if (q.left < p.right - 1 && q.right > p.left + 1 && q.top < p.bottom) tutupBawah = clamp(p.bottom - q.top, 0, p.height * 0.6);
+}
+new ResizeObserver(ukurKanvas).observe(el.panggung);
+new ResizeObserver(hitungTutup).observe(el.hasil);
+
+function skala() {
+  if (kamKartu) return ukuran.h / kamKartu.tinggi;
+  return Math.min(ukuran.h / KONFIG.tinggiPandang, ukuran.w / KONFIG.lebarPandang);
+}
+function gerakKamera(dt) {
+  const s = skala(), visH = Math.max(40, ukuran.h - tutupBawah), lihat = visH / s;
+  const lo = -0.9 + lihat / 2, hi = 11.9 - lihat / 2;
+  let cy;
+  if (kamKartu) cy = kamKartu.cy;
+  else if (akhir && akhir.jenis === 'menang') cy = clamp(Math.min(hi, pose.hT + 1.75), lo, hi);
+  else cy = clamp(pose.hT + 1.0 + lihat * 0.1, lo, hi);
+  const k = kam.siap ? 1 - Math.exp(-dt * 6) : 1;
+  kam.cy += (cy - kam.cy) * k;
+  kam.siap = true;
+  T.s = s; T.ax = ukuran.w / 2; T.ay = visH / 2; T.cy = kam.cy; T.cy0 = lo; T.visH = visH;
+}
+const layarY = y => T.ay - (y - T.cy) * T.s;
+const layarX = x => T.ax + x * T.s;
+
+// Lapisan latar: f = seberapa ikut kamera naik, k = skala (makin jauh makin kecil).
+// Saat kamera di posisi terendah, tanah semua lapisan berimpit.
+function lapisan(f, k) {
+  const s = T.s * k, d = ukuran.dpr;
+  const dasarY = T.ay + T.cy0 * T.s + (T.cy - T.cy0) * T.s * f;
+  ctx.setTransform(d * s, 0, 0, -d * s, d * T.ax, d * dasarY);
+  return 1 / s;
+}
+
+// ---------- Pemandangan (dibuat sekali, berbenih tetap) ----------
+const acakLatar = buatAcak(1708);
+const AWAN = Array.from({ length: 9 }, (_, i) => ({ x: -26 + i * 6.3 + acakLatar() * 3, y: 3.5 + acakLatar() * 11, w: 1.1 + acakLatar() * 1.4, v: 0.08 + acakLatar() * 0.1 }));
+const RUMAH = [], POHON = [];
+for (let x = -17; x < 17;) {
+  if (acakLatar() < 0.62) { const l = 2.2 + acakLatar() * 1.2; RUMAH.push({ x: x + l / 2, l, t: 1.6 + acakLatar() * 0.6, atap: 1 + acakLatar() * 0.4, pintu: acakLatar() < 0.5 }); x += l + 0.3 + acakLatar() * 0.8; }
+  else { POHON.push({ x: x + 0.6, t: 3.6 + acakLatar() * 2.2, kelapa: acakLatar() < 0.55, miring: (acakLatar() - 0.5) * 0.5 }); x += 1.3 + acakLatar(); }
+}
+const UMBUL = [-9.6, -7.2, -4.8, -2.4, 2.4, 4.8, 7.2, 9.6].map((x, i) => ({ x, t: 7.2 + ((i * 37) % 7) / 10, arah: x < 0 ? 1 : -1, fase: i * 1.7 }));
+const PENONTON = [];
+for (const [yKaki, k, gelap] of [[0.5, 0.76, true], [0.22, 0.92, false]]) {
+  for (const sisi of [-1, 1]) {
+    let x = 0.98 + acakLatar() * 0.25 + (gelap ? 0.2 : 0);
+    while (x < 8) {
+      const anak = acakLatar() < 0.28;
+      PENONTON.push({
+        x: sisi * x, y: yKaki, k, gelap, tinggi: (anak ? 1.05 + acakLatar() * 0.2 : 1.5 + acakLatar() * 0.25) * k,
+        baju: Math.floor(acakLatar() * 7), kulit: Math.floor(acakLatar() * 4), bendera: acakLatar() < 0.2,
+        peci: !anak && acakLatar() < 0.25, fase: acakLatar() * TAU, laju: 1.6 + acakLatar() * 1.4, sisi
+      });
+      x += (0.42 + acakLatar() * 0.22) * k;
+    }
+  }
+}
+PENONTON.sort((a, b) => (b.y - a.y));
+// Tetes dan kilau oli per ruas, sengaja tetap supaya batang tidak berkedip.
+const TETES = RUAS.map(r => Array.from({ length: r.tingkat * r.tingkat }, () => ({ y: r.dari + 0.15 + acakLatar() * (r.sampai - r.dari - 0.3), sisi: acakLatar() < 0.5 ? -1 : 1, p: 0.08 + acakLatar() * 0.12 * r.tingkat })));
+const KILAU = RUAS.map(r => Array.from({ length: (r.tingkat - 1) * 5 }, () => ({ y: r.dari + 0.1 + acakLatar() * (r.sampai - r.dari - 0.2), p: 0.04 + acakLatar() * 0.07 })));
+const NODA = [
+  { x: -0.08, y: 1.03, rx: 0.07, ry: 0.045, a: 0.4 }, { x: 0.1, y: 0.92, rx: 0.045, ry: 0.08, a: -0.2 },
+  { x: -0.01, y: 1.15, rx: 0.1, ry: 0.03, a: 0.05 }, { x: 0.06, y: 0.83, rx: 0.07, ry: 0.035, a: 0.3 },
+  { x: -0.12, y: 0.86, rx: 0.035, ry: 0.06, a: 0 }, { x: 0.13, y: 1.1, rx: 0.04, ry: 0.035, a: 0.8 }
+];
+
+// ---------- Gambar: pembantu ----------
+function elips(c, x, y, rx, ry, a = 0) { c.moveTo(x + rx * Math.cos(a), y + rx * Math.sin(a)); c.ellipse(x, y, rx, ry, a, 0, TAU); }
+function kotakBulat(c, x, y, w, h, r) { if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); }
+function garisTebal(pts, lebar, warna, px, garisLuar = true) {
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if (garisLuar) { ctx.lineWidth = lebar + px * 3; ctx.strokeStyle = WARNA['garis-dunia']; ctx.stroke(); }
+  ctx.lineWidth = lebar; ctx.strokeStyle = warna; ctx.stroke();
+}
+function isiGaris(px, warna, tebal = 1.6) {
+  ctx.fillStyle = warna; ctx.fill();
+  ctx.lineWidth = px * tebal; ctx.lineJoin = 'round'; ctx.strokeStyle = WARNA['garis-dunia']; ctx.stroke();
+}
+
+function gambarLangit() {
+  const d = ukuran.dpr;
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+  const g = ctx.createLinearGradient(0, 0, 0, ukuran.h);
+  g.addColorStop(0, WARNA['langit-atas']);
+  g.addColorStop(1, WARNA['langit-bawah']);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, ukuran.w, ukuran.h);
+}
+
+function gambarAwan() {
+  lapisan(0.15, 0.9);
+  ctx.fillStyle = WARNA.awan;
+  ctx.globalAlpha = temaGelap ? 0.8 : 0.85;
+  for (const a of AWAN) {
+    const geser = gerakHias ? jamDunia * a.v : 0;
+    const x = ((a.x + geser + 30) % 60 + 60) % 60 - 30;
+    ctx.beginPath();
+    elips(ctx, x, a.y, a.w, a.w * 0.32);
+    elips(ctx, x - a.w * 0.35, a.y + a.w * 0.16, a.w * 0.45, a.w * 0.32);
+    elips(ctx, x + a.w * 0.3, a.y + a.w * 0.22, a.w * 0.5, a.w * 0.38);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function gambarKampung() {
+  const px = lapisan(0.3, 0.6);
+  const dasar = 1.1;
+  ctx.fillStyle = WARNA.rumput;
+  ctx.fillRect(-80, dasar - 120, 160, 120);
+  for (const p of POHON) {
+    const x = p.x, y = dasar;
+    if (p.kelapa) {
+      const ux = x + p.miring * p.t * 0.4, uy = y + p.t;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + p.miring * 0.2, y + p.t * 0.6, ux, uy);
+      ctx.lineWidth = 0.16; ctx.strokeStyle = WARNA['rumah-gelap']; ctx.stroke();
+      ctx.fillStyle = WARNA['pohon-gelap'];
+      for (let i = 0; i < 6; i++) {
+        const a = Math.PI * (0.05 + i * 0.18), sx = Math.cos(a), sy = Math.sin(a);
+        ctx.beginPath();
+        ctx.moveTo(ux, uy);
+        ctx.quadraticCurveTo(ux + sx * 0.9, uy + sy * 0.7 + 0.2, ux + sx * 1.4, uy + sy * 0.3 - 0.35);
+        ctx.quadraticCurveTo(ux + sx * 0.8, uy + sy * 0.4, ux, uy);
+        ctx.fill();
+      }
+    } else {
+      ctx.fillStyle = WARNA['rumah-gelap'];
+      ctx.fillRect(x - 0.08, y, 0.16, p.t * 0.45);
+      ctx.fillStyle = WARNA.pohon;
+      ctx.beginPath();
+      elips(ctx, x, y + p.t * 0.62, p.t * 0.3, p.t * 0.26);
+      elips(ctx, x - p.t * 0.2, y + p.t * 0.5, p.t * 0.22, p.t * 0.18);
+      elips(ctx, x + p.t * 0.2, y + p.t * 0.52, p.t * 0.22, p.t * 0.18);
+      ctx.fill();
+    }
+  }
+  for (const r of RUMAH) {
+    const kiri = r.x - r.l / 2, y = dasar;
+    ctx.fillStyle = WARNA.rumah;
+    ctx.fillRect(kiri, y, r.l, r.t);
+    // Atap genteng pelana dilihat dari depan
+    ctx.beginPath();
+    ctx.moveTo(kiri - 0.25, y + r.t);
+    ctx.lineTo(kiri + r.l * 0.18, y + r.t + r.atap);
+    ctx.lineTo(kiri + r.l * 0.82, y + r.t + r.atap);
+    ctx.lineTo(kiri + r.l + 0.25, y + r.t);
+    ctx.closePath();
+    ctx.fillStyle = WARNA.atap; ctx.fill();
+    ctx.lineWidth = px * 1.2; ctx.strokeStyle = WARNA['rumah-gelap']; ctx.stroke();
+    ctx.fillStyle = WARNA['rumah-gelap'];
+    if (r.pintu) ctx.fillRect(r.x - 0.25, y, 0.5, r.t * 0.62);
+    ctx.fillRect(kiri + 0.3, y + r.t * 0.42, 0.42, 0.38);
+    ctx.fillRect(kiri + r.l - 0.72, y + r.t * 0.42, 0.42, 0.38);
+  }
+}
+
+function gambarUmbul() {
+  const px = lapisan(0.55, 0.8);
+  const dasar = 0.82;
+  // Tali bendera segitiga di antara tiang umbul-umbul yang bersebelahan
+  for (let i = 0; i < UMBUL.length - 1; i++) {
+    const a = UMBUL[i], b = UMBUL[i + 1];
+    const x1 = a.x, x2 = b.x, y1 = dasar + a.t - 1.2, y2 = dasar + b.t - 1.2, kendur = 0.55;
+    const titik = t => [x1 + (x2 - x1) * t, y1 + (y2 - y1) * t - kendur * 4 * t * (1 - t)];
+    ctx.beginPath();
+    for (let j = 0; j <= 20; j++) { const [x, y] = titik(j / 20); j ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+    ctx.lineWidth = px * 1.4; ctx.strokeStyle = WARNA['garis-dunia']; ctx.stroke();
+    const n = Math.max(3, Math.round((x2 - x1) / 0.42));
+    for (let j = 1; j < n; j++) {
+      const [x, y] = titik(j / n);
+      ctx.beginPath();
+      ctx.moveTo(x - 0.13, y); ctx.lineTo(x + 0.13, y); ctx.lineTo(x, y - 0.3); ctx.closePath();
+      isiGaris(px, j % 2 ? WARNA.bendera : WARNA.putih, 1);
+    }
+    if (temaGelap) {
+      ctx.fillStyle = WARNA.lampu;
+      ctx.beginPath();
+      for (let j = 0; j < n; j++) { const [x, y] = titik((j + 0.5) / n); elips(ctx, x, y - 0.05, 0.05, 0.065); }
+      ctx.fill();
+    }
+  }
+  for (const u of UMBUL) {
+    const x = u.x, atas = dasar + u.t, ujungX = x + u.arah * 1.0, ujungY = atas + 0.15;
+    // Batang bambu melengkung di ujung
+    ctx.beginPath();
+    ctx.moveTo(x, dasar);
+    ctx.lineTo(x, atas - 0.6);
+    ctx.quadraticCurveTo(x, atas + 0.2, ujungX, ujungY);
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 0.1 + px * 2.5; ctx.strokeStyle = WARNA['garis-dunia']; ctx.stroke();
+    ctx.lineWidth = 0.1; ctx.strokeStyle = WARNA.bambu; ctx.stroke();
+    // Kain panjang merah putih tergantung dari lengkungan
+    const kx = x + u.arah * 0.42, panjang = 2.8, lebar = 0.3;
+    const ayun = gerakHias ? jamDunia * 2.1 + u.fase : 0;
+    const geser = yy => (gerakHias ? Math.sin(ayun + yy * 1.4) * 0.05 * yy : 0);
+    const n = 6;
+    for (let j = 0; j < n; j++) {
+      const t0 = j / n, t1 = (j + 1) / n, ya = atas - 0.05 - panjang * t0, yb = atas - 0.05 - panjang * t1;
+      ctx.beginPath();
+      ctx.moveTo(kx - lebar / 2 + geser(panjang * t0), ya);
+      ctx.lineTo(kx + lebar / 2 + geser(panjang * t0), ya);
+      if (j === n - 1) ctx.lineTo(kx + geser(panjang * t1) + lebar * 0.1, yb - 0.25);
+      else { ctx.lineTo(kx + lebar / 2 + geser(panjang * t1), yb); ctx.lineTo(kx - lebar / 2 + geser(panjang * t1), yb); }
+      ctx.closePath();
+      ctx.fillStyle = j % 2 ? WARNA.putih : WARNA.bendera;
+      ctx.fill();
+    }
+    ctx.beginPath();
+    ctx.moveTo(kx - lebar / 2, atas - 0.05);
+    for (let j = 1; j < n; j++) ctx.lineTo(kx - lebar / 2 + geser(panjang * j / n), atas - 0.05 - panjang * j / n);
+    ctx.lineTo(kx + geser(panjang) + lebar * 0.1, atas - 0.3 - panjang);
+    for (let j = n - 1; j >= 1; j--) ctx.lineTo(kx + lebar / 2 + geser(panjang * j / n), atas - 0.05 - panjang * j / n);
+    ctx.lineTo(kx + lebar / 2, atas - 0.05);
+    ctx.closePath();
+    ctx.lineWidth = px * 1.3; ctx.strokeStyle = WARNA['garis-dunia']; ctx.stroke();
+  }
+}
+
+// Lapangan digambar dua kali: seluruhnya di balik kabut, lalu bagian depan (sampai yTepi) tanpa kabut.
+function gambarLapangan(px, kiri, kanan, yTepi) {
+  ctx.fillStyle = WARNA['tanah-gelap'];
+  ctx.fillRect(kiri, -40, kanan - kiri, 40 + yTepi);
+  ctx.fillStyle = WARNA.tanah;
+  ctx.fillRect(kiri, -40, kanan - kiri, 40 + yTepi - 0.04);
+  // Rumput liar di lapangan
+  ctx.strokeStyle = WARNA['tanah-gelap'];
+  ctx.lineWidth = px * 1.5;
+  ctx.beginPath();
+  for (let x = Math.floor(kiri / 0.9) * 0.9; x < kanan; x += 0.9) {
+    const y = -0.25 - ((x * 7.3) % 1 + 1) % 1 * 0.8;
+    ctx.moveTo(x - 0.05, y); ctx.lineTo(x - 0.09, y + 0.08);
+    ctx.moveTo(x, y); ctx.lineTo(x, y + 0.11);
+    ctx.moveTo(x + 0.05, y); ctx.lineTo(x + 0.1, y + 0.07);
+  }
+  ctx.stroke();
+}
+
+function gambarOrang(o, sorak) {
+  const lompat = gerakHias ? Math.max(0, Math.sin(jamDunia * o.laju * (sorak ? 2.4 : 1) + o.fase)) * (sorak ? 0.08 : 0.015) : 0;
+  // Garis penonton lebih tipis dari garis pemanjat: mereka latar, bukan fokus.
+  const x = o.x, y = o.y + lompat, H = o.tinggi, px = 0.65 / T.s;
+  const baju = WARNA.baju[o.baju % WARNA.baju.length], kulit = WARNA.kulitOrang[o.kulit % WARNA.kulitOrang.length];
+  const bahuY = y + H * 0.78, bw = H * 0.14;
+  // Lengan: diangkat saat bersorak atau saat memegang bendera kecil
+  const lengan = (sisi, naik) => {
+    const ujung = naik ? [x + sisi * bw * 1.25, bahuY + H * 0.3] : [x + sisi * bw * 1.15, y + H * 0.42];
+    garisTebal([[x + sisi * bw * 0.8, bahuY - 0.03], ujung], H * 0.06, kulit, px);
+    return ujung;
+  };
+  const tangBendera = o.bendera ? (o.x < 0 ? 1 : -1) : 0;
+  if (sorak) { lengan(-1, true); lengan(1, true); }
+  else { lengan(-1, tangBendera === -1); lengan(1, tangBendera === 1); }
+  // Kaki dan badan
+  ctx.beginPath(); kotakBulat(ctx, x - bw * 0.75, y, bw * 1.5, H * 0.42, 0.03); isiGaris(px, WARNA['garis-dunia'], 1);
+  ctx.beginPath(); kotakBulat(ctx, x - bw, y + H * 0.38, bw * 2, H * 0.44, H * 0.07); isiGaris(px, baju);
+  // Kepala dan rambut
+  const ky = y + H * 0.9, kr = H * 0.085;
+  ctx.beginPath(); elips(ctx, x, ky, kr, kr); isiGaris(px, kulit);
+  ctx.beginPath(); ctx.arc(x, ky + kr * 0.1, kr, 0.05 * Math.PI, 0.95 * Math.PI); ctx.closePath(); ctx.fillStyle = WARNA.rambut; ctx.fill();
+  if (o.peci) { ctx.beginPath(); kotakBulat(ctx, x - kr * 0.95, ky + kr * 0.45, kr * 1.9, kr * 0.75, kr * 0.15); ctx.fillStyle = WARNA.rambut; ctx.fill(); }
+  if (o.bendera && !sorak) {
+    const tx = x + tangBendera * bw * 1.25, ty = bahuY + H * 0.3;
+    ctx.beginPath(); ctx.moveTo(tx, ty - 0.05); ctx.lineTo(tx, ty + 0.42);
+    ctx.lineWidth = px * 1.6; ctx.strokeStyle = WARNA['garis-dunia']; ctx.stroke();
+    const kib = gerakHias ? Math.sin(jamDunia * 5 + o.fase) * 0.03 : 0;
+    ctx.beginPath(); ctx.moveTo(tx, ty + 0.42); ctx.lineTo(tx + 0.26 * tangBendera, ty + 0.42 + kib); ctx.lineTo(tx + 0.26 * tangBendera, ty + 0.3 + kib); ctx.lineTo(tx, ty + 0.3); ctx.closePath();
+    ctx.fillStyle = WARNA.bendera; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(tx, ty + 0.3); ctx.lineTo(tx + 0.26 * tangBendera, ty + 0.3 + kib); ctx.lineTo(tx + 0.26 * tangBendera, ty + 0.18 + kib); ctx.lineTo(tx, ty + 0.18); ctx.closePath();
+    ctx.fillStyle = WARNA.putih; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(tx, ty + 0.42); ctx.lineTo(tx + 0.26 * tangBendera, ty + 0.42 + kib); ctx.lineTo(tx + 0.26 * tangBendera, ty + 0.18 + kib); ctx.lineTo(tx, ty + 0.18); ctx.closePath();
+    ctx.lineWidth = px; ctx.stroke();
+  }
+}
+
+function gambarPenonton(kiri, kanan) {
+  const sorak = akhir && akhir.jenis === 'menang';
+  for (const o of PENONTON) {
+    if (o.x < kiri - 1 || o.x > kanan + 1) continue;
+    gambarOrang(o, sorak && o.y < 0.4);
+  }
+}
+
+function gambarTali(px, kiri, kanan) {
+  const tiang = [-5.8, -3.5, -1.15, 1.15, 3.5, 5.8];
+  ctx.beginPath();
+  for (let i = 0; i < tiang.length - 1; i++) {
+    const a = tiang[i], b = tiang[i + 1];
+    for (let j = 0; j <= 12; j++) { const t = j / 12, x = a + (b - a) * t, y = 0.86 - 0.12 * 4 * t * (1 - t); (i || j) ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+  }
+  ctx.lineWidth = px * 2.2; ctx.strokeStyle = WARNA['garis-dunia']; ctx.stroke();
+  for (const x of tiang) {
+    if (x < kiri - 1 || x > kanan + 1) continue;
+    ctx.beginPath(); ctx.rect(x - 0.035, 0.1, 0.07, 0.82); isiGaris(px, WARNA.bambu, 1.2);
+  }
+}
+
+function gambarPangkal(px) {
+  ctx.beginPath(); elips(ctx, 0, 0.02, 0.5, 0.09); ctx.fillStyle = WARNA['tanah-gelap']; ctx.fill();
+  ctx.beginPath(); elips(ctx, 0.08, 0.0, 0.4, 0.05); ctx.fillStyle = WARNA.oli; ctx.globalAlpha = 0.85; ctx.fill(); ctx.globalAlpha = 1;
+  ctx.beginPath(); elips(ctx, -0.05, 0.012, 0.12, 0.012); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fill();
+}
+
+function gambarBatang(px, bawah, atas) {
+  const r = TIANG.r;
+  const potongan = RUAS.map(x => [x.dari, x.sampai, x.tingkat]);
+  potongan.push([KONFIG.puncak, TIANG.atas, 2]);
+  // Oli tipis masih memperlihatkan cokelat batang; oli tebal hampir hitam dengan kilap putih yang lebar.
+  const oliAlpha = [0, 0.1, 0.42, 0.74], kilapAlpha = [0, 0.1, 0.3, 0.66];
+  for (let i = 0; i < potongan.length; i++) {
+    const [y0, y1, tk] = potongan[i];
+    if (y1 < bawah || y0 > atas) continue;
+    ctx.fillStyle = WARNA.batang;
+    ctx.fillRect(-r, y0, r * 2, y1 - y0);
+    ctx.fillStyle = WARNA.oli;
+    ctx.globalAlpha = oliAlpha[tk];
+    ctx.fillRect(-r, y0, r * 2, y1 - y0);
+    ctx.globalAlpha = 1;
+    // Bayangan bulat batang
+    const g = ctx.createLinearGradient(-r, 0, r, 0);
+    g.addColorStop(0, 'rgba(0,0,0,.38)'); g.addColorStop(0.32, 'rgba(0,0,0,0)'); g.addColorStop(0.75, 'rgba(0,0,0,.08)'); g.addColorStop(1, 'rgba(0,0,0,.45)');
+    ctx.fillStyle = g;
+    ctx.fillRect(-r, y0, r * 2, y1 - y0);
+    // Kilap oli: makin tebal oli, makin terang dan lebar garis kilapnya
+    ctx.fillStyle = `rgba(255,255,255,${kilapAlpha[tk]})`;
+    ctx.fillRect(-r * 0.58, y0, r * (0.06 + tk * 0.09), y1 - y0);
+    if (tk >= 2) {
+      ctx.fillStyle = `rgba(255,255,255,${kilapAlpha[tk] * 0.55})`;
+      ctx.fillRect(r * 0.3, y0, r * 0.1 * (tk - 1), y1 - y0);
+    }
+    // Cincin ruas alami batang pinang
+    ctx.strokeStyle = 'rgba(0,0,0,.28)';
+    ctx.lineWidth = px * 1.2;
+    ctx.beginPath();
+    for (let y = Math.ceil(y0 / 0.42) * 0.42; y < y1; y += 0.42) { ctx.moveTo(-r, y); ctx.lineTo(r, y); }
+    ctx.stroke();
+    if (i < RUAS.length) {
+      ctx.fillStyle = WARNA.oli;
+      for (const t of TETES[i]) {
+        const x = t.sisi * (r - 0.012);
+        ctx.beginPath(); ctx.moveTo(x - 0.02, t.y + 0.04); ctx.quadraticCurveTo(x - 0.02, t.y - t.p, x, t.y - t.p - 0.03); ctx.quadraticCurveTo(x + 0.02, t.y - t.p, x + 0.02, t.y + 0.04); ctx.closePath(); ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(255,255,255,.75)';
+      for (const k of KILAU[i]) { ctx.beginPath(); elips(ctx, -r * 0.48, k.y, r * 0.12, k.p); ctx.fill(); }
+    }
+  }
+  ctx.lineWidth = px * 1.8;
+  ctx.strokeStyle = WARNA['garis-dunia'];
+  ctx.beginPath();
+  ctx.moveTo(-r, Math.max(bawah, -0.02)); ctx.lineTo(-r, Math.min(atas, TIANG.atas));
+  ctx.moveTo(r, Math.max(bawah, -0.02)); ctx.lineTo(r, Math.min(atas, TIANG.atas));
+  ctx.stroke();
+  // Pita penanda batas ruas dan garis puncak
+  for (let i = 1; i <= RUAS.length; i++) {
+    const y = i < RUAS.length ? RUAS[i].dari : KONFIG.puncak;
+    if (y < bawah - 0.1 || y > atas + 0.1) continue;
+    ctx.beginPath(); ctx.rect(-r - 0.012, y - 0.03, r * 2 + 0.024, 0.06);
+    isiGaris(px, i < RUAS.length ? WARNA.putih : WARNA.bendera, 1.2);
+  }
+}
+
+function posisiGantungan(g) {
+  const a = g.sudut * Math.PI / 180;
+  return { x: RODA.rx * Math.cos(a), y: RODA.y + RODA.ry * Math.sin(a), depan: Math.sin(a) < -0.01 };
+}
+function gambarRoda(px, bagian) {
+  // bagian: 'belakang' = separuh atas elips, 'depan' = separuh bawah
+  ctx.beginPath();
+  if (bagian === 'belakang') ctx.ellipse(0, RODA.y, RODA.rx, RODA.ry, 0, 0, Math.PI);
+  else ctx.ellipse(0, RODA.y, RODA.rx, RODA.ry, 0, Math.PI, TAU);
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 0.075 + px * 3; ctx.strokeStyle = WARNA['garis-dunia']; ctx.stroke();
+  ctx.lineWidth = 0.075; ctx.strokeStyle = WARNA.bambu; ctx.stroke();
+  if (bagian === 'belakang') {
+    // Jari-jari roda ke puncak batang
+    ctx.beginPath();
+    for (const a of [0, 60, 120, 180]) {
+      const r = a * Math.PI / 180;
+      ctx.moveTo(0, TIANG.atas - 0.1); ctx.lineTo(RODA.rx * Math.cos(r), RODA.y + RODA.ry * Math.sin(r));
+    }
+    ctx.lineWidth = px * 2; ctx.strokeStyle = WARNA['garis-dunia']; ctx.stroke();
+  } else {
+    ctx.beginPath();
+    for (const a of [240, 300]) {
+      const r = a * Math.PI / 180;
+      ctx.moveTo(0, TIANG.atas - 0.1); ctx.lineTo(RODA.rx * Math.cos(r), RODA.y + RODA.ry * Math.sin(r));
+    }
+    ctx.lineWidth = px * 2; ctx.strokeStyle = WARNA['garis-dunia']; ctx.stroke();
+  }
+}
+
+function gambarHadiah(id, x, y, px, sudut = 0) {
+  // (x, y) = titik gantung di atas benda
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(sudut);
+  const gd = WARNA['garis-dunia'];
+  if (id === 'sepeda') {
+    const rr = 0.17, yr = -0.42;
+    for (const sx of [-0.29, 0.29]) {
+      ctx.beginPath(); ctx.arc(sx, yr, rr, 0, TAU); ctx.lineWidth = 0.045; ctx.strokeStyle = gd; ctx.stroke();
+      ctx.beginPath(); ctx.arc(sx, yr, rr * 0.18, 0, TAU); ctx.fillStyle = '#9AA3A8'; ctx.fill();
+      ctx.beginPath(); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; ctx.moveTo(sx, yr); ctx.lineTo(sx + Math.cos(a) * rr, yr + Math.sin(a) * rr); } ctx.lineWidth = px; ctx.strokeStyle = '#9AA3A8'; ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.moveTo(-0.29, yr); ctx.lineTo(-0.04, yr); ctx.lineTo(0.17, -0.2); ctx.lineTo(-0.14, -0.2); ctx.closePath();
+    ctx.moveTo(-0.04, yr); ctx.lineTo(-0.16, -0.16);
+    ctx.moveTo(0.17, -0.2); ctx.lineTo(0.29, yr);
+    ctx.moveTo(0.17, -0.2); ctx.lineTo(0.2, -0.1);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.lineWidth = 0.05 + px * 2.5; ctx.strokeStyle = gd; ctx.stroke();
+    ctx.lineWidth = 0.05; ctx.strokeStyle = '#1F7A78'; ctx.stroke();
+    ctx.beginPath(); kotakBulat(ctx, -0.25, -0.15, 0.17, 0.05, 0.02); isiGaris(px, gd, 1);
+    ctx.beginPath(); ctx.moveTo(0.12, -0.08); ctx.lineTo(0.28, -0.1); ctx.lineWidth = 0.035; ctx.strokeStyle = gd; ctx.stroke();
+    // Tali gantung mengikat stang
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0.2, -0.1); ctx.lineWidth = px * 1.4; ctx.strokeStyle = gd; ctx.stroke();
+  } else if (id === 'payung') {
+    // Payung terbuka digantung pada ujungnya: kubah bergerigi, gagang melengkung di bawah.
+    const atasK = -0.04, dasarK = -0.25, rx = 0.27;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, atasK); ctx.lineWidth = px * 1.6; ctx.strokeStyle = gd; ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-rx, dasarK);
+    ctx.bezierCurveTo(-rx, atasK + 0.02, rx, atasK + 0.02, rx, dasarK);
+    for (let i = 3; i >= 0; i--) { const xa = -rx + (i + 1) * rx / 2, xb = -rx + i * rx / 2; ctx.quadraticCurveTo((xa + xb) / 2, dasarK + 0.06, xb, dasarK); }
+    ctx.closePath();
+    isiGaris(px, '#2F6B45');
+    ctx.beginPath(); ctx.moveTo(0, atasK); ctx.quadraticCurveTo(-0.08, -0.13, -0.135, dasarK + 0.01); ctx.moveTo(0, atasK); ctx.quadraticCurveTo(0.08, -0.13, 0.135, dasarK + 0.01);
+    ctx.lineWidth = px * 1.2; ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, dasarK + 0.03); ctx.lineTo(0, -0.5); ctx.arc(0.045, -0.5, 0.045, Math.PI, 0, false);
+    ctx.lineCap = 'round'; ctx.lineWidth = 0.022; ctx.strokeStyle = gd; ctx.stroke();
+  } else if (id === 'ember') {
+    ctx.beginPath(); ctx.arc(0, -0.12, 0.15, Math.PI * 1.05, Math.PI * 1.95, true); ctx.lineWidth = px * 2; ctx.strokeStyle = gd; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-0.16, -0.12); ctx.lineTo(0.16, -0.12); ctx.lineTo(0.12, -0.38); ctx.lineTo(-0.12, -0.38); ctx.closePath();
+    isiGaris(px, '#E0A92B');
+    ctx.beginPath(); ctx.rect(-0.165, -0.15, 0.33, 0.04); isiGaris(px, '#C88F1A', 1);
+  } else if (id === 'kaus') {
+    ctx.beginPath(); ctx.moveTo(-0.15, -0.04); ctx.lineTo(0, 0); ctx.lineTo(0.15, -0.04); ctx.lineWidth = px * 2; ctx.strokeStyle = gd; ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-0.07, -0.04); ctx.lineTo(-0.2, -0.08); ctx.lineTo(-0.25, -0.17); ctx.lineTo(-0.17, -0.2); ctx.lineTo(-0.15, -0.16);
+    ctx.lineTo(-0.15, -0.44); ctx.lineTo(0.15, -0.44); ctx.lineTo(0.15, -0.16); ctx.lineTo(0.17, -0.2); ctx.lineTo(0.25, -0.17); ctx.lineTo(0.2, -0.08); ctx.lineTo(0.07, -0.04);
+    ctx.quadraticCurveTo(0, -0.09, -0.07, -0.04); ctx.closePath();
+    isiGaris(px, WARNA.putih);
+    ctx.beginPath(); ctx.rect(-0.15, -0.27, 0.3, 0.06); ctx.fillStyle = WARNA.bendera; ctx.fill();
+  }
+  ctx.restore();
+}
+
+function gambarGantungan(px, depan) {
+  for (let i = 0; i < GANTUNGAN.length; i++) {
+    const g = GANTUNGAN[i];
+    if (hadiahDiraih && g.id === hadiahDiraih.id && (status === 'menang' || status === 'hasil')) continue;
+    const p = posisiGantungan(g);
+    if (p.depan !== depan) continue;
+    const ayun = gerakHias ? Math.sin(jamDunia * 1.3 + i * 1.9) * 0.06 : 0;
+    const ux = p.x + Math.sin(ayun) * g.tali, uy = p.y - Math.cos(ayun) * g.tali;
+    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(ux, uy);
+    ctx.lineWidth = px * 1.4; ctx.strokeStyle = WARNA['garis-dunia']; ctx.stroke();
+    gambarHadiah(g.id, ux, uy, px, ayun);
+  }
+}
+
+function gambarBenderaPuncak(px) {
+  const x = 0, y0 = TIANG.atas, y1 = TIANG.atas + 1.05;
+  ctx.beginPath(); ctx.moveTo(x, y0 - 0.05); ctx.lineTo(x, y1);
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 0.04 + px * 2.5; ctx.strokeStyle = WARNA['garis-dunia']; ctx.stroke();
+  ctx.lineWidth = 0.04; ctx.strokeStyle = WARNA.bambu; ctx.stroke();
+  const L = 0.62, Hb = 0.4, n = 10;
+  const kib = c => (gerakHias ? Math.sin(jamDunia * 4 - c * 5) * 0.035 * c : 0);
+  const titik = (c, v) => [x + 0.02 + L * c, y1 - 0.02 - Hb * v + kib(c)];
+  for (const [v0, v1, warna] of [[0, 0.5, WARNA.bendera], [0.5, 1, WARNA.putih]]) {
+    ctx.beginPath();
+    for (let j = 0; j <= n; j++) { const [a, b] = titik(j / n, v0); j ? ctx.lineTo(a, b) : ctx.moveTo(a, b); }
+    for (let j = n; j >= 0; j--) { const [a, b] = titik(j / n, v1); ctx.lineTo(a, b); }
+    ctx.closePath(); ctx.fillStyle = warna; ctx.fill();
+  }
+  ctx.beginPath();
+  for (let j = 0; j <= n; j++) { const [a, b] = titik(j / n, 0); j ? ctx.lineTo(a, b) : ctx.moveTo(a, b); }
+  for (let j = n; j >= 0; j--) { const [a, b] = titik(j / n, 1); ctx.lineTo(a, b); }
+  ctx.closePath(); ctx.lineWidth = px * 1.4; ctx.strokeStyle = WARNA['garis-dunia']; ctx.stroke();
+  // Topi puncak batang
+  ctx.beginPath(); kotakBulat(ctx, -0.16, TIANG.atas - 0.08, 0.32, 0.12, 0.03); isiGaris(px, WARNA.bambu);
+}
+
+// Pemanjat dilihat dari belakang: tangan kirinya di kiri layar, tangan kanannya di kanan,
+// sama dengan tombol dan tombol panah.
+function gambarPemanjat(px) {
+  const y = pose.hT, menang = (status === 'menang' || status === 'hasil') && akhir && akhir.jenis === 'menang';
+  const kulit = WARNA.kulit, kulitG = WARNA['kulit-gelap'], oli = WARNA.oli, gd = WARNA['garis-dunia'];
+  const kaget = pose.kaget;
+  const rel = { kiri: clamp(pose.kiri - y, 1.58, 2.02), kanan: clamp(pose.kanan - y, 1.58, 2.02) };
+  const sisiMenang = hadiahDiraih ? (posisiGantungan(GANTUNGAN.find(g => g.id === hadiahDiraih.id)).x < 0 ? 'kiri' : 'kanan') : 'kanan';
+  // Kaki: lutut di sisi tangan yang lebih rendah sedikit naik, seperti mendorong badan
+  for (const [t, s] of [['kiri', -1], ['kanan', 1]]) {
+    const angkat = rel[t] < rel[lawan(t)] - 0.05 ? 0.09 : 0;
+    const pinggul = [s * 0.12, y + 0.62], lutut = [s * 0.42, y + 0.44 + angkat], kaki = [s * 0.15, y + 0.1 + angkat * 0.7];
+    garisTebal([pinggul, lutut], 0.14, kulit, px);
+    garisTebal([lutut, kaki], 0.115, kulitG, px);
+    ctx.beginPath(); elips(ctx, kaki[0] + s * 0.01, kaki[1] - 0.02, 0.06, 0.045, s * 0.5); isiGaris(px, oli, 1.2);
+    // Celana pendek menutup paha atas
+    garisTebal([pinggul, [s * 0.27, y + 0.53 + angkat * 0.5]], 0.17, WARNA.bendera, px, false);
+  }
+  // Celana pendek merah
+  ctx.beginPath();
+  ctx.moveTo(-0.17, y + 0.82); ctx.lineTo(0.17, y + 0.82); ctx.lineTo(0.23, y + 0.56); ctx.lineTo(0, y + 0.6); ctx.lineTo(-0.23, y + 0.56); ctx.closePath();
+  isiGaris(px, WARNA.bendera);
+  ctx.beginPath(); ctx.moveTo(-0.17, y + 0.79); ctx.lineTo(0.17, y + 0.79); ctx.lineWidth = px * 2; ctx.strokeStyle = WARNA.putih; ctx.stroke();
+  // Badan dari belakang
+  const jalurBadan = () => {
+    ctx.beginPath();
+    ctx.moveTo(-0.16, y + 0.8);
+    ctx.lineTo(0.16, y + 0.8);
+    ctx.quadraticCurveTo(0.2, y + 1.0, 0.24, y + 1.14);
+    ctx.quadraticCurveTo(0.22, y + 1.24, 0.08, y + 1.25);
+    ctx.lineTo(-0.08, y + 1.25);
+    ctx.quadraticCurveTo(-0.22, y + 1.24, -0.24, y + 1.14);
+    ctx.quadraticCurveTo(-0.2, y + 1.0, -0.16, y + 0.8);
+    ctx.closePath();
+  };
+  jalurBadan();
+  ctx.fillStyle = kulit; ctx.fill();
+  ctx.save();
+  jalurBadan(); ctx.clip();
+  ctx.fillStyle = oli; ctx.globalAlpha = 0.72;
+  ctx.beginPath(); for (const n of NODA) elips(ctx, n.x, y + n.y, n.rx, n.ry, n.a); ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.beginPath(); ctx.moveTo(0, y + 0.86); ctx.lineTo(0, y + 1.18); ctx.lineWidth = px * 1.5; ctx.strokeStyle = kulitG; ctx.stroke();
+  ctx.beginPath(); ctx.arc(-0.1, y + 1.12, 0.07, Math.PI * 1.1, Math.PI * 1.9, true); ctx.arc(0.1, y + 1.12, 0.07, Math.PI * 1.1, Math.PI * 1.9, true); ctx.stroke();
+  // Kilap oli di punggung
+  ctx.beginPath(); ctx.moveTo(-0.13, y + 0.9); ctx.quadraticCurveTo(-0.16, y + 1.04, -0.14, y + 1.16);
+  ctx.moveTo(0.17, y + 1.15); ctx.lineTo(0.11, y + 1.2);
+  ctx.lineWidth = px * 2.2; ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.stroke();
+  ctx.restore();
+  jalurBadan(); ctx.lineWidth = px * 1.6; ctx.strokeStyle = gd; ctx.stroke();
+  // Lengan: bahu -> siku -> tangan di sisi batang
+  for (const [t, s] of [['kiri', -1], ['kanan', 1]]) {
+    const bahu = [s * 0.2, y + 1.17];
+    let tangan, siku;
+    if (menang && t === sisiMenang) {
+      // Lengan diacungkan tinggi melewati roda sambil memegang hadiah, supaya jelas hadiah itu sudah diraih.
+      tangan = [s * 0.5, y + 2.5]; siku = [s * 0.4, y + 1.86];
+    } else {
+      // Tangan selalu di atas kepala, memeluk batang; siku terbuka ke samping.
+      const r = rel[t] + kaget * 0.05;
+      tangan = [s * (TIANG.r + 0.02), y + r];
+      siku = [s * (0.37 + kaget * 0.1), y + 1.31 + (r - 1.58) * 0.55];
+    }
+    garisTebal([bahu, siku], 0.1, kulit, px);
+    garisTebal([siku, tangan], 0.085, kulitG, px);
+    // Lengan bawah belepotan oli
+    ctx.beginPath(); ctx.moveTo(siku[0] * 0.55 + tangan[0] * 0.45, siku[1] * 0.55 + tangan[1] * 0.45); ctx.lineTo(tangan[0], tangan[1]);
+    ctx.lineCap = 'round'; ctx.lineWidth = 0.07; ctx.strokeStyle = oli; ctx.globalAlpha = 0.55; ctx.stroke(); ctx.globalAlpha = 1;
+    ctx.beginPath(); elips(ctx, tangan[0], tangan[1], 0.058, 0.05); isiGaris(px, kulitG, 1.4);
+    if (menang && t === sisiMenang && hadiahDiraih) {
+      const g = GANTUNGAN.find(q => q.id === hadiahDiraih.id);
+      gambarHadiah(g.id, tangan[0], tangan[1] + 0.02, px, 0);
+    }
+  }
+  // Leher dan kepala (bagian belakang): rambut, telinga, ikat kepala putih
+  ctx.beginPath(); ctx.rect(-0.05, y + 1.22, 0.1, 0.08); ctx.fillStyle = kulit; ctx.fill();
+  const ky = y + 1.37, kr = 0.11;
+  ctx.beginPath(); elips(ctx, -kr, ky - 0.01, 0.025, 0.04); elips(ctx, kr, ky - 0.01, 0.025, 0.04); isiGaris(px, kulit, 1.2);
+  ctx.beginPath(); elips(ctx, 0, ky, kr, kr * 1.05); isiGaris(px, WARNA.rambut);
+  ctx.beginPath(); ctx.arc(0, ky - 0.02, kr * 0.92, Math.PI * 1.15, Math.PI * 1.85); ctx.lineTo(0, ky - 0.08); ctx.closePath(); ctx.fillStyle = kulit; ctx.fill();
+  ctx.save();
+  ctx.beginPath(); elips(ctx, 0, ky, kr, kr * 1.05); ctx.clip();
+  ctx.fillStyle = WARNA.putih; ctx.fillRect(-kr, ky + 0.025, kr * 2, 0.045);
+  ctx.restore();
+  const kib = gerakHias ? Math.sin(jamDunia * 9) * 0.03 + lajuMelorot * 0.1 : 0;
+  ctx.beginPath();
+  ctx.moveTo(0.02, ky + 0.045); ctx.quadraticCurveTo(0.1, ky + 0.0 + kib, 0.17, ky - 0.05 + kib);
+  ctx.moveTo(0.02, ky + 0.045); ctx.quadraticCurveTo(0.08, ky - 0.04 + kib, 0.12, ky - 0.11 + kib);
+  ctx.lineCap = 'round'; ctx.lineWidth = 0.025 + px * 2.4; ctx.strokeStyle = gd; ctx.stroke();
+  ctx.lineWidth = 0.025; ctx.strokeStyle = WARNA.putih; ctx.stroke();
+  ctx.beginPath(); elips(ctx, 0.02, ky + 0.048, 0.022, 0.02); isiGaris(px, WARNA.putih, 1.2);
+}
+
+function gambarPartikel() {
+  for (const p of partikel) {
+    ctx.globalAlpha = Math.min(1, p.umur * 2);
+    ctx.fillStyle = p.jenis === 'oli' ? WARNA.oli : WARNA['tanah-gelap'];
+    ctx.beginPath(); elips(ctx, p.x, p.y, p.r, p.r); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ---------- Gambar: penanda di layar ----------
+function plat(x, y, w, hh, isi, tepi, r = 7) {
+  ctx.beginPath(); kotakBulat(ctx, x, y, w, hh, r);
+  ctx.fillStyle = isi; ctx.fill();
+  if (tepi) { ctx.lineWidth = 1.5; ctx.strokeStyle = tepi; ctx.stroke(); }
+}
+const FONT_LABEL = '700 12px "Plus Jakarta Sans", system-ui, sans-serif';
+const FONT_KECIL = '700 11px "Plus Jakarta Sans", system-ui, sans-serif';
+
+function gambarPenggaris() {
+  const x0 = 8, lebar = ukuran.w < 500 ? 48 : 54;
+  const yAtas = layarY(KONFIG.puncak) - 34, yBawah = layarY(0) + 10;
+  const top = Math.max(-12, yAtas), bot = Math.min(T.visH + 12, yBawah);
+  if (bot - top < 20) return;
+  ctx.globalAlpha = 0.94;
+  plat(x0, top, lebar, bot - top, WARNA.lembar, null, 8);
+  ctx.globalAlpha = 1;
+  ctx.beginPath(); kotakBulat(ctx, x0, top, lebar, bot - top, 8); ctx.lineWidth = 1.5; ctx.strokeStyle = WARNA.garis; ctx.stroke();
+  // Jalur ruas: makin pekat makin licin (warna tinta supaya terbaca di kedua tema)
+  const xs = x0 + lebar - 11;
+  for (const r of RUAS) {
+    const ya = layarY(r.sampai), yb = layarY(r.dari);
+    ctx.fillStyle = WARNA.tinta;
+    ctx.globalAlpha = [0, 0.18, 0.5, 0.9][r.tingkat];
+    ctx.fillRect(xs, ya, 7, yb - ya);
+    ctx.globalAlpha = 1;
+  }
+  ctx.lineWidth = 1; ctx.strokeStyle = WARNA.tinta;
+  ctx.strokeRect(xs, layarY(KONFIG.puncak), 7, layarY(0) - layarY(KONFIG.puncak));
+  // Garis ukur tiap setengah meter, angka tiap meter
+  ctx.strokeStyle = WARNA.tinta; ctx.fillStyle = WARNA.tinta;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let m = 0; m <= 16; m++) {
+    const y = layarY(m / 2);
+    if (y < -5 || y > T.visH + 5) continue;
+    const besar = m % 2 === 0;
+    ctx.moveTo(xs - 2, y); ctx.lineTo(xs - (besar ? 12 : 7), y);
+  }
+  ctx.stroke();
+  ctx.font = FONT_KECIL;
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+  const yPenanda = layarY(pose.hT);
+  for (let m = 1; m <= 7; m++) {
+    const y = layarY(m);
+    if (y < 8 || y > T.visH - 8 || Math.abs(y - yPenanda) < 14) continue;
+    ctx.fillText(`${m} m`, x0 + 5, y);
+  }
+  // Puncak: bendera kecil dan angka 8 m
+  const yp = layarY(KONFIG.puncak);
+  if (yp > -30 && yp < T.visH + 10) {
+    ctx.fillStyle = WARNA.merah;
+    ctx.fillText('8 m', x0 + 5, yp);
+    const fx = x0 + 8, fy = yp - 26;
+    ctx.fillStyle = WARNA.bendera; ctx.fillRect(fx, fy, 18, 6);
+    ctx.fillStyle = WARNA.putih; ctx.fillRect(fx, fy + 6, 18, 6);
+    ctx.lineWidth = 1.2; ctx.strokeStyle = WARNA['garis-dunia']; ctx.strokeRect(fx, fy, 18, 12);
+  }
+  // Penanda ketinggian pemanjat
+  if (yPenanda > 0 && yPenanda < T.visH) {
+    const teks = meter(pose.hT);
+    ctx.font = FONT_LABEL;
+    const w = ctx.measureText(teks).width + 14, x = x0 + lebar + 7;
+    ctx.beginPath(); ctx.moveTo(x0 + lebar - 1, yPenanda); ctx.lineTo(x + 1, yPenanda - 6); ctx.lineTo(x + 1, yPenanda + 6); ctx.closePath();
+    ctx.fillStyle = WARNA.tinta; ctx.fill();
+    plat(x, yPenanda - 11, w, 22, WARNA.lembar, WARNA.tinta, 6);
+    ctx.fillStyle = WARNA.tinta;
+    ctx.fillText(teks, x + 7, yPenanda + 0.5);
+  }
+}
+
+function gambarTagRuas(lbl) {
+  ctx.font = FONT_KECIL;
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+  for (const r of RUAS) {
+    const y = layarY(r.dari + 0.28);
+    if (y < 12 || y > T.visH - 12) continue;
+    const teks = `Ruas ${r.no}: ${r.oli.nama}`;
+    const w = ctx.measureText(teks).width + 14;
+    const x = Math.min(layarX(0.6), ukuran.w - w - 8);
+    // Label umpan balik lebih penting; tag ruas yang bertabrakan dengannya disembunyikan sementara.
+    if (lbl && x < lbl.x + lbl.w + 4 && x + w > lbl.x - 4 && y + 12 > lbl.y && y - 12 < lbl.y + lbl.h) continue;
+    ctx.beginPath(); ctx.moveTo(layarX(TIANG.r), layarY(r.dari)); ctx.lineTo(x, y);
+    ctx.lineWidth = 1.5; ctx.strokeStyle = WARNA.tinta; ctx.stroke();
+    plat(x, y - 10, w, 20, WARNA.lembar, WARNA.garis, 6);
+    ctx.fillStyle = WARNA.tinta;
+    ctx.fillText(teks, x + 7, y + 0.5);
+  }
+}
+
+function kotakLabel() {
+  if (!label.teks || jamDunia > label.sampai) return null;
+  ctx.font = FONT_LABEL;
+  const w = ctx.measureText(label.teks).width + 18;
+  return { x: clamp(T.ax - w / 2, 8, ukuran.w - w - 8), y: clamp(layarY(pose.hT + 2.1) - 30, 8, T.visH - 34), w, h: 26 };
+}
+function gambarLabel(k) {
+  if (!k) return;
+  ctx.font = FONT_LABEL;
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+  const { x, y, w } = k;
+  if (label.gelap) plat(x, y, w, 26, WARNA.tinta, null, 8);
+  else plat(x, y, w, 26, WARNA.lembar, WARNA.tinta, 8);
+  ctx.fillStyle = label.gelap ? WARNA.lembar : WARNA.tinta;
+  ctx.fillText(label.teks, x + 9, y + 13.5);
+}
+
+function gambar() {
+  if (!WARNA.tinta) bacaWarna();
+  gambarLangit();
+  gambarAwan();
+  gambarKampung();
+  gambarUmbul();
+  const px = lapisan(1, 1);
+  const kiri = -T.ax / T.s, kanan = (ukuran.w - T.ax) / T.s;
+  const atas = T.cy + T.ay / T.s, bawah = T.cy - (ukuran.h - T.ay) / T.s;
+  const tanahTerlihat = bawah < 2.5;
+  if (tanahTerlihat) {
+    gambarLapangan(px, kiri, kanan, 0.65);
+    gambarPenonton(kiri, kanan);
+    gambarTali(px, kiri, kanan);
+  }
+  // Kabut tipis di atas semua latar (kampung, umbul-umbul, penonton) supaya batang dan pemanjat
+  // yang tajam menjadi satu-satunya fokus.
+  const d = ukuran.dpr;
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+  ctx.fillStyle = WARNA['langit-bawah'];
+  ctx.globalAlpha = temaGelap ? 0.34 : 0.4;
+  ctx.fillRect(0, 0, ukuran.w, ukuran.h);
+  ctx.globalAlpha = 1;
+  lapisan(1, 1);
+  if (tanahTerlihat) {
+    gambarLapangan(px, kiri, kanan, 0.1);
+    gambarPangkal(px);
+  }
+  if (atas > RODA.y - 1.2) { gambarRoda(px, 'belakang'); gambarGantungan(px, false); }
+  gambarBatang(px, bawah, atas);
+  if (atas > TIANG.atas - 0.2) gambarBenderaPuncak(px);
+  if (atas > RODA.y - 1.2) { gambarRoda(px, 'depan'); gambarGantungan(px, true); }
+  gambarPemanjat(px);
+  gambarPartikel();
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+  // Saat lembar hasil tampil, angka sudah ada di lembar; penggaris dan tag disembunyikan supaya adegan bersih.
+  if (!modeKartu && status !== 'hasil') {
+    const k = kotakLabel();
+    gambarTagRuas(k);
+    gambarPenggaris();
+    gambarLabel(k);
+  }
+}
+
+let waktuLalu = performance.now();
+function putaran(sekarang) {
+  requestAnimationFrame(putaran);
+  // Batas 0,1 detik: cukup longgar supaya irama tetap sesuai jam nyata di perangkat yang tersendat,
+  // tapi kembali dari tab tersembunyi tidak membuat pemanjat melompat.
+  const dt = Math.min(0.1, Math.max(0, (sekarang - waktuLalu) / 1000));
+  waktuLalu = sekarang;
+  if (!beku) perbarui(dt);
+  else { gerakKamera(dt); perbaruiKendali(); }
+  gambar();
+}
+
+bacaWarna();
+ukurKanvas();
+mulaiBaru();
+el.status.hidden = true;
+requestAnimationFrame(t => { waktuLalu = t; putaran(t); });
+
+// ---------- Kait uji dan gambar kartu ----------
+function maju(detikMaju, langkah = 1 / 120) { const n = Math.round(detikMaju / langkah); for (let i = 0; i < n; i++) perbarui(langkah); }
+function keadaan() {
+  const r = ruasSekarang();
+  return {
+    status, jeda, beku, waktu: +waktu.toFixed(3), sisa: +(KONFIG.waktuBatas - waktu).toFixed(3),
+    tinggi: +h.toFixed(3), tinggiMaks: +hMaks.toFixed(3), cengkeraman: +grip.toFixed(1),
+    ruas: r.no, oli: r.oli.nama, jendela: [bebas ? 0 : r.oli.min, r.oli.max], sejak: +sejak.toFixed(3),
+    bebas, tanganLalu, tanganBerikut: bebas ? null : lawan(tanganLalu),
+    melorot, tergelincir: slip.sisa > 0, statistik: JSON.parse(JSON.stringify(stat)),
+    hadiah: hadiahDiraih ? hadiahDiraih.nama : null,
+    penyebab: akhir ? { jenis: akhir.jenis, judul: akhir.judul, sebab: akhir.sebab, saran: akhir.saran } : null,
+    label: label.teks && jamDunia <= label.sampai ? label.teks : null,
+    rekor, skalaPxPerM: +T.s.toFixed(2), kameraY: +kam.cy.toFixed(2), gerakHias, partikel: partikel.length,
+    hasilTerlihat: !el.hasil.hidden,
+    fokus: document.activeElement ? document.activeElement.id || document.activeElement.tagName : null
+  };
+}
+window.__panjatPinang = {
+  KONFIG, OLI: OLI.slice(1), RUAS, HADIAH,
+  keadaan,
+  tekan: tangan => { tekan(tangan, true); return keadaan(); },
+  maju: d => { maju(d); return keadaan(); },
+  // bekukan(true): jam nyata berhenti memajukan babak; hanya maju() yang memajukan.
+  bekukan: on => { beku = !!on; },
+  mulaiUlang: () => { mulaiBaru(); return keadaan(); },
+  aturTinggi: m => { h = clamp(m, 0, KONFIG.puncak - 0.01); hMaks = Math.max(hMaks, h); pose.hT = h; pose.kiri = pose.sasaran.kiri = h + 1.97; pose.kanan = pose.sasaran.kanan = h + 1.68; kam.siap = false; return keadaan(); },
+  aturCengkeraman: v => { grip = clamp(v, 0, 100); },
+  // Bot berirama untuk kalibrasi: jeda = 'awal' | 'tengah' | 'akhir' | angka detik | fungsi(oli) -> detik.
+  panjatOtomatis: (opsi = {}) => {
+    const acak = buatAcak(opsi.benih || 7);
+    const pilih = o => {
+      const j = opsi.jeda === undefined ? 'tengah' : opsi.jeda;
+      let v;
+      if (typeof j === 'function') v = j(o);
+      else if (typeof j === 'number') v = j;
+      else if (j === 'awal') v = o.min + 0.06;
+      else if (j === 'akhir') v = o.max - 0.06;
+      else v = (o.min + o.max) / 2;
+      if (opsi.sebar) { const u = acak() + acak() + acak() - 1.5; v += u * opsi.sebar; }
+      return Math.max(0.01, v);
+    };
+    let tangan = opsi.tangan || 'kiri', n = 0;
+    while ((status === 'siap' || status === 'main') && n < 3000) {
+      const sasaran = status === 'siap' ? 0 : pilih(ruasSekarang().oli);
+      let aman = 0;
+      while (status === 'main' && (slip.sisa > 0 || sejak + 1e-9 < sasaran) && aman++ < 12000) perbarui(1 / 240);
+      if (status !== 'siap' && status !== 'main') break;
+      tekan(tangan, true);
+      if (!opsi.tanganSama) tangan = lawan(tangan);
+      n++;
+    }
+    for (let i = 0; i < 1200 && status !== 'hasil'; i++) perbarui(1 / 120);
+    return keadaan();
+  },
+  modeKartu: on => {
+    modeKartu = !!on;
+    el.app.classList.toggle('mode-kartu', modeKartu);
+    if (!modeKartu) kamKartu = null;
+    sembunyikanPetunjuk();
+    ukurKanvas();
+  },
+  // Adegan gambar kartu 480x480: pemanjat di ruas oli tebal, tangan kiri meraih ke atas, roda hadiah di atasnya.
+  contohKartu: () => {
+    const k = window.__panjatPinang;
+    mulaiBaru();
+    k.modeKartu(true);
+    status = 'main';
+    k.aturTinggi(6.3);
+    tanganLalu = 'kiri'; bebas = false; sejak = 0.3; grip = 82;
+    pose.kiri = pose.sasaran.kiri = h + 2.0;
+    pose.kanan = pose.sasaran.kanan = h + 1.62;
+    kamKartu = { cy: 8.74, tinggi: 5.75 };
+    beku = true;
+    jamDunia = 1.2;
+    ukurKanvas();
+    gerakKamera(1);
+    return keadaan();
+  }
+};
+})();
+</script>
+</body>
+</html>
