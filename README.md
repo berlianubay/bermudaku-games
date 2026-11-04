@@ -53,8 +53,7 @@ npx wrangler@4 login
 npx wrangler@4 deploy
 ```
 
-Situs tayang di `bermudaku-games.<subdomain-akun>.workers.dev`. Untuk memakai domain sendiri:
-Cloudflare Dashboard > Workers & Pages > bermudaku-games > Settings > Domains & Routes > Add > Custom domain,
-lalu isi misalnya `games.bermudaku.com` (domainnya harus sudah ada di akun Cloudflare yang sama).
+Situs tayang di https://games.bmdku.com. Domain kustom diatur di `routes` pada `wrangler.jsonc`
+(zonanya harus ada di akun Cloudflare yang sama); karena itu alamat bawaan workers.dev ikut mati.
 
 © 2026 Bermuda Lentera
